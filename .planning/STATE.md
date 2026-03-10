@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-10T12:56:16.397Z"
-last_activity: 2026-03-10 — Completed 03-01-PLAN.md
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-10T13:22:45Z"
+last_activity: 2026-03-10 — Completed 04-02-PLAN.md
 progress:
   total_phases: 12
-  completed_phases: 3
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 4
+  total_plans: 7
+  completed_plans: 7
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 3 — LLM Adapter (COMPLETE)
+**Current focus:** Phase 4 — Guardrails & Approval Gates (COMPLETE)
 
 ## Current Position
 
-Phase: 3 of 12 (LLM Adapter) — COMPLETE
-Plan: 1 of 1 in current phase
+Phase: 4 of 12 (Guardrails & Approval Gates) — COMPLETE
+Plan: 2 of 2 in current phase
 Status: Phase Complete
-Last activity: 2026-03-10 — Completed 03-01-PLAN.md
+Last activity: 2026-03-10 — Completed 04-02-PLAN.md
 
 Progress: [██████████] 100%
 
@@ -57,6 +57,8 @@ Progress: [██████████] 100%
 | Phase 02 P02 | 4min | 2 tasks | 4 files |
 | Phase 03 P01 | 4 min | 2 tasks | 6 files |
 | Phase 03 P01 | 4 min | 2 tasks | 6 files |
+| Phase 04 P01 | 3 min | 2 tasks | 4 files |
+| Phase 04 P02 | 2 min | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -87,6 +89,13 @@ Recent decisions affecting current work:
 - [Phase 03]: Frozen dataclasses for LLMResponse/TokenUsage — immutable responses
 - [Phase 03]: ABC adapter pattern — new adapters only need subclass + implement call()/call_for_json()
 - [Phase 03]: Lazy client init - OpenAI client created on first call, not at construction
+- [Phase 04]: Fail-fast on first missing prerequisite — clearer error messages, simpler control flow
+- [Phase 04]: Declarative dict mapping Stage→requirements — easy to extend for new stages
+- [Phase 04]: normalize_path avoids os.path.normpath — converts to backslashes on Windows
+- [Phase 04]: check_scope returns original (un-normalized) paths — preserves user-facing context
+- [Phase 04]: No abort=True on typer.confirm — returns bool for ApprovalError hierarchy
+- [Phase 04]: Mutation-after-confirmation — state untouched until user confirms approval
+- [Phase 04]: Each gate wrapper formats titled summary and delegates to core approve()
 
 ### Pending Todos
 
@@ -99,5 +108,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Phase 3 complete — transitioning to Phase 4
-Resume file: .planning/phases/03-llm-adapter/03-VERIFICATION.md
+Stopped at: Phase 4 complete — transitioning to Phase 5
+Resume file: .planning/phases/04-guardrails-approval/04-02-SUMMARY.md
