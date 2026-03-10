@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. LLM Adapter | 0/1 | Not started | - |
 | 4. Guardrails & Approval Gates | 2/2 | Complete    | 2026-03-10 |
 | 5. Prompts & Dual Output | 2/2 | Complete    | 2026-03-10 |
-| 6. Brief & Research Stage | 1/3 | In Progress|  |
+| 6. Brief & Research Stage | 2/3 | In Progress|  |
 | 7. Design Stage | 0/2 | Not started | - |
 | 8. Plan Stage | 0/2 | Not started | - |
 | 9. Execute Stage | 0/2 | Not started | - |

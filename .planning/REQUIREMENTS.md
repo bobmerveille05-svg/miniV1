@@ -64,10 +64,10 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Researcher
 
-- [ ] **RSCH-01**: Deep context module scans codebase: detects tech stack from config files (package.json, requirements.txt, etc.)
-- [ ] **RSCH-02**: Deep context scans files up to configurable depth, max file count, and max file size
-- [ ] **RSCH-03**: Deep context extracts imports/exports from Python, JS/TS, and Go source files
-- [ ] **RSCH-04**: Deep context detects naming conventions, directory structure patterns, and test patterns
+- [x] **RSCH-01**: Deep context module scans codebase: detects tech stack from config files (package.json, requirements.txt, etc.)
+- [x] **RSCH-02**: Deep context scans files up to configurable depth, max file count, and max file size
+- [x] **RSCH-03**: Deep context extracts imports/exports from Python, JS/TS, and Go source files
+- [x] **RSCH-04**: Deep context detects naming conventions, directory structure patterns, and test patterns
 - [ ] **RSCH-05**: Researcher role receives scanned context + BRIEF.md and produces RESEARCH.json + RESEARCH.md
 - [ ] **RSCH-06**: RESEARCH.json contains: project_overview, tech_stack, architecture_patterns, relevant_files, existing_conventions, dependencies_map, potential_impacts, constraints, assumptions_verified, open_questions, recommended_focus_files
 - [ ] **RSCH-07**: Researcher prompt enforces "explore, don't design" — no solutions proposed
@@ -235,10 +235,10 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | BRIEF-01 | Phase 6 | Complete |
 | BRIEF-02 | Phase 6 | Complete |
 | BRIEF-03 | Phase 6 | Complete |
-| RSCH-01 | Phase 6 | Pending |
-| RSCH-02 | Phase 6 | Pending |
-| RSCH-03 | Phase 6 | Pending |
-| RSCH-04 | Phase 6 | Pending |
+| RSCH-01 | Phase 6 | Complete |
+| RSCH-02 | Phase 6 | Complete |
+| RSCH-03 | Phase 6 | Complete |
+| RSCH-04 | Phase 6 | Complete |
 | RSCH-05 | Phase 6 | Pending |
 | RSCH-06 | Phase 6 | Pending |
 | RSCH-07 | Phase 6 | Pending |
