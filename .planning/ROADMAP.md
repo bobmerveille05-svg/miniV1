@@ -95,11 +95,11 @@ Plans:
   2. All prompts enforce JSON-only output with anchoring instructions at start and end of the prompt
   3. `{{placeholder}}` variables in USER_TEMPLATE are replaced with actual context data at call time
   4. Every LLM-produced artifact is saved as both `.json` and `.md` — the Markdown is generated programmatically from parsed JSON, not by the LLM
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Prompt templates (5 role .md files) + loader module (load_prompt, render_prompt) + pyproject.toml package-data + tests
+- [ ] 05-02-PLAN.md — Dual-output renderer (5 render_*_md functions + save_dual) + tests
 
 ### Phase 6: Brief & Research Stage
 **Goal**: User can create a brief and run the full research stage to produce verified codebase context
