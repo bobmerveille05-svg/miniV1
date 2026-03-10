@@ -50,6 +50,7 @@ from minilegion.core.state import (
 )
 from minilegion.prompts.loader import load_prompt, render_prompt
 from minilegion.adapters.openai_adapter import OpenAIAdapter
+from minilegion.adapters.factory import get_adapter
 from minilegion.core.coherence import check_coherence
 
 
@@ -341,9 +342,9 @@ def research() -> None:
             codebase_context=codebase_context,
         )
 
-        # LLM call — OpenAIAdapter takes full config, NOT individual fields
+        # LLM call — use get_adapter(config) so the configured provider is used
         typer.echo("Running researcher...")
-        adapter = OpenAIAdapter(config)
+        adapter = get_adapter(config)
 
         def llm_call(prompt: str) -> str:
             # system_prompt is fixed; prompt is user message (with retry feedback appended)
@@ -423,7 +424,7 @@ def design() -> None:
         )
 
         typer.echo("Running designer...")
-        adapter = OpenAIAdapter(config)
+        adapter = get_adapter(config)
 
         def llm_call(prompt: str) -> str:
             response = adapter.call_for_json(system_prompt, prompt)
@@ -537,7 +538,7 @@ def plan(
             )
 
             typer.echo("Running planner (fast mode)...")
-            adapter = OpenAIAdapter(config)
+            adapter = get_adapter(config)
 
             def llm_call_fast(prompt: str) -> str:
                 response = adapter.call_for_json(system_prompt, prompt)
@@ -602,7 +603,7 @@ def plan(
             )
 
             typer.echo("Running planner...")
-            adapter = OpenAIAdapter(config)
+            adapter = get_adapter(config)
 
             def llm_call(prompt: str) -> str:
                 response = adapter.call_for_json(system_prompt, prompt)
@@ -678,9 +679,9 @@ def execute(
             source_files=source_files,
         )
 
-        # LLM call
+        # LLM call — use get_adapter(config) so the configured provider is used
         typer.echo("Running builder...")
-        adapter = OpenAIAdapter(config)
+        adapter = get_adapter(config)
 
         def llm_call(prompt: str) -> str:
             response = adapter.call_for_json(system_prompt, prompt)
@@ -830,9 +831,9 @@ def review() -> None:
                 conventions=conventions,
             )
 
-            # LLM call
+            # LLM call — use get_adapter(config) so the configured provider is used
             typer.echo("Running reviewer...")
-            adapter = OpenAIAdapter(config)
+            adapter = get_adapter(config)
 
             def llm_call(prompt: str) -> str:
                 response = adapter.call_for_json(system_prompt, prompt)
@@ -940,7 +941,7 @@ def review() -> None:
             )
 
             typer.echo("Re-running builder...")
-            builder_adapter = OpenAIAdapter(config)
+            builder_adapter = get_adapter(config)
 
             def builder_llm_call(prompt: str) -> str:
                 response = builder_adapter.call_for_json(builder_system, prompt)
