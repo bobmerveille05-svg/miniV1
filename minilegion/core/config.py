@@ -17,6 +17,7 @@ class MiniLegionConfig(BaseModel):
     provider: str = "openai"
     model: str = "gpt-4o"
     api_key_env: str = "OPENAI_API_KEY"
+    base_url: str | None = None  # For openai-compatible and ollama providers
     timeout: int = 120
     max_retries: int = 2
     engines: dict[str, str] = Field(default_factory=dict)

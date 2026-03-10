@@ -8,8 +8,14 @@ dependencies = [
     "openai>=1.0",
 ]
 
+[project.scripts]
+minilegion = "minilegion.cli:app"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+include = ["minilegion*"]
 
 [tool.setuptools.package-data]
 "minilegion.prompts" = ["*.md"]
