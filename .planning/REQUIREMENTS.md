@@ -74,11 +74,11 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Designer
 
-- [ ] **DSGN-01**: Designer role receives BRIEF.md + RESEARCH.json + recommended focus files and produces DESIGN.json + DESIGN.md
-- [ ] **DSGN-02**: DESIGN.json contains: design_approach, architecture_decisions (with alternatives_rejected), components (with files), data_models, api_contracts, integration_points, design_patterns_used, conventions_to_follow, technical_risks, out_of_scope, test_strategy, estimated_complexity
-- [ ] **DSGN-03**: Each architecture decision must have at least 1 rejected alternative
-- [ ] **DSGN-04**: conventions_to_follow must reference conventions from RESEARCH.json
-- [ ] **DSGN-05**: Designer prompt enforces "design, don't plan" — no task decomposition
+- [x] **DSGN-01**: Designer role receives BRIEF.md + RESEARCH.json + recommended focus files and produces DESIGN.json + DESIGN.md
+- [x] **DSGN-02**: DESIGN.json contains: design_approach, architecture_decisions (with alternatives_rejected), components (with files), data_models, api_contracts, integration_points, design_patterns_used, conventions_to_follow, technical_risks, out_of_scope, test_strategy, estimated_complexity
+- [x] **DSGN-03**: Each architecture decision must have at least 1 rejected alternative
+- [x] **DSGN-04**: conventions_to_follow must reference conventions from RESEARCH.json
+- [x] **DSGN-05**: Designer prompt enforces "design, don't plan" — no task decomposition
 
 ### Planner
 
@@ -239,14 +239,14 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | RSCH-02 | Phase 6 | Complete |
 | RSCH-03 | Phase 6 | Complete |
 | RSCH-04 | Phase 6 | Complete |
-| RSCH-05 | Phase 6 | Pending |
-| RSCH-06 | Phase 6 | Pending |
-| RSCH-07 | Phase 6 | Pending |
-| DSGN-01 | Phase 7 | Pending |
-| DSGN-02 | Phase 7 | Pending |
-| DSGN-03 | Phase 7 | Pending |
-| DSGN-04 | Phase 7 | Pending |
-| DSGN-05 | Phase 7 | Pending |
+| RSCH-05 | Phase 6 | Complete |
+| RSCH-06 | Phase 6 | Complete |
+| RSCH-07 | Phase 6 | Complete |
+| DSGN-01 | Phase 7 | Complete |
+| DSGN-02 | Phase 7 | Complete |
+| DSGN-03 | Phase 7 | Complete |
+| DSGN-04 | Phase 7 | Complete |
+| DSGN-05 | Phase 7 | Complete |
 | PLAN-01 | Phase 8 | Pending |
 | PLAN-02 | Phase 8 | Pending |
 | PLAN-03 | Phase 8 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 5 completion*
+*Last updated: 2026-03-10 after Phase 7 completion*
