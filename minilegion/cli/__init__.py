@@ -27,3 +27,8 @@ def main(
 # Import commands module to register all @app.command() decorators.
 # This import MUST come after app creation to avoid circular imports.
 from minilegion.cli import commands  # noqa: F401, E402
+
+# Register config sub-app (minilegion config init / minilegion config model)
+from minilegion.cli.config_commands import config_app  # noqa: E402
+
+app.add_typer(config_app, name="config")
