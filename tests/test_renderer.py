@@ -28,6 +28,7 @@ from minilegion.core.renderer import (
     render_plan_md,
     render_execution_log_md,
     render_review_md,
+    render_decisions_md,
     save_dual,
 )
 
@@ -341,3 +342,90 @@ class TestSaveDual:
         with patch("minilegion.core.renderer.write_atomic") as mock_wa:
             save_dual(data, json_path, md_path)
             assert mock_wa.call_count == 2
+
+
+# ── TestRenderDecisionsMd ─────────────────────────────────────────────
+
+
+class TestRenderDecisionsMd:
+    def test_starts_with_heading(self):
+        data = _full_design()
+        md = render_decisions_md(data)
+        assert md.startswith("# Architecture Decisions")
+
+    def test_single_decision_contains_decision_header(self):
+        data = _full_design()
+        md = render_decisions_md(data)
+        assert "### Decision: Use Pydantic for validation" in md
+
+    def test_single_decision_contains_rationale(self):
+        data = _full_design()
+        md = render_decisions_md(data)
+        assert "**Rationale:** Built-in JSON support" in md
+
+    def test_single_decision_contains_alternatives_rejected_heading(self):
+        data = _full_design()
+        md = render_decisions_md(data)
+        assert "**Alternatives Rejected:**" in md
+
+    def test_single_decision_lists_each_alternative(self):
+        data = _full_design()
+        md = render_decisions_md(data)
+        assert "- dataclasses" in md
+        assert "- attrs" in md
+
+    def test_empty_decisions_returns_placeholder(self):
+        data = DesignSchema(
+            design_approach="Minimal",
+            architecture_decisions=[],
+            test_strategy="None",
+            estimated_complexity="low",
+        )
+        md = render_decisions_md(data)
+        assert "_No architecture decisions recorded._" in md
+
+    def test_multiple_decisions_all_rendered(self):
+        data = DesignSchema(
+            design_approach="Multi-decision approach",
+            architecture_decisions=[
+                ArchitectureDecision(
+                    decision="Use Pydantic",
+                    rationale="Type safety",
+                    alternatives_rejected=["attrs"],
+                ),
+                ArchitectureDecision(
+                    decision="Use Typer",
+                    rationale="Easy CLI",
+                    alternatives_rejected=["click"],
+                ),
+                ArchitectureDecision(
+                    decision="Use pytest",
+                    rationale="Standard testing",
+                    alternatives_rejected=["unittest"],
+                ),
+            ],
+            test_strategy="Full coverage",
+            estimated_complexity="medium",
+        )
+        md = render_decisions_md(data)
+        assert md.count("### Decision:") == 3
+
+    def test_returns_nonempty_string_always(self):
+        # With decisions
+        data_with = _full_design()
+        assert len(render_decisions_md(data_with)) > 0
+        # Without decisions
+        data_empty = DesignSchema(
+            design_approach="x",
+            architecture_decisions=[],
+            test_strategy="x",
+            estimated_complexity="low",
+        )
+        assert len(render_decisions_md(data_empty)) > 0
+
+    def test_accepts_design_schema_type(self):
+        """render_decisions_md accepts DesignSchema without AttributeError."""
+        data = _full_design()
+        # Should not raise
+        result = render_decisions_md(data)
+        assert isinstance(result, str)

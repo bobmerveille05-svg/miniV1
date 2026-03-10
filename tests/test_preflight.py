@@ -298,3 +298,50 @@ class TestSafeModeGuards:
         # DESIGN.json missing
         with pytest.raises(PreflightError, match="DESIGN.json"):
             check_preflight(Stage.PLAN, project_dir)
+
+
+class TestArchivePreflight:
+    """Stage.ARCHIVE entries in REQUIRED_FILES and REQUIRED_APPROVALS."""
+
+    def test_archive_in_required_files(self):
+        assert Stage.ARCHIVE in REQUIRED_FILES
+
+    def test_archive_required_files_content(self):
+        assert REQUIRED_FILES[Stage.ARCHIVE] == [
+            "REVIEW.json",
+            "PLAN.json",
+            "EXECUTION_LOG.json",
+            "DESIGN.json",
+        ]
+
+    def test_archive_in_required_approvals(self):
+        assert Stage.ARCHIVE in REQUIRED_APPROVALS
+
+    def test_archive_required_approvals_content(self):
+        assert REQUIRED_APPROVALS[Stage.ARCHIVE] == ["review_approved"]
+
+    def test_archive_preflight_raises_on_missing_review_json(self, tmp_project_dir):
+        """check_preflight(Stage.ARCHIVE) raises PreflightError when REVIEW.json is missing."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(project_dir, {"review_approved": True})
+        # No files created
+        with pytest.raises(PreflightError, match="REVIEW.json"):
+            check_preflight(Stage.ARCHIVE, project_dir)
+
+    def test_archive_preflight_raises_on_missing_review_approved(self, tmp_project_dir):
+        """check_preflight(Stage.ARCHIVE) raises PreflightError when review_approved is False."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(project_dir)  # review_approved=False by default
+        for f in ["REVIEW.json", "PLAN.json", "EXECUTION_LOG.json", "DESIGN.json"]:
+            (project_dir / f).touch()
+        with pytest.raises(PreflightError, match="review_approved"):
+            check_preflight(Stage.ARCHIVE, project_dir)
+
+    def test_archive_preflight_passes_when_all_satisfied(self, tmp_project_dir):
+        """check_preflight(Stage.ARCHIVE) passes when all 4 files exist and review_approved=True."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(project_dir, {"review_approved": True})
+        for f in ["REVIEW.json", "PLAN.json", "EXECUTION_LOG.json", "DESIGN.json"]:
+            (project_dir / f).touch()
+        # Should not raise
+        check_preflight(Stage.ARCHIVE, project_dir)

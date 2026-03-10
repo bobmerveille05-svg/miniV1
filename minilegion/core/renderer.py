@@ -211,6 +211,29 @@ def render_execution_log_md(data: ExecutionLogSchema) -> str:
     return "".join(parts)
 
 
+def render_decisions_md(design_data: DesignSchema) -> str:
+    """Render architecture decisions from DesignSchema to DECISIONS.md content.
+
+    Not registered in _RENDERERS — called directly from archive() via write_atomic().
+    """
+    parts: list[str] = ["# Architecture Decisions\n\n"]
+
+    if not design_data.architecture_decisions:
+        parts.append("_No architecture decisions recorded._\n")
+        return "".join(parts)
+
+    for ad in design_data.architecture_decisions:
+        parts.append(f"### Decision: {ad.decision}\n\n")
+        parts.append(f"**Rationale:** {ad.rationale}\n\n")
+        if ad.alternatives_rejected:
+            parts.append("**Alternatives Rejected:**\n\n")
+            for alt in ad.alternatives_rejected:
+                parts.append(f"- {alt}\n")
+            parts.append("\n")
+
+    return "".join(parts)
+
+
 def render_review_md(data: ReviewSchema) -> str:
     """Render a ReviewSchema to structured Markdown."""
     parts: list[str] = ["# Review Report\n\n"]

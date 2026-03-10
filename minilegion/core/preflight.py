@@ -27,10 +27,11 @@ REQUIRED_FILES: dict[Stage, list[str]] = {
         "PLAN.json",
         "EXECUTION_LOG.json",
     ],
+    Stage.ARCHIVE: ["REVIEW.json", "PLAN.json", "EXECUTION_LOG.json", "DESIGN.json"],
 }
 
 # GUARD-02: Declarative approval requirements per stage.
-# Stages not listed (INIT, BRIEF, ARCHIVE) have no approval requirements.
+# Stages not listed (INIT, BRIEF) have no approval requirements.
 REQUIRED_APPROVALS: dict[Stage, list[str]] = {
     Stage.RESEARCH: ["brief_approved"],
     Stage.DESIGN: ["brief_approved", "research_approved"],
@@ -48,6 +49,7 @@ REQUIRED_APPROVALS: dict[Stage, list[str]] = {
         "plan_approved",
         "execute_approved",
     ],
+    Stage.ARCHIVE: ["review_approved"],
 }
 
 
