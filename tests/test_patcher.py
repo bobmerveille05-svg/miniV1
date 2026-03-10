@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
-import pytest
 
 from minilegion.core.patcher import apply_patch
 from minilegion.core.schemas import ChangedFile

@@ -5,8 +5,6 @@ import pytest
 from minilegion.core.exceptions import InvalidTransitionError
 from minilegion.core.state import (
     APPROVAL_KEYS,
-    FORWARD_TRANSITIONS,
-    STAGE_ORDER,
     ProjectState,
     Stage,
     StateMachine,

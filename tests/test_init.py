@@ -5,7 +5,6 @@ Tests for all init artifacts (STATE.json, config, BRIEF.md, prompts/).
 
 import json
 
-import pytest
 from typer.testing import CliRunner
 
 from minilegion.cli import app

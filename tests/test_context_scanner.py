@@ -1,7 +1,5 @@
 """Tests for minilegion.core.context_scanner — codebase scanning for LLM prompt injection."""
 
-import pytest
-from pathlib import Path
 from minilegion.core.config import MiniLegionConfig
 from minilegion.core.context_scanner import scan_codebase
 

@@ -2,7 +2,6 @@
 
 import json
 
-import pytest
 from pathlib import Path
 from unittest.mock import patch
 from typer.testing import CliRunner
@@ -85,7 +84,7 @@ class TestBriefCommand:
         monkeypatch.chdir(tmp_path)
 
         with patch("minilegion.core.approval.typer.confirm", return_value=False):
-            result = runner.invoke(app, ["brief", "some text"])
+            runner.invoke(app, ["brief", "some text"])
 
         # File should exist even though approval was rejected
         assert (project_ai / "BRIEF.md").exists(), (
@@ -144,12 +143,11 @@ class TestBriefCommand:
         project_ai = tmp_path / "project-ai"
         project_ai.mkdir()
         _write_init_state(project_ai)
-        # Capture original STATE.json content
-        original_state = (project_ai / "STATE.json").read_text(encoding="utf-8")
+        # Capture original STATE.json content (kept for documentation only)
         monkeypatch.chdir(tmp_path)
 
         with patch("minilegion.core.approval.typer.confirm", return_value=False):
-            result = runner.invoke(app, ["brief", "rejected text"])
+            runner.invoke(app, ["brief", "rejected text"])
 
         # STATE.json current_stage should still be init
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
@@ -270,7 +268,7 @@ class TestResearchCommand:
         # Also mock read_text on RESEARCH.md path since save_dual is mocked
         (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
 
-        result = runner.invoke(app, ["research"])
+        runner.invoke(app, ["research"])
         assert len(preflight_calls) == 1
         from minilegion.core.state import Stage
 
@@ -335,7 +333,7 @@ class TestResearchCommand:
         )
         (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
 
-        result = runner.invoke(app, ["research"])
+        runner.invoke(app, ["research"])
         assert len(scan_calls) == 1
         assert scan_calls[0][0] == project_ai
 
@@ -388,7 +386,7 @@ class TestResearchCommand:
         )
         (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
 
-        result = runner.invoke(app, ["research"])
+        runner.invoke(app, ["research"])
         assert len(retry_calls) == 1
         assert retry_calls[0]["artifact_name"] == "research"
         assert retry_calls[0]["project_dir"] == project_ai
@@ -502,7 +500,7 @@ class TestResearchCommand:
             "minilegion.core.approval.typer.confirm", lambda *a, **kw: False
         )
 
-        result = runner.invoke(app, ["research"])
+        runner.invoke(app, ["research"])
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
         assert state_data["current_stage"] == "brief"
 

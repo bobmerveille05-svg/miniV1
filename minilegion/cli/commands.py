@@ -26,7 +26,6 @@ from minilegion.core.context_scanner import scan_codebase
 from minilegion.core.diff import generate_diff_text
 from minilegion.core.exceptions import (
     ConfigError,
-    InvalidTransitionError,
     MiniLegionError,
 )
 from minilegion.core.file_io import write_atomic

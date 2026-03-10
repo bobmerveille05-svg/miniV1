@@ -6,7 +6,6 @@ Tests cover:
 - validate_with_retry: full retry loop with fixups, validation, error feedback
 """
 
-import json
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch

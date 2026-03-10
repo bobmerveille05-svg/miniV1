@@ -9,7 +9,6 @@ Tests cover:
 
 import json
 
-import pytest
 
 from minilegion.core.fixups import (
     apply_fixups,

@@ -1,6 +1,5 @@
 """Tests for minilegion.core.file_io — atomic write utility."""
 
-import os
 from unittest.mock import patch
 
 import pytest

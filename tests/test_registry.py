@@ -15,9 +15,7 @@ from minilegion.core.schemas import (
     PlanSchema,
     ResearchSchema,
     ReviewSchema,
-    Verdict,
 )
-from minilegion.core.schemas import DesignConformity
 from minilegion.core.state import ProjectState
 
 

@@ -23,7 +23,6 @@ from typing import Callable
 
 from minilegion.adapters.factory import get_adapter
 from minilegion.core.approval import (
-    ApprovalError,
     approve_brief,
     approve_design,
     approve_patch,

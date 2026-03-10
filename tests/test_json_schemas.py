@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from minilegion.core.registry import SCHEMA_REGISTRY, get_json_schema
+from minilegion.core.registry import get_json_schema
 
 
 SCHEMA_DIR = Path(__file__).parent.parent / "minilegion" / "schemas"

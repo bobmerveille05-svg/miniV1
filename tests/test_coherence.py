@@ -9,10 +9,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 
 from minilegion.core.coherence import (
-    CoherenceIssue,
     _check_design_plan,
     _check_design_review,
     _check_plan_execute,

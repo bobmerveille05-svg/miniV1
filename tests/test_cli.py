@@ -5,7 +5,6 @@ Tests all 8 commands, flags, no-args help, and state transition validation.
 
 import json
 
-import pytest
 from typer.testing import CliRunner
 
 from minilegion.cli import app
