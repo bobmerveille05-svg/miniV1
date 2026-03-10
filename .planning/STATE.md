@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-10T12:31:25.194Z"
-last_activity: 2026-03-10 — Completed 02-02-PLAN.md
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-10T12:56:16.397Z"
+last_activity: 2026-03-10 — Completed 03-01-PLAN.md
 progress:
   total_phases: 12
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 3
+  total_plans: 5
+  completed_plans: 5
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 2 — Schemas & Validation (COMPLETE)
+**Current focus:** Phase 3 — LLM Adapter (COMPLETE)
 
 ## Current Position
 
-Phase: 2 of 12 (Schemas & Validation) — COMPLETE
-Plan: 2 of 2 in current phase
+Phase: 3 of 12 (LLM Adapter) — COMPLETE
+Plan: 1 of 1 in current phase
 Status: Phase Complete
-Last activity: 2026-03-10 — Completed 02-02-PLAN.md
+Last activity: 2026-03-10 — Completed 03-01-PLAN.md
 
 Progress: [██████████] 100%
 
@@ -55,6 +55,8 @@ Progress: [██████████] 100%
 | Phase 02 P01 | 4 min | 2 tasks | 13 files |
 | Phase 02 P02 | 4 min | 2 tasks | 4 files |
 | Phase 02 P02 | 4min | 2 tasks | 4 files |
+| Phase 03 P01 | 4 min | 2 tasks | 6 files |
+| Phase 03 P01 | 4 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -80,6 +82,11 @@ Recent decisions affecting current work:
 - [Phase 02]: Fixup order BOM->fences->commas — BOM affects fence detection
 - [Phase 02]: PydanticValidationError aliased to avoid collision with minilegion ValidationError
 - [Phase 02]: Error feedback capped at 5 issues for concise LLM retry prompts
+- [Phase 03]: Lazy client init — OpenAI client created on first call, not at construction
+- [Phase 03]: max_retries=0 on SDK client — retry logic lives in core/retry.py
+- [Phase 03]: Frozen dataclasses for LLMResponse/TokenUsage — immutable responses
+- [Phase 03]: ABC adapter pattern — new adapters only need subclass + implement call()/call_for_json()
+- [Phase 03]: Lazy client init - OpenAI client created on first call, not at construction
 
 ### Pending Todos
 
@@ -91,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T12:31:25.179Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-llm-adapter/03-CONTEXT.md
+Last session: 2026-03-10T12:56:11.126Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

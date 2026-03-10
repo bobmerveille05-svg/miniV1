@@ -26,10 +26,10 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### LLM Adapter
 
-- [ ] **ADPT-01**: Abstract base class defines the LLM adapter contract (send prompt, receive response, structured output support)
-- [ ] **ADPT-02**: OpenAI adapter implements the base class using `openai` SDK with `response_format` for structured JSON output
-- [ ] **ADPT-03**: Adapter accepts system prompt + user message + max_tokens + timeout and returns raw content + token usage
-- [ ] **ADPT-04**: Adapter reads API key from environment variable specified in config
+- [x] **ADPT-01**: Abstract base class defines the LLM adapter contract (send prompt, receive response, structured output support)
+- [x] **ADPT-02**: OpenAI adapter implements the base class using `openai` SDK with `response_format` for structured JSON output
+- [x] **ADPT-03**: Adapter accepts system prompt + user message + max_tokens + timeout and returns raw content + token usage
+- [x] **ADPT-04**: Adapter reads API key from environment variable specified in config
 
 ### Schemas & Validation
 
@@ -211,10 +211,10 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | SCHM-03 | Phase 2 | Complete |
 | SCHM-04 | Phase 2 | Complete |
 | SCHM-05 | Phase 2 | Complete |
-| ADPT-01 | Phase 3 | Pending |
-| ADPT-02 | Phase 3 | Pending |
-| ADPT-03 | Phase 3 | Pending |
-| ADPT-04 | Phase 3 | Pending |
+| ADPT-01 | Phase 3 | Complete |
+| ADPT-02 | Phase 3 | Complete |
+| ADPT-03 | Phase 3 | Complete |
+| ADPT-04 | Phase 3 | Complete |
 | GUARD-01 | Phase 4 | Pending |
 | GUARD-02 | Phase 4 | Pending |
 | GUARD-03 | Phase 4 | Pending |
