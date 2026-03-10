@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & CLI** - State machine, config, exceptions, atomic I/O, and CLI skeleton with 8 commands (completed 2026-03-10)
 - [x] **Phase 2: Schemas & Validation** - Pydantic models for all 6 artifacts, JSON schema generation, and retry logic (completed 2026-03-10)
-- [ ] **Phase 3: LLM Adapter** - Abstract base class and OpenAI concrete adapter with structured output support
+- [x] **Phase 3: LLM Adapter** - Abstract base class and OpenAI concrete adapter with structured output support (completed 2026-03-10)
 - [ ] **Phase 4: Guardrails & Approval Gates** - Pre-flight checks, scope lock, path normalization, and 5 human approval gates
 - [ ] **Phase 5: Prompts & Dual Output** - Role prompt templates for all 5 LLM roles and programmatic Markdown generation
 - [ ] **Phase 6: Brief & Research Stage** - Brief creation, deep context codebase scanner, and Researcher pipeline stage
