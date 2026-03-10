@@ -98,18 +98,18 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Reviewer
 
-- [ ] **REVW-01**: Reviewer role receives diff + PLAN.json + DESIGN.json + conventions and produces REVIEW.json + REVIEW.md
-- [ ] **REVW-02**: REVIEW.json contains: bugs, scope_deviations, design_conformity (conforms + deviations), convention_violations, security_risks, performance_risks, tech_debt, out_of_scope_files, success_criteria_met, verdict (pass|revise), corrective_actions
-- [ ] **REVW-03**: Reviewer checks design conformity — implementation matches DESIGN.json components and interfaces
-- [ ] **REVW-04**: Reviewer checks convention compliance against conventions from RESEARCH.json
-- [ ] **REVW-05**: Reviewer prompt enforces "identify, don't correct" — no fixes proposed
+- [x] **REVW-01**: Reviewer role receives diff + PLAN.json + DESIGN.json + conventions and produces REVIEW.json + REVIEW.md
+- [x] **REVW-02**: REVIEW.json contains: bugs, scope_deviations, design_conformity (conforms + deviations), convention_violations, security_risks, performance_risks, tech_debt, out_of_scope_files, success_criteria_met, verdict (pass|revise), corrective_actions
+- [x] **REVW-03**: Reviewer checks design conformity — implementation matches DESIGN.json components and interfaces
+- [x] **REVW-04**: Reviewer checks convention compliance against conventions from RESEARCH.json
+- [x] **REVW-05**: Reviewer prompt enforces "identify, don't correct" — no fixes proposed
 
 ### Revise Loop
 
-- [ ] **REVS-01**: When verdict = "revise", pipeline re-enters execute with corrective_actions from REVIEW.json
-- [ ] **REVS-02**: Revise loop bounded at max 2 iterations
-- [ ] **REVS-03**: After 2 failed revisions, escalate to human with full context display
-- [ ] **REVS-04**: If design_conformity.conforms = false, offer to re-design before re-executing
+- [x] **REVS-01**: When verdict = "revise", pipeline re-enters execute with corrective_actions from REVIEW.json
+- [x] **REVS-02**: Revise loop bounded at max 2 iterations
+- [x] **REVS-03**: After 2 failed revisions, escalate to human with full context display
+- [x] **REVS-04**: If design_conformity.conforms = false, offer to re-design before re-executing
 
 ### Archivist
 
@@ -257,15 +257,15 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | BUILD-03 | Phase 9 | Complete |
 | BUILD-04 | Phase 9 | Complete |
 | BUILD-05 | Phase 9 | Complete |
-| REVW-01 | Phase 10 | Pending |
-| REVW-02 | Phase 10 | Pending |
-| REVW-03 | Phase 10 | Pending |
-| REVW-04 | Phase 10 | Pending |
-| REVW-05 | Phase 10 | Pending |
-| REVS-01 | Phase 10 | Pending |
-| REVS-02 | Phase 10 | Pending |
-| REVS-03 | Phase 10 | Pending |
-| REVS-04 | Phase 10 | Pending |
+| REVW-01 | Phase 10 | Complete |
+| REVW-02 | Phase 10 | Complete |
+| REVW-03 | Phase 10 | Complete |
+| REVW-04 | Phase 10 | Complete |
+| REVW-05 | Phase 10 | Complete |
+| REVS-01 | Phase 10 | Complete |
+| REVS-02 | Phase 10 | Complete |
+| REVS-03 | Phase 10 | Complete |
+| REVS-04 | Phase 10 | Complete |
 | ARCH-01 | Phase 11 | Pending |
 | ARCH-02 | Phase 11 | Pending |
 | ARCH-03 | Phase 11 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 9 completion*
+*Last updated: 2026-03-10 after Phase 10 completion*

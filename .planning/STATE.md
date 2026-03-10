@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 9 (Execute Stage)
-last_updated: "2026-03-10T20:00:00.000Z"
-last_activity: 2026-03-10 — execute() command implemented (BUILD-01..05), patcher.py module, 11 TestExecuteCommand + 8 TestPatcher tests GREEN, 470 passing total
+stopped_at: Completed Phase 10 (Review & Revise)
+last_updated: "2026-03-10T21:00:00.000Z"
+last_activity: 2026-03-10 — review() command implemented (REVW-01..05, REVS-01..04), approve_review, generate_diff_text, revise loop, re-design offer, escalation; 20 new tests, 490 passing total
 progress:
   total_phases: 12
-  completed_phases: 9
-  total_plans: 16
-  completed_plans: 15
-  percent: 75
+  completed_phases: 10
+  total_plans: 19
+  completed_plans: 18
+  percent: 83
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 10 — Review & Revise (NEXT)
+**Current focus:** Phase 11 — Archivist & Coherence (NEXT)
 
 ## Current Position
 
-Phase: 10 of 12 (Review & Revise) — NEXT
+Phase: 11 of 12 (Archivist & Coherence) — NEXT
 Plan: 0 of TBD in current phase
-Status: Phase 09 COMPLETE — Phase 10 not yet started
-Last activity: 2026-03-10 — Phase 9 verified (470 tests GREEN, all BUILD requirements met)
+Status: Phase 10 COMPLETE — Phase 11 not yet started
+Last activity: 2026-03-10 — Phase 10 verified (490 tests GREEN, all REVW + REVS requirements met)
 
 Progress: [████████████████] 75%
 
@@ -72,6 +72,8 @@ Progress: [████████████████] 75%
 | Phase 08 P01 | ~10 min | 2 tasks | 2 files |
 | Phase 09 P01 | ~15 min | 2 tasks | 2 files |
 | Phase 09 P02 | ~15 min | 3 tasks | 3 files |
+| Phase 10 P01 | ~10 min | 2 tasks | 5 files |
+| Phase 10 P02 | ~15 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -140,6 +142,12 @@ Recent decisions affecting current work:
 - [Phase 09]: dry-run returns early after showing [DRY RUN] descriptions; no writes, no state transition
 - [Phase 09]: save_dual called AFTER all patches applied (not before loop)
 - [Phase 09]: project_root = project_dir.parent for all file operations
+- [Phase 10]: review() follows pipeline pattern: reviewer LLM call → save_dual(REVIEW.json/REVIEW.md) → approve_review → check verdict → revise loop
+- [Phase 10]: generate_diff_text(execution_log) converts ExecutionLogSchema to readable diff string; project_dir optional/unused
+- [Phase 10]: revise_count stored as state.metadata["revise_count"] (string); _MAX_REVISE_ITERATIONS = 2
+- [Phase 10]: re-design confirm via typer.confirm() in commands.py directly (NOT approval gate); must mock minilegion.cli.commands.typer.confirm separately from minilegion.core.approval.typer.confirm
+- [Phase 10]: builder re-run in revise loop uses corrective_actions text injected via {{corrective_actions}} placeholder in builder.md
+- [Phase 10]: ApprovalError (review rejection) caught before MiniLegionError → exit 0; same subclass ordering pattern
 
 ### Pending Todos
 
@@ -151,6 +159,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T20:00:00.000Z
-Stopped at: Completed Phase 9 (Execute Stage)
+Last session: 2026-03-10T21:00:00.000Z
+Stopped at: Completed Phase 10 (Review & Revise)
 Resume file: None
