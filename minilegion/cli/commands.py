@@ -12,6 +12,7 @@ import typer
 
 from minilegion.cli import app
 from minilegion.core.config import MiniLegionConfig
+from minilegion.core.approval import ApprovalError, approve_brief
 from minilegion.core.exceptions import (
     ConfigError,
     InvalidTransitionError,
@@ -181,7 +182,49 @@ def brief(
     text: Annotated[str | None, typer.Argument(help="Brief text")] = None,
 ) -> None:
     """Run the brief stage."""
-    _pipeline_stub(Stage.BRIEF)
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        # Validate transition before doing any work
+        if not sm.can_transition(Stage.BRIEF):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.BRIEF.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        # Read text argument or fall back to stdin
+        if text is None:
+            text = typer.get_text_stream("stdin").read().strip()
+
+        brief_content = f"# Project Brief\n\n## Overview\n\n{text}\n"
+
+        # Write atomically BEFORE approval gate (append-only artifact principle)
+        write_atomic(project_dir / "BRIEF.md", brief_content)
+        typer.echo(typer.style("BRIEF.md created.", fg=typer.colors.GREEN))
+
+        # Approval gate — raises ApprovalError on rejection
+        approve_brief(state, project_dir / "STATE.json", brief_content)
+
+        # State mutation ONLY after confirmed approval
+        sm.transition(Stage.BRIEF)
+        state.current_stage = Stage.BRIEF.value  # CRITICAL: sync ProjectState manually
+        state.add_history("brief", "Brief created and approved")
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(typer.style("Brief approved. Stage: brief", fg=typer.colors.GREEN))
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Brief rejected. Stage unchanged.", fg=typer.colors.YELLOW)
+        )
+        # exit code 0 — rejection is not an error
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
 
 
 @app.command()
