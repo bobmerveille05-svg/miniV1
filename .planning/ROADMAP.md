@@ -37,12 +37,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. State machine enforces valid transitions — running `design` from `init` state is rejected with a clear error
   4. Config file is loaded and parsed — user can set LLM provider, model, and per-role engine assignment
   5. All file writes use atomic pattern — interrupted writes never corrupt existing files
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Core infrastructure: package scaffold, exceptions, atomic file I/O, config model, state machine + unit tests
+- [ ] 01-02-PLAN.md — CLI layer: 8 Typer commands (init, brief, research, design, plan, execute, review, status) + integration tests
 
 ### Phase 2: Schemas & Validation
 **Goal**: All 6 machine-readable artifact types have enforced schemas with automatic validation and retry on failure
@@ -221,7 +220,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & CLI | 0/3 | Not started | - |
+| 1. Foundation & CLI | 0/2 | Not started | - |
 | 2. Schemas & Validation | 0/2 | Not started | - |
 | 3. LLM Adapter | 0/2 | Not started | - |
 | 4. Guardrails & Approval Gates | 0/3 | Not started | - |
