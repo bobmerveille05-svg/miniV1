@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 10 (Review & Revise)
-last_updated: "2026-03-10T21:00:00.000Z"
-last_activity: 2026-03-10 — review() command implemented (REVW-01..05, REVS-01..04), approve_review, generate_diff_text, revise loop, re-design offer, escalation; 20 new tests, 490 passing total
+stopped_at: Completed Phase 11 (Archivist & Coherence)
+last_updated: "2026-03-10T22:00:00.000Z"
+last_activity: 2026-03-10 — archive() command implemented (ARCH-01..03, COHR-01..05), render_decisions_md, coherence.py, archive preflight; 50 new tests, 540 passing total
 progress:
   total_phases: 12
-  completed_phases: 10
-  total_plans: 19
-  completed_plans: 18
-  percent: 83
+  completed_phases: 11
+  total_plans: 22
+  completed_plans: 21
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 11 — Archivist & Coherence (NEXT)
+**Current focus:** Phase 12 — Fast Mode (NEXT)
 
 ## Current Position
 
-Phase: 11 of 12 (Archivist & Coherence) — NEXT
+Phase: 12 of 12 (Fast Mode) — NEXT
 Plan: 0 of TBD in current phase
-Status: Phase 10 COMPLETE — Phase 11 not yet started
-Last activity: 2026-03-10 — Phase 10 verified (490 tests GREEN, all REVW + REVS requirements met)
+Status: Phase 11 COMPLETE — Phase 12 not yet started
+Last activity: 2026-03-10 — Phase 11 verified (540 tests GREEN, all ARCH + COHR requirements met)
 
-Progress: [████████████████] 75%
+Progress: [████████████████████] 92%
 
 ## Performance Metrics
 
@@ -148,6 +148,14 @@ Recent decisions affecting current work:
 - [Phase 10]: re-design confirm via typer.confirm() in commands.py directly (NOT approval gate); must mock minilegion.cli.commands.typer.confirm separately from minilegion.core.approval.typer.confirm
 - [Phase 10]: builder re-run in revise loop uses corrective_actions text injected via {{corrective_actions}} placeholder in builder.md
 - [Phase 10]: ApprovalError (review rejection) caught before MiniLegionError → exit 0; same subclass ordering pattern
+- [Phase 11]: archive() is fully deterministic — no load_config(), no OpenAIAdapter, no validate_with_retry (ARCH-01)
+- [Phase 11]: archive() catches only MiniLegionError (no ApprovalError block — no approval gate in archive)
+- [Phase 11]: render_decisions_md(design_data) NOT in _RENDERERS — called directly via write_atomic() in archive()
+- [Phase 11]: CoherenceIssue is a dataclass (not Pydantic) with check_name, severity, message fields
+- [Phase 11]: check_coherence() never raises — missing files cause that sub-check to be skipped gracefully
+- [Phase 11]: COHR-01/02/05: severity="warning"; COHR-03/04: severity="error"
+- [Phase 11]: state.current_stage = Stage.ARCHIVE.value (with .value!) before save_state() — sync gap fix
+- [Phase 11]: DECISIONS.md written to project_dir / "DECISIONS.md" via write_atomic() before save_state()
 
 ### Pending Todos
 
@@ -159,6 +167,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T21:00:00.000Z
-Stopped at: Completed Phase 10 (Review & Revise)
+Last session: 2026-03-10T22:00:00.000Z
+Stopped at: Completed Phase 11 (Archivist & Coherence)
 Resume file: None

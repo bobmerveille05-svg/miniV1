@@ -113,17 +113,17 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Archivist
 
-- [ ] **ARCH-01**: Archivist is fully deterministic — no LLM calls
-- [ ] **ARCH-02**: After review passes, Archivist updates STATE.json with completed tasks, final verdict, and history entry
-- [ ] **ARCH-03**: Archivist updates DECISIONS.md with any architecture decisions made during the cycle
+- [x] **ARCH-01**: Archivist is fully deterministic — no LLM calls
+- [x] **ARCH-02**: After review passes, Archivist updates STATE.json with completed tasks, final verdict, and history entry
+- [x] **ARCH-03**: Archivist updates DECISIONS.md with any architecture decisions made during the cycle
 
 ### Inter-phase Coherence
 
-- [ ] **COHR-01**: Research→Design check: recommended_focus_files from RESEARCH.json were read by Designer
-- [ ] **COHR-02**: Design→Plan check: every component in DESIGN.json has at least 1 task in PLAN.json
-- [ ] **COHR-03**: Plan→Execute check: files in patches are subset of touched_files in PLAN.json
-- [ ] **COHR-04**: Design→Review check: execution conforms to DESIGN.json components and interfaces
-- [ ] **COHR-05**: Research conventions→Review check: code follows conventions from RESEARCH.json
+- [x] **COHR-01**: Research→Design check: recommended_focus_files from RESEARCH.json were read by Designer
+- [x] **COHR-02**: Design→Plan check: every component in DESIGN.json has at least 1 task in PLAN.json
+- [x] **COHR-03**: Plan→Execute check: files in patches are subset of touched_files in PLAN.json
+- [x] **COHR-04**: Design→Review check: execution conforms to DESIGN.json components and interfaces
+- [x] **COHR-05**: Research conventions→Review check: code follows conventions from RESEARCH.json
 
 ### Prompts
 
@@ -266,14 +266,14 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | REVS-02 | Phase 10 | Complete |
 | REVS-03 | Phase 10 | Complete |
 | REVS-04 | Phase 10 | Complete |
-| ARCH-01 | Phase 11 | Pending |
-| ARCH-02 | Phase 11 | Pending |
-| ARCH-03 | Phase 11 | Pending |
-| COHR-01 | Phase 11 | Pending |
-| COHR-02 | Phase 11 | Pending |
-| COHR-03 | Phase 11 | Pending |
-| COHR-04 | Phase 11 | Pending |
-| COHR-05 | Phase 11 | Pending |
+| ARCH-01 | Phase 11 | Complete |
+| ARCH-02 | Phase 11 | Complete |
+| ARCH-03 | Phase 11 | Complete |
+| COHR-01 | Phase 11 | Complete |
+| COHR-02 | Phase 11 | Complete |
+| COHR-03 | Phase 11 | Complete |
+| COHR-04 | Phase 11 | Complete |
+| COHR-05 | Phase 11 | Complete |
 | FAST-01 | Phase 12 | Pending |
 | FAST-02 | Phase 12 | Pending |
 | FAST-03 | Phase 12 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 10 completion*
+*Last updated: 2026-03-10 after Phase 11 completion*

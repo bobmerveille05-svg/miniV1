@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Plan Stage** - Planner role producing task decomposition constrained by design (completed 2026-03-10)
 - [x] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support (completed 2026-03-10)
 - [x] **Phase 10: Review & Revise** - Reviewer role with design/convention checks and bounded revise loop (completed 2026-03-10)
-- [ ] **Phase 11: Archivist & Coherence** - Deterministic archival and inter-phase coherence validation across all stages
+- [x] **Phase 11: Archivist & Coherence** - Deterministic archival and inter-phase coherence validation across all stages (completed 2026-03-10)
 - [ ] **Phase 12: Fast Mode** - Abbreviated pipeline with --fast and --skip-research-design flags
 
 ## Phase Details
@@ -192,9 +192,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — render_decisions_md() in renderer.py + Stage.ARCHIVE in preflight dicts + tests (ARCH-02, ARCH-03)
-- [ ] 11-02-PLAN.md — core/coherence.py: CoherenceIssue dataclass + check_coherence() + 5 sub-checks + unit/integration tests (COHR-01..05)
-- [ ] 11-03-PLAN.md — Wire archive() command in commands.py replacing stub + CLI integration tests (ARCH-01..03, COHR-01..05)
+- [x] 11-01-PLAN.md — render_decisions_md() in renderer.py + Stage.ARCHIVE in preflight dicts + tests (ARCH-02, ARCH-03)
+- [x] 11-02-PLAN.md — core/coherence.py: CoherenceIssue dataclass + check_coherence() + 5 sub-checks + unit/integration tests (COHR-01..05)
+- [x] 11-03-PLAN.md — Wire archive() command in commands.py replacing stub + CLI integration tests (ARCH-01..03, COHR-01..05)
 
 ### Phase 12: Fast Mode
 **Goal**: Experienced users can skip research and design stages for quick iterations with degraded but functional context
@@ -226,5 +226,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Plan Stage | 1/1 | Complete    | 2026-03-10 |
 | 9. Execute Stage | 2/2 | Complete    | 2026-03-10 |
 | 10. Review & Revise | 3/3 | Complete    | 2026-03-10 |
-| 11. Archivist & Coherence | 0/3 | Not started | - |
+| 11. Archivist & Coherence | 3/3 | Complete    | 2026-03-10 |
 | 12. Fast Mode | 0/1 | Not started | - |
