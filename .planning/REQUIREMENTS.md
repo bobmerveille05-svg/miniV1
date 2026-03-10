@@ -10,11 +10,11 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 ### Foundation
 
 - [ ] **FOUND-01**: User can run `minilegion init <name>` to create a project directory with all template files in `project-ai/`
-- [ ] **FOUND-02**: User can configure LLM provider, model, API key, timeouts, and per-role engine assignment via `minilegion.config.json`
-- [ ] **FOUND-03**: State machine manages transitions between 8 stages (init, brief, research, design, plan, execute, review, archive) with valid/invalid transition enforcement
+- [x] **FOUND-02**: User can configure LLM provider, model, API key, timeouts, and per-role engine assignment via `minilegion.config.json`
+- [x] **FOUND-03**: State machine manages transitions between 8 stages (init, brief, research, design, plan, execute, review, archive) with valid/invalid transition enforcement
 - [ ] **FOUND-04**: `STATE.json` is only written to disk after human approval — state is computed as Python objects first, written atomically via `os.replace()`
-- [ ] **FOUND-05**: All file I/O uses atomic write pattern (write to temp file, then `os.replace`) to prevent partial-failure corruption
-- [ ] **FOUND-06**: Custom exception hierarchy for distinct error categories (validation, LLM, state, preflight, approval)
+- [x] **FOUND-05**: All file I/O uses atomic write pattern (write to temp file, then `os.replace`) to prevent partial-failure corruption
+- [x] **FOUND-06**: Custom exception hierarchy for distinct error categories (validation, LLM, state, preflight, approval)
 
 ### CLI
 
@@ -196,11 +196,11 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
-| FOUND-06 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Complete |
+| FOUND-06 | Phase 1 | Complete |
 | CLI-01 | Phase 1 | Pending |
 | CLI-02 | Phase 1 | Pending |
 | CLI-03 | Phase 1 | Pending |
