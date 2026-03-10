@@ -31,9 +31,14 @@ from minilegion.core.exceptions import (
 from minilegion.core.file_io import write_atomic
 from minilegion.core.patcher import apply_patch
 from minilegion.core.preflight import check_preflight
-from minilegion.core.renderer import save_dual
+from minilegion.core.renderer import save_dual, render_decisions_md
 from minilegion.core.retry import validate_with_retry
-from minilegion.core.schemas import ExecutionLogSchema, PlanSchema, ReviewSchema
+from minilegion.core.schemas import (
+    DesignSchema,
+    ExecutionLogSchema,
+    PlanSchema,
+    ReviewSchema,
+)
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
     ProjectState,
@@ -44,6 +49,7 @@ from minilegion.core.state import (
 )
 from minilegion.prompts.loader import load_prompt, render_prompt
 from minilegion.adapters.openai_adapter import OpenAIAdapter
+from minilegion.core.coherence import check_coherence
 
 
 # ---------------------------------------------------------------------------
@@ -842,5 +848,96 @@ def review() -> None:
         )
         # exit code 0 — rejection is not an error
     except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def archive() -> None:
+    """Run the archive stage — finalize pipeline cycle deterministically."""
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        if not sm.can_transition(Stage.ARCHIVE):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.ARCHIVE.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        # No load_config() — archive makes zero LLM calls (ARCH-01)
+        check_preflight(Stage.ARCHIVE, project_dir)
+
+        # Read artifacts (ARCH-02, ARCH-03)
+        execution_log = ExecutionLogSchema.model_validate_json(
+            (project_dir / "EXECUTION_LOG.json").read_text(encoding="utf-8")
+        )
+        review_data = ReviewSchema.model_validate_json(
+            (project_dir / "REVIEW.json").read_text(encoding="utf-8")
+        )
+        design_data = DesignSchema.model_validate_json(
+            (project_dir / "DESIGN.json").read_text(encoding="utf-8")
+        )
+
+        # Run coherence checks (non-blocking) — COHR-01..05
+        issues = check_coherence(project_dir)
+        for issue in issues:
+            prefix = "[WARNING]" if issue.severity == "warning" else "[ERROR]"
+            typer.echo(
+                typer.style(
+                    f"{prefix} {issue.check_name}: {issue.message}",
+                    fg=typer.colors.YELLOW
+                    if issue.severity == "warning"
+                    else typer.colors.RED,
+                )
+            )
+
+        # Update state (ARCH-02)
+        task_ids = [tr.task_id for tr in execution_log.tasks]
+        state.completed_tasks = task_ids
+        state.metadata["final_verdict"] = review_data.verdict.value
+
+        # Store coherence issues in metadata (non-blocking)
+        if issues:
+            import json as _json
+
+            state.metadata["coherence_issues"] = _json.dumps(
+                [
+                    {
+                        "check": i.check_name,
+                        "severity": i.severity,
+                        "message": i.message,
+                    }
+                    for i in issues
+                ]
+            )
+
+        # Write DECISIONS.md (ARCH-03) — write before save_state
+        decisions_content = render_decisions_md(design_data)
+        write_atomic(project_dir / "DECISIONS.md", decisions_content)
+
+        # Transition state — CRITICAL: set .value for JSON serializability
+        sm.transition(Stage.ARCHIVE)
+        state.current_stage = Stage.ARCHIVE.value  # sync gap fix
+        state.add_history(
+            "archive",
+            f"Pipeline archived. {len(task_ids)} tasks. Verdict: {review_data.verdict.value}.",
+        )
+        save_state(state, project_dir / "STATE.json")
+
+        typer.echo(
+            typer.style(
+                f"Archiving... {len(task_ids)} tasks completed. "
+                f"Verdict: {review_data.verdict.value}. DECISIONS.md written.",
+                fg=typer.colors.GREEN,
+            )
+        )
+
+    except MiniLegionError as exc:
+        # NOTE: No ApprovalError block — archive has no approval gate
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
         raise typer.Exit(code=1)
