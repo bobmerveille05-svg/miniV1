@@ -18,6 +18,7 @@ from minilegion.core.approval import (
     approve_research,
     approve_design,
     approve_plan,
+    approve_patch,
 )
 from minilegion.core.context_scanner import scan_codebase
 from minilegion.core.exceptions import (
@@ -26,9 +27,12 @@ from minilegion.core.exceptions import (
     MiniLegionError,
 )
 from minilegion.core.file_io import write_atomic
+from minilegion.core.patcher import apply_patch
 from minilegion.core.preflight import check_preflight
 from minilegion.core.renderer import save_dual
 from minilegion.core.retry import validate_with_retry
+from minilegion.core.schemas import ExecutionLogSchema, PlanSchema
+from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
     ProjectState,
     Stage,
@@ -89,6 +93,33 @@ def _pipeline_stub(stage: Stage, extra_info: str = "") -> None:
     except MiniLegionError as exc:
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
         raise typer.Exit(code=1)
+
+
+def _read_source_files(
+    file_paths: list[str], project_root: Path, config: MiniLegionConfig
+) -> str:
+    """Read source files for builder context, capped at scan_max_file_size.
+
+    Args:
+        file_paths: Relative paths of files to read (from PLAN.json touched_files).
+        project_root: Root directory to resolve relative paths from.
+        config: Config with scan_max_file_size limit.
+
+    Returns:
+        Formatted string of file contents for the builder prompt.
+    """
+    parts: list[str] = []
+    for path_str in file_paths:
+        fpath = project_root / path_str
+        if not fpath.exists() or not fpath.is_file():
+            continue
+        size = fpath.stat().st_size
+        if size > config.scan_max_file_size:
+            parts.append(f"## {path_str}\n[File too large: {size} bytes]\n---\n")
+            continue
+        content = fpath.read_text(encoding="utf-8", errors="replace")
+        parts.append(f"## {path_str}\n{content}\n---\n")
+    return "\n".join(parts) if parts else "(no existing source files)"
 
 
 # ---------------------------------------------------------------------------
@@ -471,17 +502,130 @@ def plan(
 @app.command()
 def execute(
     task: Annotated[
-        int | None, typer.Option("--task", help="Execute specific task")
+        int | None, typer.Option("--task", help="Execute specific task (1-indexed)")
     ] = None,
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Show changes without applying")
     ] = False,
 ) -> None:
     """Run the execute stage."""
-    _pipeline_stub(
-        Stage.EXECUTE,
-        extra_info=f"task={task}, dry_run={dry_run}",
-    )
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        if not sm.can_transition(Stage.EXECUTE):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.EXECUTE.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        config = load_config(project_dir.parent)
+        check_preflight(Stage.EXECUTE, project_dir)
+
+        # Read PLAN.json for context and scope lock
+        plan_json_str = (project_dir / "PLAN.json").read_text(encoding="utf-8")
+        plan_data = PlanSchema.model_validate_json(plan_json_str)
+        project_root = project_dir.parent
+
+        # Build source_files context string for builder prompt
+        source_files = _read_source_files(plan_data.touched_files, project_root, config)
+
+        # Load and render builder prompt
+        system_prompt, user_template = load_prompt("builder")
+        project_name = project_dir.parent.name
+        user_message = render_prompt(
+            user_template,
+            project_name=project_name,
+            plan_json=plan_json_str,
+            source_files=source_files,
+        )
+
+        # LLM call
+        typer.echo("Running builder...")
+        adapter = OpenAIAdapter(config)
+
+        def llm_call(prompt: str) -> str:
+            response = adapter.call_for_json(system_prompt, prompt)
+            return response.content
+
+        execution_log = validate_with_retry(
+            llm_call, user_message, "execution_log", config, project_dir
+        )
+
+        # Scope lock — validate all changed files are within PLAN.json touched_files
+        all_changed = [cf.path for tr in execution_log.tasks for cf in tr.changed_files]
+        validate_scope(all_changed, plan_data.touched_files)
+
+        # --task N filter (1-indexed)
+        if task is not None:
+            idx = task - 1
+            if idx < 0 or idx >= len(execution_log.tasks):
+                typer.echo(
+                    typer.style(
+                        f"Task index {task} out of range (1-{len(execution_log.tasks)})",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
+            execution_log = ExecutionLogSchema(tasks=[execution_log.tasks[idx]])
+
+        # Dry-run branch (BUILD-05) — show changes, no approvals, no writes
+        if dry_run:
+            for tr in execution_log.tasks:
+                for cf in tr.changed_files:
+                    desc = apply_patch(cf, project_root, dry_run=True)
+                    typer.echo(f"  [DRY RUN] {desc}")
+            typer.echo(
+                typer.style(
+                    "Dry run complete. No files modified.", fg=typer.colors.CYAN
+                )
+            )
+            return
+
+        # Normal: per-patch approval + apply (BUILD-03, BUILD-04)
+        for tr in execution_log.tasks:
+            for cf in tr.changed_files:
+                # Preview the change (dry_run=True generates description without writing)
+                desc = apply_patch(cf, project_root, dry_run=True)
+                # Approval gate — raises ApprovalError on rejection
+                approve_patch(state, project_dir / "STATE.json", desc)
+                # Apply only after confirmed approval
+                apply_patch(cf, project_root, dry_run=False)
+
+        # Save dual output after all patches applied and approved
+        save_dual(
+            execution_log,
+            project_dir / "EXECUTION_LOG.json",
+            project_dir / "EXECUTION_LOG.md",
+        )
+        typer.echo(
+            typer.style(
+                "EXECUTION_LOG.json + EXECUTION_LOG.md saved.", fg=typer.colors.GREEN
+            )
+        )
+
+        sm.transition(Stage.EXECUTE)
+        state.current_stage = (
+            Stage.EXECUTE.value
+        )  # CRITICAL: sync ProjectState manually
+        state.add_history("execute", "Execution completed and approved")
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(
+            typer.style("Execution complete. Stage: execute", fg=typer.colors.GREEN)
+        )
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Patch rejected. Execution stopped.", fg=typer.colors.YELLOW)
+        )
+        # exit code 0 — rejection is not an error
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
 
 
 @app.command()
