@@ -12,7 +12,12 @@ import typer
 
 from minilegion.cli import app
 from minilegion.core.config import MiniLegionConfig, load_config
-from minilegion.core.approval import ApprovalError, approve_brief, approve_research
+from minilegion.core.approval import (
+    ApprovalError,
+    approve_brief,
+    approve_research,
+    approve_design,
+)
 from minilegion.core.context_scanner import scan_codebase
 from minilegion.core.exceptions import (
     ConfigError,
@@ -327,7 +332,66 @@ def research() -> None:
 @app.command()
 def design() -> None:
     """Run the design stage."""
-    _pipeline_stub(Stage.DESIGN)
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        if not sm.can_transition(Stage.DESIGN):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.DESIGN.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        config = load_config(project_dir.parent)
+        check_preflight(Stage.DESIGN, project_dir)
+
+        system_prompt, user_template = load_prompt("designer")
+        project_name = project_dir.parent.name
+        brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
+        research_json = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
+        focus_files_content = "(Focus file reading deferred to Phase 9)"
+        user_message = render_prompt(
+            user_template,
+            project_name=project_name,
+            brief_content=brief_content,
+            research_json=research_json,
+            focus_files_content=focus_files_content,
+        )
+
+        typer.echo("Running designer...")
+        adapter = OpenAIAdapter(config)
+
+        def llm_call(prompt: str) -> str:
+            response = adapter.call_for_json(system_prompt, prompt)
+            return response.content
+
+        design_data = validate_with_retry(
+            llm_call, user_message, "design", config, project_dir
+        )
+
+        save_dual(design_data, project_dir / "DESIGN.json", project_dir / "DESIGN.md")
+        typer.echo(typer.style("DESIGN.json + DESIGN.md saved.", fg=typer.colors.GREEN))
+
+        design_md = (project_dir / "DESIGN.md").read_text(encoding="utf-8")
+        approve_design(state, project_dir / "STATE.json", design_md)
+
+        sm.transition(Stage.DESIGN)
+        state.current_stage = Stage.DESIGN.value  # CRITICAL: sync ProjectState manually
+        state.add_history("design", "Design completed and approved")
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(typer.style("Design approved. Stage: design", fg=typer.colors.GREEN))
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Design rejected. Stage unchanged.", fg=typer.colors.YELLOW)
+        )
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
 
 
 @app.command()
