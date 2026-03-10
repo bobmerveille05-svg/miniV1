@@ -36,8 +36,8 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 - [x] **SCHM-01**: Pydantic models define all 6 machine-readable artifact schemas (research, design, plan, execution_log, review, state)
 - [x] **SCHM-02**: JSON Schema files generated from Pydantic models for external tool consumption
 - [x] **SCHM-03**: LLM output is parsed and validated against schema immediately after each call
-- [ ] **SCHM-04**: Invalid JSON triggers retry with error feedback injected into next LLM call (max 2 retries)
-- [ ] **SCHM-05**: After max retries, raw LLM output is saved to `*_RAW_DEBUG.txt` for diagnosis
+- [x] **SCHM-04**: Invalid JSON triggers retry with error feedback injected into next LLM call (max 2 retries)
+- [x] **SCHM-05**: After max retries, raw LLM output is saved to `*_RAW_DEBUG.txt` for diagnosis
 
 ### Pre-flight & Guardrails
 
@@ -209,8 +209,8 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | SCHM-01 | Phase 2 | Complete |
 | SCHM-02 | Phase 2 | Complete |
 | SCHM-03 | Phase 2 | Complete |
-| SCHM-04 | Phase 2 | Pending |
-| SCHM-05 | Phase 2 | Pending |
+| SCHM-04 | Phase 2 | Complete |
+| SCHM-05 | Phase 2 | Complete |
 | ADPT-01 | Phase 3 | Pending |
 | ADPT-02 | Phase 3 | Pending |
 | ADPT-03 | Phase 3 | Pending |

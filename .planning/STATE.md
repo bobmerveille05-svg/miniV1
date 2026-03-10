@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-10T11:45:41.000Z"
-last_activity: 2026-03-10 — Completed 02-01-PLAN.md
+status: completed
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-10T12:00:14.361Z"
+last_activity: 2026-03-10 — Completed 02-02-PLAN.md
 progress:
   total_phases: 12
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 2 — Schemas & Validation
+**Current focus:** Phase 2 — Schemas & Validation (COMPLETE)
 
 ## Current Position
 
-Phase: 2 of 12 (Schemas & Validation) — IN PROGRESS
-Plan: 1 of 2 in current phase
-Status: Plan 1 Complete
-Last activity: 2026-03-10 — Completed 02-01-PLAN.md
+Phase: 2 of 12 (Schemas & Validation) — COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-03-10 — Completed 02-02-PLAN.md
 
-Progress: [███████░░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -53,6 +53,8 @@ Progress: [███████░░░] 75%
 | Phase 01 P01 | 3 min | 2 tasks | 17 files |
 | Phase 01 P02 | 4 min | 2 tasks | 4 files |
 | Phase 02 P01 | 4 min | 2 tasks | 13 files |
+| Phase 02 P02 | 4 min | 2 tasks | 4 files |
+| Phase 02 P02 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +76,10 @@ Recent decisions affecting current work:
 - [Phase 02]: ChangedFile.action uses Literal type for one-off constraint
 - [Phase 02]: validate() lets pydantic.ValidationError propagate — retry module handles it
 - [Phase 02]: Schema registry maps artifact name to Pydantic class with str/dict dual-input validate()
+- [Phase 02]: Simple regex for trailing commas — known edge case with string values, acceptable
+- [Phase 02]: Fixup order BOM->fences->commas — BOM affects fence detection
+- [Phase 02]: PydanticValidationError aliased to avoid collision with minilegion ValidationError
+- [Phase 02]: Error feedback capped at 5 issues for concise LLM retry prompts
 
 ### Pending Todos
 
@@ -85,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T11:45:41Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-schemas-validation/02-02-PLAN.md
+Last session: 2026-03-10T12:00:13.355Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: None
