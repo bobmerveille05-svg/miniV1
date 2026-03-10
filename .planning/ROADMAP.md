@@ -127,11 +127,10 @@ Plans:
   2. Every architecture decision includes at least 1 rejected alternative — schema validation enforces this
   3. conventions_to_follow references conventions discovered in RESEARCH.json
   4. Designer prompt enforces "design, don't plan" — output contains no task decomposition
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — Wire design() command (replace stub, add approve_design import) + 10 unit tests
 
 ### Phase 8: Plan Stage
 **Goal**: User can run the plan stage to produce a task decomposition constrained by the approved design
