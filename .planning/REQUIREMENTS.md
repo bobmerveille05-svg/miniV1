@@ -9,20 +9,20 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Foundation
 
-- [ ] **FOUND-01**: User can run `minilegion init <name>` to create a project directory with all template files in `project-ai/`
+- [x] **FOUND-01**: User can run `minilegion init <name>` to create a project directory with all template files in `project-ai/`
 - [x] **FOUND-02**: User can configure LLM provider, model, API key, timeouts, and per-role engine assignment via `minilegion.config.json`
 - [x] **FOUND-03**: State machine manages transitions between 8 stages (init, brief, research, design, plan, execute, review, archive) with valid/invalid transition enforcement
-- [ ] **FOUND-04**: `STATE.json` is only written to disk after human approval — state is computed as Python objects first, written atomically via `os.replace()`
+- [x] **FOUND-04**: `STATE.json` is only written to disk after human approval — state is computed as Python objects first, written atomically via `os.replace()`
 - [x] **FOUND-05**: All file I/O uses atomic write pattern (write to temp file, then `os.replace`) to prevent partial-failure corruption
 - [x] **FOUND-06**: Custom exception hierarchy for distinct error categories (validation, LLM, state, preflight, approval)
 
 ### CLI
 
-- [ ] **CLI-01**: User can run 8 commands via `python run.py <command>`: init, brief, research, design, plan, execute, review, status
-- [ ] **CLI-02**: `plan` command accepts `--fast` and `--skip-research-design` flags
-- [ ] **CLI-03**: `execute` command accepts `--task N` and `--dry-run` flags
-- [ ] **CLI-04**: Running a command without arguments shows usage help
-- [ ] **CLI-05**: `status` command reads `STATE.json` and displays current stage, approvals, completed/pending tasks, and open risks
+- [x] **CLI-01**: User can run 8 commands via `python run.py <command>`: init, brief, research, design, plan, execute, review, status
+- [x] **CLI-02**: `plan` command accepts `--fast` and `--skip-research-design` flags
+- [x] **CLI-03**: `execute` command accepts `--task N` and `--dry-run` flags
+- [x] **CLI-04**: Running a command without arguments shows usage help
+- [x] **CLI-05**: `status` command reads `STATE.json` and displays current stage, approvals, completed/pending tasks, and open risks
 
 ### LLM Adapter
 
@@ -195,17 +195,17 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Complete |
 | FOUND-05 | Phase 1 | Complete |
 | FOUND-06 | Phase 1 | Complete |
-| CLI-01 | Phase 1 | Pending |
-| CLI-02 | Phase 1 | Pending |
-| CLI-03 | Phase 1 | Pending |
-| CLI-04 | Phase 1 | Pending |
-| CLI-05 | Phase 1 | Pending |
+| CLI-01 | Phase 1 | Complete |
+| CLI-02 | Phase 1 | Complete |
+| CLI-03 | Phase 1 | Complete |
+| CLI-04 | Phase 1 | Complete |
+| CLI-05 | Phase 1 | Complete |
 | SCHM-01 | Phase 2 | Pending |
 | SCHM-02 | Phase 2 | Pending |
 | SCHM-03 | Phase 2 | Pending |
