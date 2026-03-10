@@ -189,12 +189,12 @@ Plans:
   3. Research→Design coherence check verifies recommended_focus_files were read by Designer
   4. Design→Plan coherence check verifies every component has at least 1 task
   5. Plan→Execute and Design→Review coherence checks catch scope drift between pipeline stages
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
-- [ ] 11-03: TBD
+- [ ] 11-01-PLAN.md — render_decisions_md() in renderer.py + Stage.ARCHIVE in preflight dicts + tests (ARCH-02, ARCH-03)
+- [ ] 11-02-PLAN.md — core/coherence.py: CoherenceIssue dataclass + check_coherence() + 5 sub-checks + unit/integration tests (COHR-01..05)
+- [ ] 11-03-PLAN.md — Wire archive() command in commands.py replacing stub + CLI integration tests (ARCH-01..03, COHR-01..05)
 
 ### Phase 12: Fast Mode
 **Goal**: Experienced users can skip research and design stages for quick iterations with degraded but functional context
