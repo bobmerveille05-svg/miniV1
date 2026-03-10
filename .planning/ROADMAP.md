@@ -111,12 +111,12 @@ Plans:
   3. User can run `minilegion research` and see RESEARCH.json + RESEARCH.md produced with project_overview, tech_stack, relevant_files, and all required fields
   4. Researcher prompt enforces "explore, don't design" — output contains no solution proposals
   5. Deep context respects configurable limits (max depth, max file count, max file size)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md — Config extensions (3 scanner limit fields) + context_scanner.py module + 27 unit tests (RSCH-01, RSCH-02, RSCH-03, RSCH-04)
+- [ ] 06-02-PLAN.md — brief() command implementation: text/stdin → BRIEF.md atomic write → approve_brief → state transition + 10 CLI tests (BRIEF-01, BRIEF-02, BRIEF-03)
+- [ ] 06-03-PLAN.md — research() command orchestration: preflight → scan → prompt → LLM → validate+retry → save_dual → approve → state transition + 11 CLI tests (RSCH-05, RSCH-06, RSCH-07)
 
 ### Phase 7: Design Stage
 **Goal**: User can run the design stage to produce architecture decisions grounded in research findings
@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. LLM Adapter | 0/1 | Not started | - |
 | 4. Guardrails & Approval Gates | 2/2 | Complete    | 2026-03-10 |
 | 5. Prompts & Dual Output | 2/2 | Complete    | 2026-03-10 |
-| 6. Brief & Research Stage | 0/3 | Not started | - |
+| 6. Brief & Research Stage | 1/3 | In Progress|  |
 | 7. Design Stage | 0/2 | Not started | - |
 | 8. Plan Stage | 0/2 | Not started | - |
 | 9. Execute Stage | 0/2 | Not started | - |

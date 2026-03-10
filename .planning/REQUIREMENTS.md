@@ -58,9 +58,9 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Brief
 
-- [ ] **BRIEF-01**: User can run `minilegion brief "<text>"` to create BRIEF.md from free-text input
-- [ ] **BRIEF-02**: If no text argument provided, user is prompted via stdin
-- [ ] **BRIEF-03**: After BRIEF.md creation, approve_brief() is called before state transitions
+- [x] **BRIEF-01**: User can run `minilegion brief "<text>"` to create BRIEF.md from free-text input
+- [x] **BRIEF-02**: If no text argument provided, user is prompted via stdin
+- [x] **BRIEF-03**: After BRIEF.md creation, approve_brief() is called before state transitions
 
 ### Researcher
 
@@ -232,9 +232,9 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | PRMT-04 | Phase 5 | Complete |
 | DUAL-01 | Phase 5 | Complete |
 | DUAL-02 | Phase 5 | Complete |
-| BRIEF-01 | Phase 6 | Pending |
-| BRIEF-02 | Phase 6 | Pending |
-| BRIEF-03 | Phase 6 | Pending |
+| BRIEF-01 | Phase 6 | Complete |
+| BRIEF-02 | Phase 6 | Complete |
+| BRIEF-03 | Phase 6 | Complete |
 | RSCH-01 | Phase 6 | Pending |
 | RSCH-02 | Phase 6 | Pending |
 | RSCH-03 | Phase 6 | Pending |
