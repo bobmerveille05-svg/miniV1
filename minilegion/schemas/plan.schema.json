@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "PlanTask": {
+      "description": "A single task within an implementation plan.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "component": {
+          "default": "",
+          "title": "Component",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ],
+      "title": "PlanTask",
+      "type": "object"
+    }
+  },
+  "description": "Plan artifact: implementation plan with task breakdown.",
+  "properties": {
+    "objective": {
+      "title": "Objective",
+      "type": "string"
+    },
+    "design_ref": {
+      "title": "Design Ref",
+      "type": "string"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/PlanTask"
+      },
+      "title": "Tasks",
+      "type": "array"
+    },
+    "touched_files": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Touched Files",
+      "type": "array"
+    },
+    "risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "success_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Success Criteria",
+      "type": "array"
+    },
+    "test_plan": {
+      "title": "Test Plan",
+      "type": "string"
+    }
+  },
+  "required": [
+    "objective",
+    "design_ref",
+    "test_plan"
+  ],
+  "title": "PlanSchema",
+  "type": "object"
+}

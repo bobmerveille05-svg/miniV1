@@ -1,0 +1,66 @@
+{
+  "$defs": {
+    "HistoryEntry": {
+      "description": "A single history log entry.",
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "details": {
+          "default": "",
+          "title": "Details",
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp",
+        "action"
+      ],
+      "title": "HistoryEntry",
+      "type": "object"
+    }
+  },
+  "description": "STATE.json schema \u2014 the single source of truth for project state.",
+  "properties": {
+    "current_stage": {
+      "default": "init",
+      "title": "Current Stage",
+      "type": "string"
+    },
+    "approvals": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "title": "Approvals",
+      "type": "object"
+    },
+    "completed_tasks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Completed Tasks",
+      "type": "array"
+    },
+    "history": {
+      "items": {
+        "$ref": "#/$defs/HistoryEntry"
+      },
+      "title": "History",
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Metadata",
+      "type": "object"
+    }
+  },
+  "title": "ProjectState",
+  "type": "object"
+}

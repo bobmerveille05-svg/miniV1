@@ -1,0 +1,141 @@
+{
+  "$defs": {
+    "ArchitectureDecision": {
+      "description": "A single architecture decision with rationale.",
+      "properties": {
+        "decision": {
+          "title": "Decision",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "alternatives_rejected": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Alternatives Rejected",
+          "type": "array"
+        }
+      },
+      "required": [
+        "decision",
+        "rationale"
+      ],
+      "title": "ArchitectureDecision",
+      "type": "object"
+    },
+    "Component": {
+      "description": "A design component with its associated files.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Files",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "title": "Component",
+      "type": "object"
+    }
+  },
+  "description": "Design artifact: architecture and component decisions.",
+  "properties": {
+    "design_approach": {
+      "title": "Design Approach",
+      "type": "string"
+    },
+    "architecture_decisions": {
+      "items": {
+        "$ref": "#/$defs/ArchitectureDecision"
+      },
+      "title": "Architecture Decisions",
+      "type": "array"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "data_models": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Data Models",
+      "type": "array"
+    },
+    "api_contracts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Api Contracts",
+      "type": "array"
+    },
+    "integration_points": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Integration Points",
+      "type": "array"
+    },
+    "design_patterns_used": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Design Patterns Used",
+      "type": "array"
+    },
+    "conventions_to_follow": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conventions To Follow",
+      "type": "array"
+    },
+    "technical_risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Technical Risks",
+      "type": "array"
+    },
+    "out_of_scope": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Out Of Scope",
+      "type": "array"
+    },
+    "test_strategy": {
+      "title": "Test Strategy",
+      "type": "string"
+    },
+    "estimated_complexity": {
+      "default": "medium",
+      "title": "Estimated Complexity",
+      "type": "string"
+    }
+  },
+  "required": [
+    "design_approach",
+    "test_strategy"
+  ],
+  "title": "DesignSchema",
+  "type": "object"
+}

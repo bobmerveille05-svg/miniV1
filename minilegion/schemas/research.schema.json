@@ -1,0 +1,87 @@
+{
+  "description": "Research artifact: codebase analysis output.",
+  "properties": {
+    "project_overview": {
+      "title": "Project Overview",
+      "type": "string"
+    },
+    "tech_stack": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tech Stack",
+      "type": "array"
+    },
+    "architecture_patterns": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Architecture Patterns",
+      "type": "array"
+    },
+    "relevant_files": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Relevant Files",
+      "type": "array"
+    },
+    "existing_conventions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Existing Conventions",
+      "type": "array"
+    },
+    "dependencies_map": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Dependencies Map",
+      "type": "object"
+    },
+    "potential_impacts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Potential Impacts",
+      "type": "array"
+    },
+    "constraints": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Constraints",
+      "type": "array"
+    },
+    "assumptions_verified": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions Verified",
+      "type": "array"
+    },
+    "open_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Open Questions",
+      "type": "array"
+    },
+    "recommended_focus_files": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Recommended Focus Files",
+      "type": "array"
+    }
+  },
+  "required": [
+    "project_overview"
+  ],
+  "title": "ResearchSchema",
+  "type": "object"
+}

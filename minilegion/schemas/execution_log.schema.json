@@ -1,0 +1,99 @@
+{
+  "$defs": {
+    "ChangedFile": {
+      "description": "A file changed during execution.",
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "create",
+            "modify",
+            "delete"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "content": {
+          "default": "",
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "action"
+      ],
+      "title": "ChangedFile",
+      "type": "object"
+    },
+    "TaskResult": {
+      "description": "Result of executing a single plan task.",
+      "properties": {
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "changed_files": {
+          "items": {
+            "$ref": "#/$defs/ChangedFile"
+          },
+          "title": "Changed Files",
+          "type": "array"
+        },
+        "unchanged_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unchanged Files",
+          "type": "array"
+        },
+        "tests_run": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tests Run",
+          "type": "array"
+        },
+        "test_result": {
+          "default": "",
+          "title": "Test Result",
+          "type": "string"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "out_of_scope_needed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Out Of Scope Needed",
+          "type": "array"
+        }
+      },
+      "required": [
+        "task_id"
+      ],
+      "title": "TaskResult",
+      "type": "object"
+    }
+  },
+  "description": "Execution log artifact: build results and changed files.",
+  "properties": {
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/TaskResult"
+      },
+      "title": "Tasks",
+      "type": "array"
+    }
+  },
+  "title": "ExecutionLogSchema",
+  "type": "object"
+}

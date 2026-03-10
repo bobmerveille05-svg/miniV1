@@ -1,0 +1,112 @@
+{
+  "$defs": {
+    "DesignConformity": {
+      "description": "Design conformity assessment within a review.",
+      "properties": {
+        "conforms": {
+          "title": "Conforms",
+          "type": "boolean"
+        },
+        "deviations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Deviations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "conforms"
+      ],
+      "title": "DesignConformity",
+      "type": "object"
+    },
+    "Verdict": {
+      "description": "Review verdict: pass or revise.",
+      "enum": [
+        "pass",
+        "revise"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Review artifact: code review with verdict and findings.",
+  "properties": {
+    "bugs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Bugs",
+      "type": "array"
+    },
+    "scope_deviations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope Deviations",
+      "type": "array"
+    },
+    "design_conformity": {
+      "$ref": "#/$defs/DesignConformity"
+    },
+    "convention_violations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Convention Violations",
+      "type": "array"
+    },
+    "security_risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Security Risks",
+      "type": "array"
+    },
+    "performance_risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Performance Risks",
+      "type": "array"
+    },
+    "tech_debt": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tech Debt",
+      "type": "array"
+    },
+    "out_of_scope_files": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Out Of Scope Files",
+      "type": "array"
+    },
+    "success_criteria_met": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Success Criteria Met",
+      "type": "array"
+    },
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "corrective_actions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Corrective Actions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "design_conformity",
+    "verdict"
+  ],
+  "title": "ReviewSchema",
+  "type": "object"
+}
