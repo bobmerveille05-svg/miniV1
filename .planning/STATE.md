@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 8 (Plan Stage)
-last_updated: "2026-03-10T19:00:00.000Z"
-last_activity: 2026-03-10 — plan() command implemented (PLAN-01..05), 10 TestPlanCommand tests GREEN, 451 passing total
+stopped_at: Completed Phase 9 (Execute Stage)
+last_updated: "2026-03-10T20:00:00.000Z"
+last_activity: 2026-03-10 — execute() command implemented (BUILD-01..05), patcher.py module, 11 TestExecuteCommand + 8 TestPatcher tests GREEN, 470 passing total
 progress:
   total_phases: 12
-  completed_phases: 8
-  total_plans: 14
-  completed_plans: 13
-  percent: 67
+  completed_phases: 9
+  total_plans: 16
+  completed_plans: 15
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 9 — Execute Stage (NEXT)
+**Current focus:** Phase 10 — Review & Revise (NEXT)
 
 ## Current Position
 
-Phase: 9 of 12 (Execute Stage) — NEXT
+Phase: 10 of 12 (Review & Revise) — NEXT
 Plan: 0 of TBD in current phase
-Status: Phase 08 COMPLETE — Phase 09 not yet started
-Last activity: 2026-03-10 — Phase 8 verified (451 tests GREEN, all PLAN requirements met)
+Status: Phase 09 COMPLETE — Phase 10 not yet started
+Last activity: 2026-03-10 — Phase 9 verified (470 tests GREEN, all BUILD requirements met)
 
-Progress: [██████████████] 67%
+Progress: [████████████████] 75%
 
 ## Performance Metrics
 
@@ -70,6 +70,8 @@ Progress: [██████████████] 67%
 | Phase 06 P03 | ~15 min | 3 tasks | 2 files |
 | Phase 07 P01 | ~20 min | 2 tasks | 4 files |
 | Phase 08 P01 | ~10 min | 2 tasks | 2 files |
+| Phase 09 P01 | ~15 min | 2 tasks | 2 files |
+| Phase 09 P02 | ~15 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -130,7 +132,14 @@ Recent decisions affecting current work:
 - [Phase 07]: design.schema.json regenerated after Pydantic model change
 - [Phase 08]: plan() follows identical pattern to design(): same pipeline, Stage.PLAN, load_prompt("planner"), render_prompt with project_name/brief_content/research_json/design_json, validate_with_retry("plan"), save_dual(PLAN.json, PLAN.md), approve_plan, state.current_stage = Stage.PLAN.value
 - [Phase 08]: approve_plan was already implemented in approval.py — only needed import addition in commands.py
-- [Phase 08]: --fast and --skip-research-design flags preserved in plan() signature for Phase 12
+- [Phase 09]: execute() follows same pattern as plan() with per-patch approval loop instead of single gate
+- [Phase 09]: patcher.py apply_patch(cf, project_root, dry_run) handles create/modify (write_atomic) and delete (unlink)
+- [Phase 09]: _read_source_files() helper reads touched_files from PLAN.json for builder context (capped at scan_max_file_size)
+- [Phase 09]: validate_scope() raises ValidationError on out-of-scope files; caught by MiniLegionError handler → exit 1
+- [Phase 09]: --task N is 1-indexed; out-of-range → exit 1 before any approval/apply
+- [Phase 09]: dry-run returns early after showing [DRY RUN] descriptions; no writes, no state transition
+- [Phase 09]: save_dual called AFTER all patches applied (not before loop)
+- [Phase 09]: project_root = project_dir.parent for all file operations
 
 ### Pending Todos
 
@@ -142,6 +151,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T19:00:00.000Z
-Stopped at: Completed Phase 8 (Plan Stage)
+Last session: 2026-03-10T20:00:00.000Z
+Stopped at: Completed Phase 9 (Execute Stage)
 Resume file: None

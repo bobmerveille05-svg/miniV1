@@ -90,11 +90,11 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Builder
 
-- [ ] **BUILD-01**: Builder role receives PLAN.json + source files and produces EXECUTION_LOG.json with structured patches
-- [ ] **BUILD-02**: EXECUTION_LOG.json contains per-task: task_id, changed_files (path, action, content), unchanged_files, tests_run, test_result, blockers, out_of_scope_needed
-- [ ] **BUILD-03**: Each patch is displayed to user for approval before application
-- [ ] **BUILD-04**: Patcher module applies approved patches to the filesystem
-- [ ] **BUILD-05**: Dry-run mode shows what would change without modifying files
+- [x] **BUILD-01**: Builder role receives PLAN.json + source files and produces EXECUTION_LOG.json with structured patches
+- [x] **BUILD-02**: EXECUTION_LOG.json contains per-task: task_id, changed_files (path, action, content), unchanged_files, tests_run, test_result, blockers, out_of_scope_needed
+- [x] **BUILD-03**: Each patch is displayed to user for approval before application
+- [x] **BUILD-04**: Patcher module applies approved patches to the filesystem
+- [x] **BUILD-05**: Dry-run mode shows what would change without modifying files
 
 ### Reviewer
 
@@ -252,11 +252,11 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | PLAN-03 | Phase 8 | Complete |
 | PLAN-04 | Phase 8 | Complete |
 | PLAN-05 | Phase 8 | Complete |
-| BUILD-01 | Phase 9 | Pending |
-| BUILD-02 | Phase 9 | Pending |
-| BUILD-03 | Phase 9 | Pending |
-| BUILD-04 | Phase 9 | Pending |
-| BUILD-05 | Phase 9 | Pending |
+| BUILD-01 | Phase 9 | Complete |
+| BUILD-02 | Phase 9 | Complete |
+| BUILD-03 | Phase 9 | Complete |
+| BUILD-04 | Phase 9 | Complete |
+| BUILD-05 | Phase 9 | Complete |
 | REVW-01 | Phase 10 | Pending |
 | REVW-02 | Phase 10 | Pending |
 | REVW-03 | Phase 10 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 8 completion*
+*Last updated: 2026-03-10 after Phase 9 completion*

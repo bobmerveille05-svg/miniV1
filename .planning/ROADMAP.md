@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Brief & Research Stage** - Brief creation, deep context codebase scanner, and Researcher pipeline stage (completed 2026-03-10)
 - [x] **Phase 7: Design Stage** - Designer role producing architecture decisions with rejected alternatives (completed 2026-03-10)
 - [x] **Phase 8: Plan Stage** - Planner role producing task decomposition constrained by design (completed 2026-03-10)
-- [ ] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support
+- [x] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support (completed 2026-03-10)
 - [ ] **Phase 10: Review & Revise** - Reviewer role with design/convention checks and bounded revise loop
 - [ ] **Phase 11: Archivist & Coherence** - Deterministic archival and inter-phase coherence validation across all stages
 - [ ] **Phase 12: Fast Mode** - Abbreviated pipeline with --fast and --skip-research-design flags
@@ -156,11 +156,11 @@ Plans:
   3. Approved patches are applied to the filesystem by the patcher module
   4. User can run `minilegion execute --dry-run` and see what would change without any files being modified
   5. `--task N` flag allows executing a single task instead of the full plan
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [x] 09-01-PLAN.md — Patcher module (apply_patch for create/modify/delete with atomic writes and dry-run support) + 8 unit tests
+- [x] 09-02-PLAN.md — Wire execute() command (replace stub, add patcher/scope/approve_patch imports, per-patch approval loop, --task N filter, --dry-run) + 11 CLI tests
 
 ### Phase 10: Review & Revise
 **Goal**: User can run the review stage to verify execution against design and conventions, with automatic revise loop on failure
@@ -224,7 +224,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Brief & Research Stage | 3/3 | Complete    | 2026-03-10 |
 | 7. Design Stage | 1/1 | Complete    | 2026-03-10 |
 | 8. Plan Stage | 1/1 | Complete    | 2026-03-10 |
-| 9. Execute Stage | 0/2 | Not started | - |
+| 9. Execute Stage | 2/2 | Complete    | 2026-03-10 |
 | 10. Review & Revise | 0/3 | Not started | - |
 | 11. Archivist & Coherence | 0/3 | Not started | - |
 | 12. Fast Mode | 0/1 | Not started | - |
