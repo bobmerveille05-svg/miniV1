@@ -240,7 +240,7 @@ class TestResearchCommand:
 
         preflight_calls = []
 
-        def mock_preflight(stage, project_dir):
+        def mock_preflight(stage, project_dir, skip_stages=None):
             preflight_calls.append((stage, project_dir))
 
         monkeypatch.setattr("minilegion.cli.commands.check_preflight", mock_preflight)
@@ -310,7 +310,7 @@ class TestResearchCommand:
             return "scanned context"
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr("minilegion.cli.commands.scan_codebase", mock_scan)
         monkeypatch.setattr(
@@ -365,7 +365,7 @@ class TestResearchCommand:
             return mock_research
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "context"
@@ -405,7 +405,7 @@ class TestResearchCommand:
         mock_research = ResearchSchema(**VALID_RESEARCH)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
@@ -444,7 +444,7 @@ class TestResearchCommand:
         mock_research = ResearchSchema(**VALID_RESEARCH)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
@@ -482,7 +482,7 @@ class TestResearchCommand:
         mock_research = ResearchSchema(**VALID_RESEARCH)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
@@ -518,7 +518,7 @@ class TestResearchCommand:
         mock_research = ResearchSchema(**VALID_RESEARCH)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
@@ -554,7 +554,7 @@ class TestResearchCommand:
         from minilegion.core.exceptions import LLMError
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
@@ -610,7 +610,7 @@ class TestResearchCommand:
         mock_research = ResearchSchema(**VALID_RESEARCH)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"

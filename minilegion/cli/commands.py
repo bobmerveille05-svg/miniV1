@@ -5,6 +5,7 @@ Commands register themselves with the Typer app imported from minilegion.cli.
 
 from __future__ import annotations
 
+import json as _json
 from pathlib import Path
 from typing import Annotated
 
@@ -72,6 +73,25 @@ def find_project_dir() -> Path:
             "No MiniLegion project found. Run `minilegion init <name>` first."
         )
     return project_dir
+
+
+def _get_skip_stages(state: ProjectState) -> set[str]:
+    """Return set of stage names recorded as skipped in state metadata.
+
+    Used by downstream commands (execute, review, archive) to pass
+    skip_stages to check_preflight() when fast mode was used for plan.
+
+    Args:
+        state: The loaded ProjectState.
+
+    Returns:
+        Set of stage names (e.g. {"research", "design"}) or empty set.
+    """
+    raw = state.metadata.get("skipped_stages", "[]")
+    try:
+        return set(_json.loads(raw))
+    except (ValueError, TypeError):
+        return set()
 
 
 def _pipeline_stub(stage: Stage, extra_info: str = "") -> None:
@@ -448,55 +468,163 @@ def plan(
     try:
         project_dir = find_project_dir()
         state = load_state(project_dir / "STATE.json")
-        sm = StateMachine(Stage(state.current_stage), state.approvals)
+        config = load_config(project_dir.parent)
 
-        if not sm.can_transition(Stage.PLAN):
+        if fast or skip_research_design:
+            # --- FAST MODE PATH (FAST-01, FAST-02) ---
+            # Synthetically advance through skipped stages so the state machine
+            # allows us to reach PLAN from BRIEF (or RESEARCH).
+            sm = StateMachine(Stage(state.current_stage), state.approvals)
+            current = Stage(state.current_stage)
+
+            # Advance through RESEARCH if needed
+            if current == Stage.BRIEF:
+                if not sm.can_transition(Stage.RESEARCH):
+                    typer.echo(
+                        typer.style(
+                            f"Cannot transition from {state.current_stage} to research",
+                            fg=typer.colors.RED,
+                        )
+                    )
+                    raise typer.Exit(code=1)
+                sm.transition(Stage.RESEARCH)
+                current = Stage.RESEARCH
+
+            # Advance through DESIGN if needed
+            if current == Stage.RESEARCH:
+                if not sm.can_transition(Stage.DESIGN):
+                    typer.echo(
+                        typer.style(
+                            f"Cannot transition from {current.value} to design",
+                            fg=typer.colors.RED,
+                        )
+                    )
+                    raise typer.Exit(code=1)
+                sm.transition(Stage.DESIGN)
+                current = Stage.DESIGN
+
+            # Now transition to PLAN
+            if not sm.can_transition(Stage.PLAN):
+                typer.echo(
+                    typer.style(
+                        f"Cannot transition from {current.value} to plan",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
+
+            # Preflight: bypass research/design requirements
+            skip_stages: set[str] = {"research", "design"}
+            check_preflight(Stage.PLAN, project_dir, skip_stages=skip_stages)
+
+            # Build degraded context: codebase tree + brief (no research/design JSON)
+            brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
+            codebase_tree = scan_codebase(project_dir.parent, config)
+            research_sub = f"## Fast Mode: No research phase run\n\n{codebase_tree}"
+            design_sub = (
+                '{"note": "Fast mode: no design phase run. '
+                'Plan based on brief and codebase context."}'
+            )
+
+            system_prompt, user_template = load_prompt("planner")
+            project_name = project_dir.parent.name
+            user_message = render_prompt(
+                user_template,
+                project_name=project_name,
+                brief_content=brief_content,
+                research_json=research_sub,
+                design_json=design_sub,
+            )
+
+            typer.echo("Running planner (fast mode)...")
+            adapter = OpenAIAdapter(config)
+
+            def llm_call_fast(prompt: str) -> str:
+                response = adapter.call_for_json(system_prompt, prompt)
+                return response.content
+
+            plan_data = validate_with_retry(
+                llm_call_fast, user_message, "plan", config, project_dir
+            )
+
+            save_dual(plan_data, project_dir / "PLAN.json", project_dir / "PLAN.md")
+            typer.echo(typer.style("PLAN.json + PLAN.md saved.", fg=typer.colors.GREEN))
+
+            plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
+            approve_plan(state, project_dir / "STATE.json", plan_md)
+
+            # Set synthetic approvals for skipped stages (FAST-03)
+            state.approvals["research_approved"] = True
+            state.approvals["design_approved"] = True
+
+            sm.transition(Stage.PLAN)
+            state.current_stage = (
+                Stage.PLAN.value
+            )  # CRITICAL: sync ProjectState manually
+            state.metadata["skipped_stages"] = _json.dumps(sorted(skip_stages))
+            state.add_history(
+                "plan",
+                "Fast mode: research and design skipped. Plan completed and approved.",
+            )
+            save_state(state, project_dir / "STATE.json")
             typer.echo(
                 typer.style(
-                    f"Cannot transition from {state.current_stage} to {Stage.PLAN.value}",
-                    fg=typer.colors.RED,
+                    "Plan approved. Stage: plan (fast mode)", fg=typer.colors.GREEN
                 )
             )
-            raise typer.Exit(code=1)
 
-        config = load_config(project_dir.parent)
-        check_preflight(Stage.PLAN, project_dir)
+        else:
+            # --- NORMAL MODE PATH ---
+            sm = StateMachine(Stage(state.current_stage), state.approvals)
 
-        system_prompt, user_template = load_prompt("planner")
-        project_name = project_dir.parent.name
-        brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
-        research_json = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
-        design_json = (project_dir / "DESIGN.json").read_text(encoding="utf-8")
-        user_message = render_prompt(
-            user_template,
-            project_name=project_name,
-            brief_content=brief_content,
-            research_json=research_json,
-            design_json=design_json,
-        )
+            if not sm.can_transition(Stage.PLAN):
+                typer.echo(
+                    typer.style(
+                        f"Cannot transition from {state.current_stage} to {Stage.PLAN.value}",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
 
-        typer.echo("Running planner...")
-        adapter = OpenAIAdapter(config)
+            check_preflight(Stage.PLAN, project_dir)
 
-        def llm_call(prompt: str) -> str:
-            response = adapter.call_for_json(system_prompt, prompt)
-            return response.content
+            system_prompt, user_template = load_prompt("planner")
+            project_name = project_dir.parent.name
+            brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
+            research_json = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
+            design_json = (project_dir / "DESIGN.json").read_text(encoding="utf-8")
+            user_message = render_prompt(
+                user_template,
+                project_name=project_name,
+                brief_content=brief_content,
+                research_json=research_json,
+                design_json=design_json,
+            )
 
-        plan_data = validate_with_retry(
-            llm_call, user_message, "plan", config, project_dir
-        )
+            typer.echo("Running planner...")
+            adapter = OpenAIAdapter(config)
 
-        save_dual(plan_data, project_dir / "PLAN.json", project_dir / "PLAN.md")
-        typer.echo(typer.style("PLAN.json + PLAN.md saved.", fg=typer.colors.GREEN))
+            def llm_call(prompt: str) -> str:
+                response = adapter.call_for_json(system_prompt, prompt)
+                return response.content
 
-        plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
-        approve_plan(state, project_dir / "STATE.json", plan_md)
+            plan_data = validate_with_retry(
+                llm_call, user_message, "plan", config, project_dir
+            )
 
-        sm.transition(Stage.PLAN)
-        state.current_stage = Stage.PLAN.value  # CRITICAL: sync ProjectState manually
-        state.add_history("plan", "Plan completed and approved")
-        save_state(state, project_dir / "STATE.json")
-        typer.echo(typer.style("Plan approved. Stage: plan", fg=typer.colors.GREEN))
+            save_dual(plan_data, project_dir / "PLAN.json", project_dir / "PLAN.md")
+            typer.echo(typer.style("PLAN.json + PLAN.md saved.", fg=typer.colors.GREEN))
+
+            plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
+            approve_plan(state, project_dir / "STATE.json", plan_md)
+
+            sm.transition(Stage.PLAN)
+            state.current_stage = (
+                Stage.PLAN.value
+            )  # CRITICAL: sync ProjectState manually
+            state.add_history("plan", "Plan completed and approved")
+            save_state(state, project_dir / "STATE.json")
+            typer.echo(typer.style("Plan approved. Stage: plan", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -532,9 +660,7 @@ def execute(
             raise typer.Exit(code=1)
 
         config = load_config(project_dir.parent)
-        check_preflight(Stage.EXECUTE, project_dir)
-
-        # Read PLAN.json for context and scope lock
+        check_preflight(Stage.EXECUTE, project_dir, skip_stages=_get_skip_stages(state))
         plan_json_str = (project_dir / "PLAN.json").read_text(encoding="utf-8")
         plan_data = PlanSchema.model_validate_json(plan_json_str)
         project_root = project_dir.parent
@@ -657,19 +783,28 @@ def review() -> None:
             raise typer.Exit(code=1)
 
         config = load_config(project_dir.parent)
-        check_preflight(Stage.REVIEW, project_dir)
+        skip_stages = _get_skip_stages(state)
+        check_preflight(Stage.REVIEW, project_dir, skip_stages=skip_stages)
 
         # Read prior artifacts for reviewer context
         plan_json_str = (project_dir / "PLAN.json").read_text(encoding="utf-8")
         plan_data = PlanSchema.model_validate_json(plan_json_str)
-        design_json_str = (project_dir / "DESIGN.json").read_text(encoding="utf-8")
-        research_json_str = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
         project_root = project_dir.parent
         project_name = project_dir.parent.name
 
-        # Extract conventions from RESEARCH.json
-        import json as _json
+        # Load DESIGN.json and RESEARCH.json — use stubs in fast mode
+        design_path = project_dir / "DESIGN.json"
+        research_path = project_dir / "RESEARCH.json"
+        if design_path.exists():
+            design_json_str = design_path.read_text(encoding="utf-8")
+        else:
+            design_json_str = '{"note": "Fast mode: no design phase run."}'
+        if research_path.exists():
+            research_json_str = research_path.read_text(encoding="utf-8")
+        else:
+            research_json_str = '{"existing_conventions": []}'
 
+        # Extract conventions from RESEARCH.json
         research_data = _json.loads(research_json_str)
         conventions = "\n".join(research_data.get("existing_conventions", []))
 
@@ -870,7 +1005,8 @@ def archive() -> None:
             raise typer.Exit(code=1)
 
         # No load_config() — archive makes zero LLM calls (ARCH-01)
-        check_preflight(Stage.ARCHIVE, project_dir)
+        skip_stages = _get_skip_stages(state)
+        check_preflight(Stage.ARCHIVE, project_dir, skip_stages=skip_stages)
 
         # Read artifacts (ARCH-02, ARCH-03)
         execution_log = ExecutionLogSchema.model_validate_json(
@@ -879,9 +1015,14 @@ def archive() -> None:
         review_data = ReviewSchema.model_validate_json(
             (project_dir / "REVIEW.json").read_text(encoding="utf-8")
         )
-        design_data = DesignSchema.model_validate_json(
-            (project_dir / "DESIGN.json").read_text(encoding="utf-8")
-        )
+        # DESIGN.json may be absent in fast mode
+        design_path = project_dir / "DESIGN.json"
+        if design_path.exists():
+            design_data = DesignSchema.model_validate_json(
+                design_path.read_text(encoding="utf-8")
+            )
+        else:
+            design_data = None
 
         # Run coherence checks (non-blocking) — COHR-01..05
         issues = check_coherence(project_dir)
@@ -903,8 +1044,6 @@ def archive() -> None:
 
         # Store coherence issues in metadata (non-blocking)
         if issues:
-            import json as _json
-
             state.metadata["coherence_issues"] = _json.dumps(
                 [
                     {
@@ -917,7 +1056,12 @@ def archive() -> None:
             )
 
         # Write DECISIONS.md (ARCH-03) — write before save_state
-        decisions_content = render_decisions_md(design_data)
+        if design_data is not None:
+            decisions_content = render_decisions_md(design_data)
+        else:
+            decisions_content = (
+                "# Architecture Decisions\n\n_Fast mode: no design phase run._\n"
+            )
         write_atomic(project_dir / "DECISIONS.md", decisions_content)
 
         # Transition state — CRITICAL: set .value for JSON serializability

@@ -345,3 +345,142 @@ class TestArchivePreflight:
             (project_dir / f).touch()
         # Should not raise
         check_preflight(Stage.ARCHIVE, project_dir)
+
+
+class TestSkipStages:
+    """FAST-03: skip_stages parameter bypasses requirements for skipped stages."""
+
+    def test_skip_stages_none_behaves_normally(self, tmp_project_dir):
+        """No skip_stages → check_preflight behaves exactly as before."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        (project_dir / "RESEARCH.json").touch()
+        (project_dir / "DESIGN.json").touch()
+        # Should not raise
+        check_preflight(Stage.PLAN, project_dir, skip_stages=None)
+
+    def test_skip_research_skips_research_json_file_check(self, tmp_project_dir):
+        """PLAN stage with skip_stages={'research'}: RESEARCH.json absence doesn't raise."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        # No RESEARCH.json
+        (project_dir / "DESIGN.json").touch()
+        # Should not raise — RESEARCH.json is skipped
+        check_preflight(Stage.PLAN, project_dir, skip_stages={"research"})
+
+    def test_skip_design_skips_design_json_file_check(self, tmp_project_dir):
+        """PLAN stage with skip_stages={'design'}: DESIGN.json absence doesn't raise."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        (project_dir / "RESEARCH.json").touch()
+        # No DESIGN.json
+        # Should not raise — DESIGN.json is skipped
+        check_preflight(Stage.PLAN, project_dir, skip_stages={"design"})
+
+    def test_skip_both_skips_both_file_checks(self, tmp_project_dir):
+        """PLAN stage with skip_stages={'research','design'}: both absent, no raise."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        # No RESEARCH.json or DESIGN.json
+        check_preflight(Stage.PLAN, project_dir, skip_stages={"research", "design"})
+
+    def test_skip_research_skips_research_approved_check(self, tmp_project_dir):
+        """PLAN stage with skip_stages={'research'}: research_approved=False doesn't raise."""
+        project_dir = tmp_project_dir / "project-ai"
+        # research_approved intentionally False
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": False,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        # RESEARCH.json absent but skipped
+        (project_dir / "DESIGN.json").touch()
+        # Should not raise
+        check_preflight(Stage.PLAN, project_dir, skip_stages={"research"})
+
+    def test_skip_design_skips_design_approved_check(self, tmp_project_dir):
+        """PLAN stage with skip_stages={'design'}: design_approved=False doesn't raise."""
+        project_dir = tmp_project_dir / "project-ai"
+        # design_approved intentionally False
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": False,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        (project_dir / "RESEARCH.json").touch()
+        # DESIGN.json absent but skipped
+        # Should not raise
+        check_preflight(Stage.PLAN, project_dir, skip_stages={"design"})
+
+    def test_non_skipped_file_still_checked(self, tmp_project_dir):
+        """skip_stages={'research'} but BRIEF.md missing → PreflightError still raised."""
+        project_dir = tmp_project_dir / "project-ai"
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": True,
+                "research_approved": True,
+                "design_approved": True,
+            },
+        )
+        # BRIEF.md absent — not in skip_stages
+        (project_dir / "DESIGN.json").touch()
+        with pytest.raises(PreflightError, match="BRIEF.md"):
+            check_preflight(Stage.PLAN, project_dir, skip_stages={"research"})
+
+    def test_non_skipped_approval_still_checked(self, tmp_project_dir):
+        """skip_stages={'research'} but brief_approved=False → PreflightError raised."""
+        project_dir = tmp_project_dir / "project-ai"
+        # brief_approved intentionally False
+        _make_state(
+            project_dir,
+            {
+                "brief_approved": False,
+                "research_approved": False,
+                "design_approved": True,
+            },
+        )
+        (project_dir / "BRIEF.md").touch()
+        (project_dir / "DESIGN.json").touch()
+        with pytest.raises(PreflightError, match="brief_approved"):
+            check_preflight(Stage.PLAN, project_dir, skip_stages={"research"})

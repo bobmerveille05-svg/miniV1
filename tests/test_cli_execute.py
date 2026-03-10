@@ -116,7 +116,7 @@ class TestExecuteCommand:
         mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.load_prompt",
@@ -164,7 +164,7 @@ class TestExecuteCommand:
 
         called_with = {}
 
-        def mock_preflight(stage, pd):
+        def mock_preflight(stage, pd, skip_stages=None):
             called_with["stage"] = stage
 
         self._mock_all(monkeypatch, project_ai)

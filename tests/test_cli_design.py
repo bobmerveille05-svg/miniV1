@@ -82,7 +82,7 @@ class TestDesignCommand:
         mock_design = DesignSchema(**VALID_DESIGN)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.load_prompt",
@@ -115,7 +115,7 @@ class TestDesignCommand:
 
         called_with = {}
 
-        def mock_preflight(stage, pd):
+        def mock_preflight(stage, pd, skip_stages=None):
             called_with["stage"] = stage
             called_with["pd"] = pd
 

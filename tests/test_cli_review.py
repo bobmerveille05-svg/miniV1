@@ -151,7 +151,7 @@ class TestReviewCommand:
         mock_review = ReviewSchema(**review_dict)
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.load_prompt",
@@ -193,7 +193,7 @@ class TestReviewCommand:
 
         called_with = {}
 
-        def mock_preflight(stage, pd):
+        def mock_preflight(stage, pd, skip_stages=None):
             called_with["stage"] = stage
 
         self._mock_all(monkeypatch, project_ai)
@@ -319,7 +319,7 @@ class TestReviewCommand:
             )
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr("minilegion.cli.commands.load_prompt", mock_load_prompt)
         monkeypatch.setattr(
@@ -377,7 +377,7 @@ class TestReviewCommand:
             )
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr("minilegion.cli.commands.load_prompt", mock_load_prompt)
         monkeypatch.setattr(
@@ -420,7 +420,7 @@ class TestReviewCommand:
         from minilegion.core.schemas import ReviewSchema
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr(
             "minilegion.cli.commands.load_prompt",
@@ -479,7 +479,7 @@ class TestReviewCommand:
             )
 
         monkeypatch.setattr(
-            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
         )
         monkeypatch.setattr("minilegion.cli.commands.load_prompt", mock_load_prompt)
         monkeypatch.setattr(
