@@ -19,7 +19,8 @@ class TestCLIHelp:
     def test_no_args_shows_help(self):
         """No args shows help text with Usage."""
         result = runner.invoke(app, [])
-        assert result.exit_code == 0
+        # Typer/Click exits with code 0 or 2 depending on version when showing help
+        assert result.exit_code in (0, 2)
         assert "Usage" in result.output
 
     def test_help_flag(self):

@@ -24,5 +24,6 @@ def main(
         state["verbose"] = True
 
 
-# Commands will be registered in Plan 02 (minilegion/cli/commands.py)
-# For now, the app has no commands beyond the callback.
+# Import commands module to register all @app.command() decorators.
+# This import MUST come after app creation to avoid circular imports.
+from minilegion.cli import commands  # noqa: F401, E402
