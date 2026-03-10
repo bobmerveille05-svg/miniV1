@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support (completed 2026-03-10)
 - [x] **Phase 10: Review & Revise** - Reviewer role with design/convention checks and bounded revise loop (completed 2026-03-10)
 - [x] **Phase 11: Archivist & Coherence** - Deterministic archival and inter-phase coherence validation across all stages (completed 2026-03-10)
-- [ ] **Phase 12: Fast Mode** - Abbreviated pipeline with --fast and --skip-research-design flags
+- [x] **Phase 12: Fast Mode** - Abbreviated pipeline with --fast and --skip-research-design flags (completed 2026-03-10)
 
 ## Phase Details
 
@@ -207,7 +207,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 12-01: TBD
+- [x] 12-01: preflight skip_stages support + 8 tests
+- [x] 12-02: fast mode in plan() + downstream wiring + 8 tests
 
 ## Progress
 
@@ -227,4 +228,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Execute Stage | 2/2 | Complete    | 2026-03-10 |
 | 10. Review & Revise | 3/3 | Complete    | 2026-03-10 |
 | 11. Archivist & Coherence | 3/3 | Complete    | 2026-03-10 |
-| 12. Fast Mode | 0/1 | Not started | - |
+| 12. Fast Mode | 2/2 | Complete    | 2026-03-10 |

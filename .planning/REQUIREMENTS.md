@@ -139,9 +139,9 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Fast Mode
 
-- [ ] **FAST-01**: `--fast` flag allows plan command to work with basic context (tree + brief) when RESEARCH.json/DESIGN.json don't exist
-- [ ] **FAST-02**: `--skip-research-design` explicitly skips research and design stages
-- [ ] **FAST-03**: Skipped stages are recorded in STATE.json but don't block downstream commands
+- [x] **FAST-01**: `--fast` flag allows plan command to work with basic context (tree + brief) when RESEARCH.json/DESIGN.json don't exist
+- [x] **FAST-02**: `--skip-research-design` explicitly skips research and design stages
+- [x] **FAST-03**: Skipped stages are recorded in STATE.json but don't block downstream commands
 
 ## v2 Requirements
 
@@ -274,9 +274,9 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | COHR-03 | Phase 11 | Complete |
 | COHR-04 | Phase 11 | Complete |
 | COHR-05 | Phase 11 | Complete |
-| FAST-01 | Phase 12 | Pending |
-| FAST-02 | Phase 12 | Pending |
-| FAST-03 | Phase 12 | Pending |
+| FAST-01 | Phase 12 | Complete |
+| FAST-02 | Phase 12 | Complete |
+| FAST-03 | Phase 12 | Complete |
 
 **Coverage:**
 - v1 requirements: 82 total
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 11 completion*
+*Last updated: 2026-03-10 after Phase 12 completion*
