@@ -65,11 +65,10 @@ Plans:
   1. Abstract base class defines a clear contract — a new adapter can be written by implementing 1 class without modifying any other code
   2. OpenAI adapter sends prompts and receives structured JSON responses validated against schemas from Phase 2
   3. Adapter reads API key from environment variable specified in config — missing key produces a clear error before any API call
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Abstract base class (LLMAdapter, LLMResponse, TokenUsage) + OpenAI concrete adapter with lazy init, API key validation, and exception wrapping
 
 ### Phase 4: Guardrails & Approval Gates
 **Goal**: No LLM call can execute without passing pre-flight checks, and no state mutation occurs without human approval
@@ -222,7 +221,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Foundation & CLI | 0/2 | Complete    | 2026-03-10 |
 | 2. Schemas & Validation | 1/2 | Complete    | 2026-03-10 |
-| 3. LLM Adapter | 0/2 | Not started | - |
+| 3. LLM Adapter | 0/1 | Not started | - |
 | 4. Guardrails & Approval Gates | 0/3 | Not started | - |
 | 5. Prompts & Dual Output | 0/2 | Not started | - |
 | 6. Brief & Research Stage | 0/3 | Not started | - |
