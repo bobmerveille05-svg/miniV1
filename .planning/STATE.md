@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: complete
-stopped_at: Completed Phase 12 (Fast Mode) — all v1 requirements done
-last_updated: "2026-03-10T23:00:00.000Z"
-last_activity: 2026-03-10 — fast mode implemented (FAST-01..03), skip_stages preflight, plan --fast/--skip-research-design; 16 new tests, 556 passing total
+milestone_name: MVP
+status: completed
+stopped_at: Milestone v1.0 archived and tagged
+last_updated: "2026-03-10T22:29:59.316Z"
+last_activity: 2026-03-10 — milestone v1.0 archived (roadmap + requirements), ready for next milestone
 progress:
   total_phases: 12
   completed_phases: 12
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 23
+  completed_plans: 23
   percent: 100
 ---
 
@@ -18,10 +18,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-09)
+See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** ALL PHASES COMPLETE — v1.0 done
+**Current focus:** Milestone complete; start next milestone planning
 
 ## Current Position
 
