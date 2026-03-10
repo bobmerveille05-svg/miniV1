@@ -68,9 +68,9 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 - [x] **RSCH-02**: Deep context scans files up to configurable depth, max file count, and max file size
 - [x] **RSCH-03**: Deep context extracts imports/exports from Python, JS/TS, and Go source files
 - [x] **RSCH-04**: Deep context detects naming conventions, directory structure patterns, and test patterns
-- [ ] **RSCH-05**: Researcher role receives scanned context + BRIEF.md and produces RESEARCH.json + RESEARCH.md
-- [ ] **RSCH-06**: RESEARCH.json contains: project_overview, tech_stack, architecture_patterns, relevant_files, existing_conventions, dependencies_map, potential_impacts, constraints, assumptions_verified, open_questions, recommended_focus_files
-- [ ] **RSCH-07**: Researcher prompt enforces "explore, don't design" — no solutions proposed
+- [x] **RSCH-05**: Researcher role receives scanned context + BRIEF.md and produces RESEARCH.json + RESEARCH.md
+- [x] **RSCH-06**: RESEARCH.json contains: project_overview, tech_stack, architecture_patterns, relevant_files, existing_conventions, dependencies_map, potential_impacts, constraints, assumptions_verified, open_questions, recommended_focus_files
+- [x] **RSCH-07**: Researcher prompt enforces "explore, don't design" — no solutions proposed
 
 ### Designer
 

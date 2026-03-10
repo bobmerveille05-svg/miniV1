@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: LLM Adapter** - Abstract base class and OpenAI concrete adapter with structured output support (completed 2026-03-10)
 - [x] **Phase 4: Guardrails & Approval Gates** - Pre-flight checks, scope lock, path normalization, and 5 human approval gates (completed 2026-03-10)
 - [x] **Phase 5: Prompts & Dual Output** - Role prompt templates for all 5 LLM roles and programmatic Markdown generation (completed 2026-03-10)
-- [ ] **Phase 6: Brief & Research Stage** - Brief creation, deep context codebase scanner, and Researcher pipeline stage
+- [x] **Phase 6: Brief & Research Stage** - Brief creation, deep context codebase scanner, and Researcher pipeline stage (completed 2026-03-10)
 - [ ] **Phase 7: Design Stage** - Designer role producing architecture decisions with rejected alternatives
 - [ ] **Phase 8: Plan Stage** - Planner role producing task decomposition constrained by design
 - [ ] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support
@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. LLM Adapter | 0/1 | Not started | - |
 | 4. Guardrails & Approval Gates | 2/2 | Complete    | 2026-03-10 |
 | 5. Prompts & Dual Output | 2/2 | Complete    | 2026-03-10 |
-| 6. Brief & Research Stage | 2/3 | In Progress|  |
+| 6. Brief & Research Stage | 3/3 | Complete    | 2026-03-10 |
 | 7. Design Stage | 0/2 | Not started | - |
 | 8. Plan Stage | 0/2 | Not started | - |
 | 9. Execute Stage | 0/2 | Not started | - |
