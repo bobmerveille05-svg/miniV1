@@ -80,12 +80,11 @@ Plans:
   3. User sees a summary and Y/N prompt at each approval gate — rejecting leaves STATE.json byte-identical to before
   4. Scope lock catches when a patch touches a file not in `files_allowed` — paths are normalized before comparison
   5. All 5 approval gates (brief, research, design, plan, patch) are functional and block state transitions on rejection
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Pre-flight checks (declarative file/approval validation) + scope lock with path normalization
+- [ ] 04-02-PLAN.md — 5 approval gates (brief, research, design, plan, patch) with byte-identical rejection guarantee
 
 ### Phase 5: Prompts & Dual Output
 **Goal**: Every LLM role has a tested prompt template and every artifact is saved in both JSON and Markdown formats
@@ -222,7 +221,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Foundation & CLI | 0/2 | Complete    | 2026-03-10 |
 | 2. Schemas & Validation | 1/2 | Complete    | 2026-03-10 |
 | 3. LLM Adapter | 0/1 | Not started | - |
-| 4. Guardrails & Approval Gates | 0/3 | Not started | - |
+| 4. Guardrails & Approval Gates | 0/2 | Not started | - |
 | 5. Prompts & Dual Output | 0/2 | Not started | - |
 | 6. Brief & Research Stage | 0/3 | Not started | - |
 | 7. Design Stage | 0/2 | Not started | - |
