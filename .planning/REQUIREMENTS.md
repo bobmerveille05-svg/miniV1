@@ -127,15 +127,15 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Prompts
 
-- [ ] **PRMT-01**: 5 role prompts (researcher, designer, planner, builder, reviewer) each with SYSTEM and USER_TEMPLATE sections
-- [ ] **PRMT-02**: All prompts enforce JSON-only output with anchoring instructions at start and end
-- [ ] **PRMT-03**: Prompts stored as markdown files in `prompts/` directory
-- [ ] **PRMT-04**: USER_TEMPLATE uses `{{placeholder}}` syntax for variable injection
+- [x] **PRMT-01**: 5 role prompts (researcher, designer, planner, builder, reviewer) each with SYSTEM and USER_TEMPLATE sections
+- [x] **PRMT-02**: All prompts enforce JSON-only output with anchoring instructions at start and end
+- [x] **PRMT-03**: Prompts stored as markdown files in `prompts/` directory
+- [x] **PRMT-04**: USER_TEMPLATE uses `{{placeholder}}` syntax for variable injection
 
 ### Dual Output
 
-- [ ] **DUAL-01**: Every LLM-produced artifact is saved in both .json (machine) and .md (human) formats
-- [ ] **DUAL-02**: Markdown is generated programmatically from parsed JSON — not by the LLM
+- [x] **DUAL-01**: Every LLM-produced artifact is saved in both .json (machine) and .md (human) formats
+- [x] **DUAL-02**: Markdown is generated programmatically from parsed JSON — not by the LLM
 
 ### Fast Mode
 
@@ -215,23 +215,23 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | ADPT-02 | Phase 3 | Complete |
 | ADPT-03 | Phase 3 | Complete |
 | ADPT-04 | Phase 3 | Complete |
-| GUARD-01 | Phase 4 | Pending |
-| GUARD-02 | Phase 4 | Pending |
-| GUARD-03 | Phase 4 | Pending |
-| GUARD-04 | Phase 4 | Pending |
-| GUARD-05 | Phase 4 | Pending |
+| GUARD-01 | Phase 4 | Complete |
+| GUARD-02 | Phase 4 | Complete |
+| GUARD-03 | Phase 4 | Complete |
+| GUARD-04 | Phase 4 | Complete |
+| GUARD-05 | Phase 4 | Complete |
 | APRV-01 | Phase 4 | Complete |
 | APRV-02 | Phase 4 | Complete |
 | APRV-03 | Phase 4 | Complete |
 | APRV-04 | Phase 4 | Complete |
 | APRV-05 | Phase 4 | Complete |
 | APRV-06 | Phase 4 | Complete |
-| PRMT-01 | Phase 5 | Pending |
-| PRMT-02 | Phase 5 | Pending |
-| PRMT-03 | Phase 5 | Pending |
-| PRMT-04 | Phase 5 | Pending |
-| DUAL-01 | Phase 5 | Pending |
-| DUAL-02 | Phase 5 | Pending |
+| PRMT-01 | Phase 5 | Complete |
+| PRMT-02 | Phase 5 | Complete |
+| PRMT-03 | Phase 5 | Complete |
+| PRMT-04 | Phase 5 | Complete |
+| DUAL-01 | Phase 5 | Complete |
+| DUAL-02 | Phase 5 | Complete |
 | BRIEF-01 | Phase 6 | Pending |
 | BRIEF-02 | Phase 6 | Pending |
 | BRIEF-03 | Phase 6 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-09 after initial definition*
+*Last updated: 2026-03-10 after Phase 5 completion*

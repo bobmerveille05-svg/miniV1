@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-10T13:22:45Z"
-last_activity: 2026-03-10 — Completed 04-02-PLAN.md
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-10T16:30:00Z"
+last_activity: 2026-03-10 — Completed Phase 5 (Prompts & Dual Output), transitioning to Phase 6
 progress:
   total_phases: 12
-  completed_phases: 4
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 5
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -21,33 +21,37 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Phase 5 — Prompts & Dual Output (STARTING)
+**Current focus:** Phase 6 — Brief & Research Stage (STARTING)
 
 ## Current Position
 
-Phase: 5 of 12 (Prompts & Dual Output) — NOT STARTED
+Phase: 6 of 12 (Brief & Research Stage) — NOT STARTED
 Plan: 0 of TBD in current phase
 Status: Phase Starting
-Last activity: 2026-03-10 — Phase 4 verified complete, transitioning to Phase 5
+Last activity: 2026-03-10 — Phase 5 verified complete (379 tests, PRMT-01..04 + DUAL-01..02), transitioning to Phase 6
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 9
+- Average duration: ~4 min
+- Total execution time: ~36 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| Phase 01 | 2 | ~7 min | ~3.5 min |
+| Phase 02 | 2 | ~8 min | ~4 min |
+| Phase 03 | 1 | ~4 min | ~4 min |
+| Phase 04 | 2 | ~5 min | ~2.5 min |
+| Phase 05 | 2 | ~9 min | ~4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: ~4 min each
+- Trend: Stable
 
 *Updated after each plan completion*
 | Phase 01 P01 | 3 min | 2 tasks | 17 files |
@@ -59,6 +63,8 @@ Progress: [██████████] 100%
 | Phase 03 P01 | 4 min | 2 tasks | 6 files |
 | Phase 04 P01 | 3 min | 2 tasks | 4 files |
 | Phase 04 P02 | 2 min | 1 task | 2 files |
+| Phase 05 P01 | 5 min | 2 tasks | 8 files |
+| Phase 05 P02 | 4 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -88,7 +94,6 @@ Recent decisions affecting current work:
 - [Phase 03]: max_retries=0 on SDK client — retry logic lives in core/retry.py
 - [Phase 03]: Frozen dataclasses for LLMResponse/TokenUsage — immutable responses
 - [Phase 03]: ABC adapter pattern — new adapters only need subclass + implement call()/call_for_json()
-- [Phase 03]: Lazy client init - OpenAI client created on first call, not at construction
 - [Phase 04]: Fail-fast on first missing prerequisite — clearer error messages, simpler control flow
 - [Phase 04]: Declarative dict mapping Stage→requirements — easy to extend for new stages
 - [Phase 04]: normalize_path avoids os.path.normpath — converts to backslashes on Windows
@@ -96,17 +101,23 @@ Recent decisions affecting current work:
 - [Phase 04]: No abort=True on typer.confirm — returns bool for ApprovalError hierarchy
 - [Phase 04]: Mutation-after-confirmation — state untouched until user confirms approval
 - [Phase 04]: Each gate wrapper formats titled summary and delegates to core approve()
+- [Phase 05]: importlib.resources.files() for prompt loading — works in editable + packaged installs
+- [Phase 05]: <!-- SYSTEM --> and <!-- USER_TEMPLATE --> markers in .md files — human-readable, grep-friendly
+- [Phase 05]: re.sub for {{placeholder}} injection — no Jinja2 dependency, unresolved var detection
+- [Phase 05]: Per-schema render functions in renderer.py — custom formatting per schema structure
+- [Phase 05]: _RENDERERS dict keyed by class __name__ — simple dispatch, no isinstance chains
+- [Phase 05]: save_dual() uses write_atomic() for both JSON and MD — crash-safe dual output
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None yet.
+None.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Phase 5 starting — discuss → plan → execute
-Resume file: .planning/ROADMAP.md (Phase 5: Prompts & Dual Output)
+Stopped at: Phase 6 starting — discuss → plan → execute
+Resume file: .planning/ROADMAP.md (Phase 6: Brief & Research Stage)
