@@ -82,11 +82,11 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Planner
 
-- [ ] **PLAN-01**: Planner role receives DESIGN.json + RESEARCH.json + BRIEF.md and produces PLAN.json + PLAN.md
-- [ ] **PLAN-02**: PLAN.json contains: objective, design_ref, assumptions, tasks (with id, name, description, files, depends_on, component), touched_files, risks, success_criteria, test_plan
-- [ ] **PLAN-03**: Each task references a component from DESIGN.json
-- [ ] **PLAN-04**: touched_files must be a subset of files declared in DESIGN.json components
-- [ ] **PLAN-05**: Planner prompt enforces "decompose, don't design" — design decisions are already made
+- [x] **PLAN-01**: Planner role receives DESIGN.json + RESEARCH.json + BRIEF.md and produces PLAN.json + PLAN.md
+- [x] **PLAN-02**: PLAN.json contains: objective, design_ref, assumptions, tasks (with id, name, description, files, depends_on, component), touched_files, risks, success_criteria, test_plan
+- [x] **PLAN-03**: Each task references a component from DESIGN.json
+- [x] **PLAN-04**: touched_files must be a subset of files declared in DESIGN.json components
+- [x] **PLAN-05**: Planner prompt enforces "decompose, don't design" — design decisions are already made
 
 ### Builder
 
@@ -247,11 +247,11 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | DSGN-03 | Phase 7 | Complete |
 | DSGN-04 | Phase 7 | Complete |
 | DSGN-05 | Phase 7 | Complete |
-| PLAN-01 | Phase 8 | Pending |
-| PLAN-02 | Phase 8 | Pending |
-| PLAN-03 | Phase 8 | Pending |
-| PLAN-04 | Phase 8 | Pending |
-| PLAN-05 | Phase 8 | Pending |
+| PLAN-01 | Phase 8 | Complete |
+| PLAN-02 | Phase 8 | Complete |
+| PLAN-03 | Phase 8 | Complete |
+| PLAN-04 | Phase 8 | Complete |
+| PLAN-05 | Phase 8 | Complete |
 | BUILD-01 | Phase 9 | Pending |
 | BUILD-02 | Phase 9 | Pending |
 | BUILD-03 | Phase 9 | Pending |
@@ -285,4 +285,4 @@ Deferred to future sprints. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-10 after Phase 7 completion*
+*Last updated: 2026-03-10 after Phase 8 completion*

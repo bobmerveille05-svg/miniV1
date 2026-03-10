@@ -18,8 +18,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Guardrails & Approval Gates** - Pre-flight checks, scope lock, path normalization, and 5 human approval gates (completed 2026-03-10)
 - [x] **Phase 5: Prompts & Dual Output** - Role prompt templates for all 5 LLM roles and programmatic Markdown generation (completed 2026-03-10)
 - [x] **Phase 6: Brief & Research Stage** - Brief creation, deep context codebase scanner, and Researcher pipeline stage (completed 2026-03-10)
-- [ ] **Phase 7: Design Stage** - Designer role producing architecture decisions with rejected alternatives
-- [ ] **Phase 8: Plan Stage** - Planner role producing task decomposition constrained by design
+- [x] **Phase 7: Design Stage** - Designer role producing architecture decisions with rejected alternatives (completed 2026-03-10)
+- [x] **Phase 8: Plan Stage** - Planner role producing task decomposition constrained by design (completed 2026-03-10)
 - [ ] **Phase 9: Execute Stage** - Builder role producing structured patches with approval and dry-run support
 - [ ] **Phase 10: Review & Revise** - Reviewer role with design/convention checks and bounded revise loop
 - [ ] **Phase 11: Archivist & Coherence** - Deterministic archival and inter-phase coherence validation across all stages
@@ -141,11 +141,10 @@ Plans:
   2. Every task references a component from DESIGN.json — orphaned tasks are rejected
   3. touched_files is a subset of files declared in DESIGN.json components — extra files are rejected
   4. Planner prompt enforces "decompose, don't design" — design decisions are treated as settled
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [x] 08-01-PLAN.md — Wire plan() command (replace stub, add approve_plan import) + 10 unit tests
 
 ### Phase 9: Execute Stage
 **Goal**: User can run the execute stage to produce code patches that are individually approved before application
@@ -223,8 +222,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Guardrails & Approval Gates | 2/2 | Complete    | 2026-03-10 |
 | 5. Prompts & Dual Output | 2/2 | Complete    | 2026-03-10 |
 | 6. Brief & Research Stage | 3/3 | Complete    | 2026-03-10 |
-| 7. Design Stage | 0/2 | Not started | - |
-| 8. Plan Stage | 0/2 | Not started | - |
+| 7. Design Stage | 1/1 | Complete    | 2026-03-10 |
+| 8. Plan Stage | 1/1 | Complete    | 2026-03-10 |
 | 9. Execute Stage | 0/2 | Not started | - |
 | 10. Review & Revise | 0/3 | Not started | - |
 | 11. Archivist & Coherence | 0/3 | Not started | - |
