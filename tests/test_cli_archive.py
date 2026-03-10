@@ -164,7 +164,7 @@ class TestArchiveNoLlmCalls:
         _setup_archive_artifacts(project_ai)
 
         with (
-            patch("minilegion.cli.commands.OpenAIAdapter") as mock_adapter,
+            patch("minilegion.adapters.factory.get_adapter") as mock_adapter,
             patch("minilegion.cli.commands.load_config") as mock_config,
         ):
             result = runner.invoke(app, ["archive"])

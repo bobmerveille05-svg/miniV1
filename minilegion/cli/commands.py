@@ -49,7 +49,6 @@ from minilegion.core.state import (
     save_state,
 )
 from minilegion.prompts.loader import load_prompt, render_prompt
-from minilegion.adapters.openai_adapter import OpenAIAdapter
 from minilegion.adapters.factory import get_adapter
 from minilegion.core.coherence import check_coherence
 
