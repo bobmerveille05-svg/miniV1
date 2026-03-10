@@ -41,11 +41,11 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Pre-flight & Guardrails
 
-- [ ] **GUARD-01**: Pre-flight check validates required files exist before each LLM call (research needs BRIEF.md; design needs BRIEF.md + RESEARCH.json; etc.)
-- [ ] **GUARD-02**: Pre-flight check validates required approvals in STATE.json before each LLM call (design needs brief_approved + research_approved; etc.)
-- [ ] **GUARD-03**: In safe mode, `design` refuses to run without `RESEARCH.json`; `plan` refuses without `DESIGN.json`
-- [ ] **GUARD-04**: Scope lock mechanically checks `changed_files` in EXECUTION_LOG.json against `files_allowed` from PLAN.json using normalized paths
-- [ ] **GUARD-05**: Path normalization applied to all file paths before scope lock comparison (resolve `./`, trailing slashes, OS separators)
+- [x] **GUARD-01**: Pre-flight check validates required files exist before each LLM call (research needs BRIEF.md; design needs BRIEF.md + RESEARCH.json; etc.)
+- [x] **GUARD-02**: Pre-flight check validates required approvals in STATE.json before each LLM call (design needs brief_approved + research_approved; etc.)
+- [x] **GUARD-03**: In safe mode, `design` refuses to run without `RESEARCH.json`; `plan` refuses without `DESIGN.json`
+- [x] **GUARD-04**: Scope lock mechanically checks `changed_files` in EXECUTION_LOG.json against `files_allowed` from PLAN.json using normalized paths
+- [x] **GUARD-05**: Path normalization applied to all file paths before scope lock comparison (resolve `./`, trailing slashes, OS separators)
 
 ### Approval Gates
 
