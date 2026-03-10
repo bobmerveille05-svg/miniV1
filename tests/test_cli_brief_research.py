@@ -36,7 +36,9 @@ def _write_brief_state(project_ai: Path) -> None:
     state_data = {
         "current_stage": "brief",
         "approvals": {"brief_approved": True},
-        "history": [{"stage": "brief", "message": "Brief created and approved"}],
+        "history": [],
+        "completed_tasks": [],
+        "metadata": {},
     }
     (project_ai / "STATE.json").write_text(json.dumps(state_data), encoding="utf-8")
     # Also create BRIEF.md (required by preflight for research stage)
@@ -230,36 +232,408 @@ VALID_RESEARCH = {
 
 class TestResearchCommand:
     def test_research_calls_preflight(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """research() calls check_preflight(Stage.RESEARCH, project_dir)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        preflight_calls = []
+
+        def mock_preflight(stage, project_dir):
+            preflight_calls.append((stage, project_dir))
+
+        monkeypatch.setattr("minilegion.cli.commands.check_preflight", mock_preflight)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "codebase context"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "system prompt",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        # Also mock read_text on RESEARCH.md path since save_dual is mocked
+        (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research"])
+        assert len(preflight_calls) == 1
+        from minilegion.core.state import Stage
+
+        assert preflight_calls[0][0] == Stage.RESEARCH
 
     def test_research_preflight_failure_exits_1(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """PreflightError from check_preflight exits with code 1 and red message."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.exceptions import PreflightError
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight",
+            lambda stage, project_dir: (_ for _ in ()).throw(
+                PreflightError("Missing required file: BRIEF.md")
+            ),
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 1
+        assert "Missing required file" in result.output or "BRIEF.md" in result.output
 
     def test_research_runs_scanner(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """research() calls scan_codebase(project_dir, config)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        scan_calls = []
+
+        def mock_scan(project_dir, config):
+            scan_calls.append((project_dir, config))
+            return "scanned context"
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr("minilegion.cli.commands.scan_codebase", mock_scan)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "system prompt",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research"])
+        assert len(scan_calls) == 1
+        assert scan_calls[0][0] == project_ai
 
     def test_research_calls_llm(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """research() calls validate_with_retry with correct 5-arg signature."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        retry_calls = []
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        def mock_validate_with_retry(
+            llm_call, prompt, artifact_name, config, project_dir
+        ):
+            retry_calls.append(
+                {
+                    "artifact_name": artifact_name,
+                    "config": config,
+                    "project_dir": project_dir,
+                }
+            )
+            return mock_research
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "context"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry", mock_validate_with_retry
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research Report\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research"])
+        assert len(retry_calls) == 1
+        assert retry_calls[0]["artifact_name"] == "research"
+        assert retry_calls[0]["project_dir"] == project_ai
 
     def test_research_saves_dual_output(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """research() calls save_dual and RESEARCH.json + RESEARCH.md are created."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        # Use real save_dual so files are actually written
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert (project_ai / "RESEARCH.json").exists()
+        assert (project_ai / "RESEARCH.md").exists()
+        assert "RESEARCH.json + RESEARCH.md saved." in result.output
 
     def test_research_approval_accepted_transitions_state(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """Approved research transitions STATE.json current_stage from 'brief' to 'research'."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
+        assert state_data["current_stage"] == "research"
+        assert state_data["approvals"].get("research_approved") is True
 
     def test_research_rejection_leaves_state_unchanged(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """Rejected research leaves STATE.json current_stage as 'brief'."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: False
+        )
+
+        result = runner.invoke(app, ["research"])
+        state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
+        assert state_data["current_stage"] == "brief"
 
     def test_research_rejection_exits_0(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """Rejected research exits with code 0 (rejection is not an error)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: False
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, (
+            f"Expected exit 0, got {result.exit_code}: {result.output}"
+        )
+        assert "rejected" in result.output.lower()
 
     def test_research_llm_error_exits_1(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """LLM error (LLMError/MiniLegionError) from validate_with_retry exits with code 1."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.exceptions import LLMError
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: (_ for _ in ()).throw(LLMError("API connection failed")),
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 1
+        assert (
+            "API connection failed" in result.output or "error" in result.output.lower()
+        )
 
     def test_research_missing_brief_md_exits_1(self, tmp_path, monkeypatch):
-        pytest.fail("not implemented")
+        """research without BRIEF.md (real preflight) exits with code 1."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        # Write brief state but do NOT create BRIEF.md
+        state_data = {
+            "current_stage": "brief",
+            "approvals": {"brief_approved": True},
+            "history": [],
+            "completed_tasks": [],
+            "metadata": {},
+        }
+        (project_ai / "STATE.json").write_text(json.dumps(state_data), encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 1
+        assert "BRIEF.md" in result.output or "Missing" in result.output
 
     def test_research_state_current_stage_is_research_after_approval(
         self, tmp_path, monkeypatch
     ):
-        pytest.fail("not implemented")
+        """STATE.json has current_stage == 'research' after successful approval (sync gap test)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
+        # Verify state.current_stage was synced before save_state (the sync gap fix)
+        assert state_data["current_stage"] == "research", (
+            f"Expected 'research', got '{state_data['current_stage']}'"
+        )

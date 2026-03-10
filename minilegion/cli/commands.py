@@ -11,14 +11,18 @@ from typing import Annotated
 import typer
 
 from minilegion.cli import app
-from minilegion.core.config import MiniLegionConfig
-from minilegion.core.approval import ApprovalError, approve_brief
+from minilegion.core.config import MiniLegionConfig, load_config
+from minilegion.core.approval import ApprovalError, approve_brief, approve_research
+from minilegion.core.context_scanner import scan_codebase
 from minilegion.core.exceptions import (
     ConfigError,
     InvalidTransitionError,
     MiniLegionError,
 )
 from minilegion.core.file_io import write_atomic
+from minilegion.core.preflight import check_preflight
+from minilegion.core.renderer import save_dual
+from minilegion.core.retry import validate_with_retry
 from minilegion.core.state import (
     ProjectState,
     Stage,
@@ -26,6 +30,8 @@ from minilegion.core.state import (
     load_state,
     save_state,
 )
+from minilegion.prompts.loader import load_prompt, render_prompt
+from minilegion.adapters.openai_adapter import OpenAIAdapter
 
 
 # ---------------------------------------------------------------------------
@@ -230,7 +236,92 @@ def brief(
 @app.command()
 def research() -> None:
     """Run the research stage."""
-    _pipeline_stub(Stage.RESEARCH)
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        # Validate transition before doing any work
+        if not sm.can_transition(Stage.RESEARCH):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.RESEARCH.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        # Load config — CRITICAL: pass parent of project-ai dir, not project-ai itself
+        # find_project_dir() returns .../myproject/project-ai/
+        # load_config() internally appends "project-ai/minilegion.config.json"
+        # So: load_config(project_dir.parent) → myproject/project-ai/minilegion.config.json ✓
+        #     load_config(project_dir)        → myproject/project-ai/project-ai/minilegion.config.json ✗
+        config = load_config(project_dir.parent)
+
+        # Preflight validation (requires BRIEF.md + brief_approved in STATE.json)
+        check_preflight(Stage.RESEARCH, project_dir)
+
+        # Scan codebase for context
+        typer.echo("Scanning codebase...")
+        codebase_context = scan_codebase(project_dir, config)
+
+        # Load and render researcher prompt
+        system_prompt, user_template = load_prompt("researcher")
+        brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
+        project_name = project_dir.parent.name  # directory name user chose at init
+        user_message = render_prompt(
+            user_template,
+            project_name=project_name,
+            brief_content=brief_content,
+            codebase_context=codebase_context,
+        )
+
+        # LLM call — OpenAIAdapter takes full config, NOT individual fields
+        typer.echo("Running researcher...")
+        adapter = OpenAIAdapter(config)
+
+        def llm_call(prompt: str) -> str:
+            # system_prompt is fixed; prompt is user message (with retry feedback appended)
+            response = adapter.call_for_json(system_prompt, prompt)
+            return response.content
+
+        # validate_with_retry: (llm_call, prompt, artifact_name, config, project_dir)
+        # 4th arg is full MiniLegionConfig — NOT config.max_retries int
+        research_data = validate_with_retry(
+            llm_call, user_message, "research", config, project_dir
+        )
+
+        # Save dual output (JSON + Markdown)
+        save_dual(
+            research_data, project_dir / "RESEARCH.json", project_dir / "RESEARCH.md"
+        )
+        typer.echo(
+            typer.style("RESEARCH.json + RESEARCH.md saved.", fg=typer.colors.GREEN)
+        )
+
+        # Approval gate
+        research_md = (project_dir / "RESEARCH.md").read_text(encoding="utf-8")
+        approve_research(state, project_dir / "STATE.json", research_md)
+
+        # State mutation ONLY after confirmed approval
+        sm.transition(Stage.RESEARCH)
+        state.current_stage = (
+            Stage.RESEARCH.value
+        )  # CRITICAL: sync ProjectState manually
+        state.add_history("research", "Research completed and approved")
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(
+            typer.style("Research approved. Stage: research", fg=typer.colors.GREEN)
+        )
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Research rejected. Stage unchanged.", fg=typer.colors.YELLOW)
+        )
+        # exit code 0 — rejection is not an error
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
 
 
 @app.command()
