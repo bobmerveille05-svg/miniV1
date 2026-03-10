@@ -31,6 +31,21 @@ def _write_init_state(project_ai: Path) -> None:
     (project_ai / "STATE.json").write_text(json.dumps(state_data), encoding="utf-8")
 
 
+def _write_brief_state(project_ai: Path) -> None:
+    """Create STATE.json at brief stage with brief_approved=True."""
+    state_data = {
+        "current_stage": "brief",
+        "approvals": {"brief_approved": True},
+        "history": [{"stage": "brief", "message": "Brief created and approved"}],
+    }
+    (project_ai / "STATE.json").write_text(json.dumps(state_data), encoding="utf-8")
+    # Also create BRIEF.md (required by preflight for research stage)
+    (project_ai / "BRIEF.md").write_text(
+        "# Project Brief\n\n## Overview\n\nTest brief.\n",
+        encoding="utf-8",
+    )
+
+
 class TestBriefCommand:
     def test_brief_creates_brief_md_with_text_arg(self, tmp_path, monkeypatch):
         """brief "my text" creates BRIEF.md in project-ai/."""
@@ -192,3 +207,59 @@ class TestBriefCommand:
         result = runner.invoke(app, ["brief", "text"])
         assert result.exit_code == 1
         assert "Cannot transition" in result.output or "cannot" in result.output.lower()
+
+
+# ---------------------------------------------------------------------------
+# Valid research data fixture (ResearchSchema-compatible)
+# ---------------------------------------------------------------------------
+
+VALID_RESEARCH = {
+    "project_overview": "Test project overview",
+    "tech_stack": ["python"],
+    "architecture_patterns": ["layered"],
+    "relevant_files": ["minilegion/cli/commands.py"],
+    "existing_conventions": ["type hints"],
+    "dependencies_map": {},
+    "potential_impacts": ["none"],
+    "constraints": ["constraint1"],
+    "assumptions_verified": ["assumption1"],
+    "open_questions": ["question1"],
+    "recommended_focus_files": ["commands.py"],
+}
+
+
+class TestResearchCommand:
+    def test_research_calls_preflight(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_preflight_failure_exits_1(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_runs_scanner(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_calls_llm(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_saves_dual_output(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_approval_accepted_transitions_state(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_rejection_leaves_state_unchanged(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_rejection_exits_0(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_llm_error_exits_1(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_missing_brief_md_exits_1(self, tmp_path, monkeypatch):
+        pytest.fail("not implemented")
+
+    def test_research_state_current_stage_is_research_after_approval(
+        self, tmp_path, monkeypatch
+    ):
+        pytest.fail("not implemented")
