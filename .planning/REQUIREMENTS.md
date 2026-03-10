@@ -49,12 +49,12 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Approval Gates
 
-- [ ] **APRV-01**: CLI-based human approval gate after brief creation (approve_brief)
-- [ ] **APRV-02**: CLI-based human approval gate after research with summary display (approve_research)
-- [ ] **APRV-03**: CLI-based human approval gate after design with design display (approve_design)
-- [ ] **APRV-04**: CLI-based human approval gate after plan with plan display (approve_plan)
-- [ ] **APRV-05**: CLI-based human approval gate before each patch application with diff display (approve_patch)
-- [ ] **APRV-06**: Rejection at any gate leaves STATE.json unchanged — no partial state mutation
+- [x] **APRV-01**: CLI-based human approval gate after brief creation (approve_brief)
+- [x] **APRV-02**: CLI-based human approval gate after research with summary display (approve_research)
+- [x] **APRV-03**: CLI-based human approval gate after design with design display (approve_design)
+- [x] **APRV-04**: CLI-based human approval gate after plan with plan display (approve_plan)
+- [x] **APRV-05**: CLI-based human approval gate before each patch application with diff display (approve_patch)
+- [x] **APRV-06**: Rejection at any gate leaves STATE.json unchanged — no partial state mutation
 
 ### Brief
 
@@ -220,12 +220,12 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | GUARD-03 | Phase 4 | Pending |
 | GUARD-04 | Phase 4 | Pending |
 | GUARD-05 | Phase 4 | Pending |
-| APRV-01 | Phase 4 | Pending |
-| APRV-02 | Phase 4 | Pending |
-| APRV-03 | Phase 4 | Pending |
-| APRV-04 | Phase 4 | Pending |
-| APRV-05 | Phase 4 | Pending |
-| APRV-06 | Phase 4 | Pending |
+| APRV-01 | Phase 4 | Complete |
+| APRV-02 | Phase 4 | Complete |
+| APRV-03 | Phase 4 | Complete |
+| APRV-04 | Phase 4 | Complete |
+| APRV-05 | Phase 4 | Complete |
+| APRV-06 | Phase 4 | Complete |
 | PRMT-01 | Phase 5 | Pending |
 | PRMT-02 | Phase 5 | Pending |
 | PRMT-03 | Phase 5 | Pending |
