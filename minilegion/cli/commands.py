@@ -17,6 +17,7 @@ from minilegion.core.approval import (
     approve_brief,
     approve_research,
     approve_design,
+    approve_plan,
 )
 from minilegion.core.context_scanner import scan_codebase
 from minilegion.core.exceptions import (
@@ -405,10 +406,66 @@ def plan(
     ] = False,
 ) -> None:
     """Run the plan stage."""
-    _pipeline_stub(
-        Stage.PLAN,
-        extra_info=f"fast={fast}, skip_research_design={skip_research_design}",
-    )
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        if not sm.can_transition(Stage.PLAN):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.PLAN.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        config = load_config(project_dir.parent)
+        check_preflight(Stage.PLAN, project_dir)
+
+        system_prompt, user_template = load_prompt("planner")
+        project_name = project_dir.parent.name
+        brief_content = (project_dir / "BRIEF.md").read_text(encoding="utf-8")
+        research_json = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
+        design_json = (project_dir / "DESIGN.json").read_text(encoding="utf-8")
+        user_message = render_prompt(
+            user_template,
+            project_name=project_name,
+            brief_content=brief_content,
+            research_json=research_json,
+            design_json=design_json,
+        )
+
+        typer.echo("Running planner...")
+        adapter = OpenAIAdapter(config)
+
+        def llm_call(prompt: str) -> str:
+            response = adapter.call_for_json(system_prompt, prompt)
+            return response.content
+
+        plan_data = validate_with_retry(
+            llm_call, user_message, "plan", config, project_dir
+        )
+
+        save_dual(plan_data, project_dir / "PLAN.json", project_dir / "PLAN.md")
+        typer.echo(typer.style("PLAN.json + PLAN.md saved.", fg=typer.colors.GREEN))
+
+        plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
+        approve_plan(state, project_dir / "STATE.json", plan_md)
+
+        sm.transition(Stage.PLAN)
+        state.current_stage = Stage.PLAN.value  # CRITICAL: sync ProjectState manually
+        state.add_history("plan", "Plan completed and approved")
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(typer.style("Plan approved. Stage: plan", fg=typer.colors.GREEN))
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Plan rejected. Stage unchanged.", fg=typer.colors.YELLOW)
+        )
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
 
 
 @app.command()
