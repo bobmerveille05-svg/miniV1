@@ -11,5 +11,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 
+[tool.setuptools.package-data]
+"minilegion.prompts" = ["*.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
