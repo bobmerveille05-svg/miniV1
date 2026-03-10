@@ -12,6 +12,9 @@ dependencies = [
 minilegion = "minilegion.cli:app"
 
 [project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+gemini = ["google-genai>=1.0"]
+all-providers = ["anthropic>=0.40", "google-genai>=1.0"]
 dev = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
