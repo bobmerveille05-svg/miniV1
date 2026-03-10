@@ -33,9 +33,9 @@ Requirements for Sprint 1 (initial release). Each maps to roadmap phases.
 
 ### Schemas & Validation
 
-- [ ] **SCHM-01**: Pydantic models define all 6 machine-readable artifact schemas (research, design, plan, execution_log, review, state)
-- [ ] **SCHM-02**: JSON Schema files generated from Pydantic models for external tool consumption
-- [ ] **SCHM-03**: LLM output is parsed and validated against schema immediately after each call
+- [x] **SCHM-01**: Pydantic models define all 6 machine-readable artifact schemas (research, design, plan, execution_log, review, state)
+- [x] **SCHM-02**: JSON Schema files generated from Pydantic models for external tool consumption
+- [x] **SCHM-03**: LLM output is parsed and validated against schema immediately after each call
 - [ ] **SCHM-04**: Invalid JSON triggers retry with error feedback injected into next LLM call (max 2 retries)
 - [ ] **SCHM-05**: After max retries, raw LLM output is saved to `*_RAW_DEBUG.txt` for diagnosis
 
@@ -206,9 +206,9 @@ Deferred to future sprints. Tracked but not in current roadmap.
 | CLI-03 | Phase 1 | Complete |
 | CLI-04 | Phase 1 | Complete |
 | CLI-05 | Phase 1 | Complete |
-| SCHM-01 | Phase 2 | Pending |
-| SCHM-02 | Phase 2 | Pending |
-| SCHM-03 | Phase 2 | Pending |
+| SCHM-01 | Phase 2 | Complete |
+| SCHM-02 | Phase 2 | Complete |
+| SCHM-03 | Phase 2 | Complete |
 | SCHM-04 | Phase 2 | Pending |
 | SCHM-05 | Phase 2 | Pending |
 | ADPT-01 | Phase 3 | Pending |

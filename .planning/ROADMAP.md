@@ -221,7 +221,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & CLI | 0/2 | Complete    | 2026-03-10 |
-| 2. Schemas & Validation | 0/2 | Not started | - |
+| 2. Schemas & Validation | 1/2 | In Progress|  |
 | 3. LLM Adapter | 0/2 | Not started | - |
 | 4. Guardrails & Approval Gates | 0/3 | Not started | - |
 | 5. Prompts & Dual Output | 0/2 | Not started | - |
