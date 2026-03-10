@@ -12,7 +12,7 @@ MiniLegion delivers a file-centric, LLM-assisted work protocol where every task 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & CLI** - State machine, config, exceptions, atomic I/O, and CLI skeleton with 8 commands
+- [x] **Phase 1: Foundation & CLI** - State machine, config, exceptions, atomic I/O, and CLI skeleton with 8 commands (completed 2026-03-10)
 - [ ] **Phase 2: Schemas & Validation** - Pydantic models for all 6 artifacts, JSON schema generation, and retry logic
 - [ ] **Phase 3: LLM Adapter** - Abstract base class and OpenAI concrete adapter with structured output support
 - [ ] **Phase 4: Guardrails & Approval Gates** - Pre-flight checks, scope lock, path normalization, and 5 human approval gates
@@ -220,7 +220,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & CLI | 0/2 | Not started | - |
+| 1. Foundation & CLI | 0/2 | Complete    | 2026-03-10 |
 | 2. Schemas & Validation | 0/2 | Not started | - |
 | 3. LLM Adapter | 0/2 | Not started | - |
 | 4. Guardrails & Approval Gates | 0/3 | Not started | - |
