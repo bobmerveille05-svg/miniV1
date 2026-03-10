@@ -35,7 +35,7 @@ class ArchitectureDecision(BaseModel):
 
     decision: str
     rationale: str
-    alternatives_rejected: list[str] = Field(default_factory=list)
+    alternatives_rejected: list[str] = Field(default_factory=list, min_length=1)
 
 
 class Component(BaseModel):

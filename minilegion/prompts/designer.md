@@ -18,7 +18,7 @@ Produce a JSON object with the following fields:
 - "api_contracts": List of API contract descriptions.
 - "integration_points": List of integration points with external systems or modules.
 - "design_patterns_used": List of design patterns applied.
-- "conventions_to_follow": List of conventions to maintain consistency with the existing codebase.
+- "conventions_to_follow": List of conventions to follow, drawn directly from the "existing_conventions" field in the Research Findings JSON above. Reference conventions by name as found in the research.
 - "technical_risks": List of technical risks and how to mitigate them.
 - "out_of_scope": List of items explicitly excluded from this design.
 - "test_strategy": Description of the testing approach.
