@@ -19,8 +19,10 @@ from minilegion.core.approval import (
     approve_design,
     approve_plan,
     approve_patch,
+    approve_review,
 )
 from minilegion.core.context_scanner import scan_codebase
+from minilegion.core.diff import generate_diff_text
 from minilegion.core.exceptions import (
     ConfigError,
     InvalidTransitionError,
@@ -31,7 +33,7 @@ from minilegion.core.patcher import apply_patch
 from minilegion.core.preflight import check_preflight
 from minilegion.core.renderer import save_dual
 from minilegion.core.retry import validate_with_retry
-from minilegion.core.schemas import ExecutionLogSchema, PlanSchema
+from minilegion.core.schemas import ExecutionLogSchema, PlanSchema, ReviewSchema
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
     ProjectState,
@@ -628,7 +630,217 @@ def execute(
         raise typer.Exit(code=1)
 
 
+_MAX_REVISE_ITERATIONS = 2
+
+
 @app.command()
 def review() -> None:
     """Run the review stage."""
-    _pipeline_stub(Stage.REVIEW)
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        sm = StateMachine(Stage(state.current_stage), state.approvals)
+
+        if not sm.can_transition(Stage.REVIEW):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {state.current_stage} to {Stage.REVIEW.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        config = load_config(project_dir.parent)
+        check_preflight(Stage.REVIEW, project_dir)
+
+        # Read prior artifacts for reviewer context
+        plan_json_str = (project_dir / "PLAN.json").read_text(encoding="utf-8")
+        plan_data = PlanSchema.model_validate_json(plan_json_str)
+        design_json_str = (project_dir / "DESIGN.json").read_text(encoding="utf-8")
+        research_json_str = (project_dir / "RESEARCH.json").read_text(encoding="utf-8")
+        project_root = project_dir.parent
+        project_name = project_dir.parent.name
+
+        # Extract conventions from RESEARCH.json
+        import json as _json
+
+        research_data = _json.loads(research_json_str)
+        conventions = "\n".join(research_data.get("existing_conventions", []))
+
+        # Main review + revise loop
+        revise_count = int(state.metadata.get("revise_count", "0"))
+
+        while True:
+            # Read current execution log (may be updated during revise)
+            execution_log_json = (project_dir / "EXECUTION_LOG.json").read_text(
+                encoding="utf-8"
+            )
+            execution_log = ExecutionLogSchema.model_validate_json(execution_log_json)
+            diff_text = generate_diff_text(execution_log)
+
+            # Load and render reviewer prompt
+            system_prompt, user_template = load_prompt("reviewer")
+            user_message = render_prompt(
+                user_template,
+                project_name=project_name,
+                diff_text=diff_text,
+                plan_json=plan_json_str,
+                design_json=design_json_str,
+                conventions=conventions,
+            )
+
+            # LLM call
+            typer.echo("Running reviewer...")
+            adapter = OpenAIAdapter(config)
+
+            def llm_call(prompt: str) -> str:
+                response = adapter.call_for_json(system_prompt, prompt)
+                return response.content
+
+            review_data = validate_with_retry(
+                llm_call, user_message, "review", config, project_dir
+            )
+
+            # Save dual output
+            save_dual(
+                review_data, project_dir / "REVIEW.json", project_dir / "REVIEW.md"
+            )
+            typer.echo(
+                typer.style("REVIEW.json + REVIEW.md saved.", fg=typer.colors.GREEN)
+            )
+
+            review_md = (project_dir / "REVIEW.md").read_text(encoding="utf-8")
+
+            # Approval gate
+            approve_review(state, project_dir / "STATE.json", review_md)
+
+            # Check verdict
+            from minilegion.core.schemas import Verdict
+
+            if review_data.verdict == Verdict.PASS:
+                # Done — transition to review stage
+                sm.transition(Stage.REVIEW)
+                state.current_stage = Stage.REVIEW.value
+                state.add_history("review", "Review passed and approved")
+                save_state(state, project_dir / "STATE.json")
+                typer.echo(
+                    typer.style("Review passed. Stage: review", fg=typer.colors.GREEN)
+                )
+                return
+
+            # verdict == revise
+            if revise_count >= _MAX_REVISE_ITERATIONS:
+                typer.echo(
+                    typer.style(
+                        f"Revise limit reached ({_MAX_REVISE_ITERATIONS} iterations). "
+                        "Manual intervention required.",
+                        fg=typer.colors.RED,
+                    )
+                )
+                typer.echo("Corrective actions needed:")
+                for action in review_data.corrective_actions:
+                    typer.echo(f"  - {action}")
+                return  # exit 0 — human escalation
+
+            # Offer re-design if design does not conform
+            if not review_data.design_conformity.conforms:
+                typer.echo(
+                    typer.style(
+                        "Design conformity failure detected. Re-design recommended.",
+                        fg=typer.colors.YELLOW,
+                    )
+                )
+                want_redesign = typer.confirm("Re-design before re-executing?")
+                if want_redesign:
+                    sm.transition(Stage.DESIGN)
+                    state.current_stage = Stage.DESIGN.value
+                    state.add_history("review", "Backtracked to design for re-design")
+                    save_state(state, project_dir / "STATE.json")
+                    typer.echo(
+                        typer.style(
+                            "Backtracked to design stage.", fg=typer.colors.YELLOW
+                        )
+                    )
+                    return  # exit 0 — user will re-run design manually
+
+            # Increment revise count and re-run builder
+            revise_count += 1
+            state.metadata["revise_count"] = str(revise_count)
+            save_state(state, project_dir / "STATE.json")
+
+            typer.echo(
+                typer.style(
+                    f"Verdict: revise (iteration {revise_count}/{_MAX_REVISE_ITERATIONS}). "
+                    "Re-running builder with corrective actions...",
+                    fg=typer.colors.YELLOW,
+                )
+            )
+
+            # Build corrective_actions context string for builder prompt
+            corrective_text = ""
+            if review_data.corrective_actions:
+                corrective_text = (
+                    "\n## Corrective Actions from Review\n"
+                    + "\n".join(f"- {a}" for a in review_data.corrective_actions)
+                    + "\n"
+                )
+
+            # Re-run builder with corrective actions injected
+            source_files = _read_source_files(
+                plan_data.touched_files, project_root, config
+            )
+            builder_system, builder_template = load_prompt("builder")
+            builder_message = render_prompt(
+                builder_template,
+                project_name=project_name,
+                plan_json=plan_json_str,
+                source_files=source_files,
+                corrective_actions=corrective_text,
+            )
+
+            typer.echo("Re-running builder...")
+            builder_adapter = OpenAIAdapter(config)
+
+            def builder_llm_call(prompt: str) -> str:
+                response = builder_adapter.call_for_json(builder_system, prompt)
+                return response.content
+
+            new_execution_log = validate_with_retry(
+                builder_llm_call,
+                builder_message,
+                "execution_log",
+                config,
+                project_dir,
+            )
+
+            # Scope validation
+            all_changed = [
+                cf.path for tr in new_execution_log.tasks for cf in tr.changed_files
+            ]
+            validate_scope(all_changed, plan_data.touched_files)
+
+            # Per-patch approval + apply
+            for tr in new_execution_log.tasks:
+                for cf in tr.changed_files:
+                    desc = apply_patch(cf, project_root, dry_run=True)
+                    approve_patch(state, project_dir / "STATE.json", desc)
+                    apply_patch(cf, project_root, dry_run=False)
+
+            # Save updated execution log
+            save_dual(
+                new_execution_log,
+                project_dir / "EXECUTION_LOG.json",
+                project_dir / "EXECUTION_LOG.md",
+            )
+
+            # Loop back to reviewer
+            execution_log = new_execution_log
+
+    except ApprovalError:
+        typer.echo(
+            typer.style("Review rejected. Stage unchanged.", fg=typer.colors.YELLOW)
+        )
+        # exit code 0 — rejection is not an error
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)

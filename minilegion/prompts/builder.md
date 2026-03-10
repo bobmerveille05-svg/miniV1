@@ -31,3 +31,5 @@ CRITICAL: Your entire response must be a single valid JSON object. Nothing else.
 {{source_files}}
 
 Execute the plan above. For each task, produce the code changes. Return a single JSON object matching the ExecutionLogSchema.
+
+{{corrective_actions}}

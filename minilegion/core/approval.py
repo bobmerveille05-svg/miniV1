@@ -123,3 +123,13 @@ def approve_patch(state: ProjectState, state_path: Path, diff_text: str) -> bool
     """
     summary = f"=== Patch for Approval ===\n\n{diff_text}\n"
     return approve("execute_approved", summary, state, state_path)
+
+
+def approve_review(state: ProjectState, state_path: Path, review_summary: str) -> bool:
+    """Approval gate for the review artifact.
+
+    Displays the review summary and prompts for approval.
+    Sets ``review_approved`` in STATE.json on acceptance.
+    """
+    summary = f"=== Review for Approval ===\n\n{review_summary}\n"
+    return approve("review_approved", summary, state, state_path)
