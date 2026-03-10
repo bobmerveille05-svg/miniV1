@@ -20,6 +20,10 @@ class MiniLegionConfig(BaseModel):
     timeout: int = 120
     max_retries: int = 2
     engines: dict[str, str] = Field(default_factory=dict)
+    # Scanner limits (Phase 6) — all have defaults for backward compatibility
+    scan_max_depth: int = 5
+    scan_max_files: int = 200
+    scan_max_file_size_kb: int = 100
 
     def get_engine(self, role: str) -> str:
         """Get engine for a role, falling back to default model."""
