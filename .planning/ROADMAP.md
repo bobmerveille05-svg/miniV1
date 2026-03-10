@@ -51,11 +51,11 @@ Plans:
   1. Pydantic models exist for all 6 artifact types (research, design, plan, execution_log, review, state) and reject invalid data with clear errors
   2. JSON Schema files are generated from Pydantic models and are valid JSON Schema documents
   3. Invalid LLM output triggers retry with error feedback — after 2 retries, raw output is saved to `*_RAW_DEBUG.txt`
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Pydantic models for all 6 artifacts, schema registry, JSON Schema generation
+- [ ] 02-02-PLAN.md — Pre-parse fixup pipeline, retry logic with error feedback, RAW_DEBUG capture
 
 ### Phase 3: LLM Adapter
 **Goal**: LLM calls can be made through a provider-agnostic interface with the OpenAI adapter as the concrete implementation
