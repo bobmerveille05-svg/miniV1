@@ -108,6 +108,15 @@ class OllamaAdapter(LLMAdapter):
         try:
             with urllib.request.urlopen(req, timeout=effective_timeout) as resp:
                 raw = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                raise LLMError(
+                    f"Model '{self._config.model}' is not installed in Ollama.\n"
+                    f"Run: ollama pull {self._config.model}"
+                ) from exc
+            raise LLMError(
+                f"Ollama returned HTTP {exc.code} at {self._base_url}. Error: {exc}"
+            ) from exc
         except urllib.error.URLError as exc:
             raise LLMError(
                 f"Cannot reach Ollama at {self._base_url}. Is it running? Error: {exc}"

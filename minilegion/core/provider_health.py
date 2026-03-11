@@ -63,19 +63,34 @@ def _check_openai_compatible(config: MiniLegionConfig) -> None:
 
 
 def _check_ollama(config: MiniLegionConfig) -> None:
+    import json as _json
+
     base_url = (config.base_url or _DEFAULT_OLLAMA_URL).rstrip("/")
     url = f"{base_url}/api/tags"
     try:
-        with urllib.request.urlopen(url, timeout=config.timeout):
-            return
+        with urllib.request.urlopen(url, timeout=config.timeout) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
     except urllib.error.URLError as exc:
         raise LLMError(
-            f"Ollama is not ready at {base_url}. Start Ollama or update base_url. Error: {exc}"
+            f"Cannot reach Ollama at {base_url}. Is Ollama running? Error: {exc}"
         ) from exc
     except TimeoutError as exc:
         raise LLMError(
             f"Ollama healthcheck timed out after {config.timeout}s at {base_url}."
         ) from exc
+
+    # Check that the configured model is actually installed
+    installed = {m.get("name", "").split(":")[0] for m in data.get("models", [])}
+    installed |= {m.get("name", "") for m in data.get("models", [])}
+    model = config.model
+    model_base = model.split(":")[0]
+    if model not in installed and model_base not in installed:
+        available = ", ".join(sorted(installed)) or "none"
+        raise LLMError(
+            f"Model '{model}' is not installed in Ollama.\n"
+            f"Run: ollama pull {model}\n"
+            f"Installed models: {available}"
+        )
 
 
 def _require_env_var(env_name: str, provider: str) -> None:
