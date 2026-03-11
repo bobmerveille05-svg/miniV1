@@ -85,3 +85,92 @@ class TestInitCommand:
         data = json.loads(state_path.read_text())
         assert len(data["history"]) >= 1
         assert data["history"][0]["action"] == "init"
+
+
+class TestInitContextScaffolding:
+    """Tests for adapter, template, and memory scaffolding created by init."""
+
+    def test_init_creates_adapters_dir(self, tmp_path, monkeypatch):
+        """init creates project-ai/adapters/ directory."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        assert (tmp_path / "myproject" / "project-ai" / "adapters").is_dir()
+
+    def test_init_creates_claude_adapter(self, tmp_path, monkeypatch):
+        """init creates project-ai/adapters/claude.md."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        adapter_path = tmp_path / "myproject" / "project-ai" / "adapters" / "claude.md"
+        assert adapter_path.exists()
+        assert len(adapter_path.read_text()) > 0
+
+    def test_init_creates_all_adapter_files(self, tmp_path, monkeypatch):
+        """init creates all 5 adapter files (_base, claude, chatgpt, copilot, opencode)."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        adapters_dir = tmp_path / "myproject" / "project-ai" / "adapters"
+        for name in (
+            "_base.md",
+            "claude.md",
+            "chatgpt.md",
+            "copilot.md",
+            "opencode.md",
+        ):
+            assert (adapters_dir / name).exists(), f"Missing adapter: {name}"
+
+    def test_init_creates_templates_dir(self, tmp_path, monkeypatch):
+        """init creates project-ai/templates/ directory."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        assert (tmp_path / "myproject" / "project-ai" / "templates").is_dir()
+
+    def test_init_creates_research_template(self, tmp_path, monkeypatch):
+        """init creates project-ai/templates/research.md."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        template_path = (
+            tmp_path / "myproject" / "project-ai" / "templates" / "research.md"
+        )
+        assert template_path.exists()
+        assert len(template_path.read_text()) > 0
+
+    def test_init_creates_all_stage_templates(self, tmp_path, monkeypatch):
+        """init creates all 8 stage templates (init through archive)."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        templates_dir = tmp_path / "myproject" / "project-ai" / "templates"
+        for stage in (
+            "init",
+            "brief",
+            "research",
+            "design",
+            "plan",
+            "execute",
+            "review",
+            "archive",
+        ):
+            assert (templates_dir / f"{stage}.md").exists(), (
+                f"Missing template: {stage}.md"
+            )
+
+    def test_init_creates_memory_dir(self, tmp_path, monkeypatch):
+        """init creates project-ai/memory/ directory."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        assert (tmp_path / "myproject" / "project-ai" / "memory").is_dir()
+
+    def test_init_creates_decisions_memory(self, tmp_path, monkeypatch):
+        """init creates project-ai/memory/decisions.md."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        mem_path = tmp_path / "myproject" / "project-ai" / "memory" / "decisions.md"
+        assert mem_path.exists()
+        assert len(mem_path.read_text()) > 0
+
+    def test_init_creates_all_memory_files(self, tmp_path, monkeypatch):
+        """init creates all 3 memory scaffold files."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        memory_dir = tmp_path / "myproject" / "project-ai" / "memory"
+        for name in ("decisions.md", "glossary.md", "constraints.md"):
+            assert (memory_dir / name).exists(), f"Missing memory file: {name}"

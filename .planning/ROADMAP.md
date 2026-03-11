@@ -54,7 +54,7 @@ Plans:
   3. The context block contains: current STATE, previous artifact summary, current stage template, memory digest (decisions/glossary/constraints), and chosen adapter instructions
   4. `project-ai/adapters/` contains `_base.md`, `claude.md`, `chatgpt.md`, `copilot.md`, `opencode.md`
   5. ADR-0007 file exists at `.planning/milestones/v1.1-ADR-0007.md` with all required fields
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md — Implement `minilegion context <tool>` command, context assembler, ContextConfig sub-model
@@ -170,7 +170,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Config Hardening | v1.1 pre-work | 2/2 | Complete | 2026-03-11 |
-| 2. Context + Adapters | v1.1 | 0/2 | Not started | - |
+| 2. Context + Adapters | 2/2 | Complete   | 2026-03-11 | - |
 | 3. History Extraction | v1.1 | 0/2 | Not started | - |
 | 4. Evidence Bundles | v1.1 | 0/1 | Not started | - |
 | 5. Validate + Advance | v1.1 | 0/2 | Not started | - |
