@@ -171,11 +171,11 @@ Plans:
 **Depends on:** Phase 8
 **Requirements:** CTX-01, CTX-02, CTX-03, CTX-04, CTX-05, CTX-06, CFG-08, CFG-09
 **Gap Closure:** Closes orphaned Phase 2 requirement evidence and the status->context flow gap from v1.1 audit.
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 13-01: Backfill Phase 2 verification evidence and requirement mapping
-- [ ] 13-02: Close context completeness wiring gap (`lookahead_tasks` and compact context behavior)
+- [ ] 13-01-PLAN.md — Wire deterministic compact-plan lookahead into context assembly and test CTX-01/CFG-08 behavior
+- [ ] 13-02-PLAN.md — Backfill Phase 2 requirement-ID verification artifact and context default docs for audit traceability
 
 ---
 
