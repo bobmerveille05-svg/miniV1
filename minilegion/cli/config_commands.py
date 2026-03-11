@@ -154,9 +154,32 @@ def _choose_model(config: MiniLegionConfig, provider: str) -> str:
         live_models = _fetch_ollama_catalog(base_url=config.base_url)
         if live_models:
             typer.echo(typer.style("Installed Ollama models:", bold=True))
-            labels = [f"{m.id}" for m in live_models]
+            labels = []
+            for m in live_models:
+                if ":cloud" in m.id:
+                    labels.append(
+                        f"{m.id}  "
+                        + typer.style(
+                            "[cloud — requires internet, may be slow]",
+                            fg=typer.colors.YELLOW,
+                        )
+                    )
+                else:
+                    labels.append(
+                        f"{m.id}  " + typer.style("[local]", fg=typer.colors.GREEN)
+                    )
             idx = _prompt_choice("Model number", labels)
-            return live_models[idx].id
+            chosen = live_models[idx].id
+            if ":cloud" in chosen:
+                typer.echo(
+                    typer.style(
+                        f"  Warning: '{chosen}' is a cloud model routed via ollama.com.\n"
+                        "  It requires internet access and may be slow or time out.\n"
+                        "  Consider using a local model (deepseek-r1:1.5b, gemma3:4b).",
+                        fg=typer.colors.YELLOW,
+                    )
+                )
+            return chosen
         else:
             typer.echo(
                 typer.style(
