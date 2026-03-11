@@ -30,7 +30,15 @@ PROVIDERS: dict[str, str] = {
     "openai-compatible": "OpenRouter / OpenAI-compatible",
 }
 
-# Maps provider slug → default API key env var name
+# Maps provider slug → default base_url (None means not applicable)
+DEFAULT_BASE_URL: dict[str, str | None] = {
+    "openai": None,
+    "anthropic": None,
+    "gemini": None,
+    "ollama": "http://localhost:11434",
+    "openai-compatible": "https://openrouter.ai/api/v1",
+}
+
 DEFAULT_ENV_VAR: dict[str, str] = {
     "openai": "OPENAI_API_KEY",
     "anthropic": "ANTHROPIC_API_KEY",
@@ -296,7 +304,30 @@ def config_init() -> None:
             )
             typer.echo(f"    Example:  export {api_key_env}=sk-...")
 
-    # --- Step 3: choose model ---
+    # --- Step 3: base_url (openai-compatible and ollama only) ---
+    base_url: str | None = existing.base_url
+    if provider == "openai-compatible":
+        typer.echo("")
+        typer.echo(typer.style("Base URL:", bold=True))
+        typer.echo("  OpenRouter : https://openrouter.ai/api/v1")
+        typer.echo("  Groq       : https://api.groq.com/openai/v1")
+        typer.echo("  LM Studio  : http://localhost:1234/v1")
+        typer.echo("  Other      : enter your custom endpoint")
+        raw_url = typer.prompt(
+            "Base URL (press Enter to use OpenRouter)",
+            default="https://openrouter.ai/api/v1",
+        )
+        base_url = raw_url.strip() or "https://openrouter.ai/api/v1"
+        typer.echo(typer.style(f"  Base URL set to: {base_url}", fg=typer.colors.GREEN))
+    elif provider == "ollama":
+        default_ollama_url = DEFAULT_BASE_URL["ollama"]
+        raw_url = typer.prompt(
+            f"Ollama base URL (press Enter to use '{default_ollama_url}')",
+            default=default_ollama_url,
+        )
+        base_url = raw_url.strip() or default_ollama_url
+
+    # --- Step 4: choose model ---
     typer.echo("")
     try:
         model_id = _choose_model(existing, provider)
@@ -312,6 +343,7 @@ def config_init() -> None:
             "provider": provider,
             "model": model_id,
             "api_key_env": api_key_env,
+            "base_url": base_url,
         }
     )
     write_atomic(_config_path(project_dir), updated.model_dump_json(indent=2))
@@ -363,6 +395,68 @@ def config_model() -> None:
     updated = config.model_copy(update={"model": model_id})
     write_atomic(_config_path(project_dir), updated.model_dump_json(indent=2))
     typer.echo(typer.style(f"\nModel updated: {model_id}", fg=typer.colors.GREEN))
+    typer.echo(
+        typer.style(
+            "Saved to project-ai/minilegion.config.json",
+            fg=typer.colors.GREEN,
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# `config base-url`
+# ---------------------------------------------------------------------------
+
+
+@config_app.command("base-url")
+def config_base_url() -> None:
+    """Show and update the base_url (for openai-compatible and ollama providers)."""
+    try:
+        project_dir = _find_project_dir()
+        config = _load_existing_config(project_dir)
+    except ConfigError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+    provider = config.provider
+    current_url = config.base_url or ""
+
+    typer.echo("")
+    typer.echo(typer.style("Current configuration:", bold=True))
+    typer.echo(f"  Provider : {PROVIDERS.get(provider, provider)}")
+    typer.echo(
+        f"  Base URL : {typer.style(current_url or '(not set)', fg=typer.colors.CYAN)}"
+    )
+    typer.echo("")
+
+    if provider not in ("openai-compatible", "ollama"):
+        typer.echo(
+            typer.style(
+                f"Provider '{provider}' does not use base_url.",
+                fg=typer.colors.YELLOW,
+            )
+        )
+        raise typer.Exit(code=0)
+
+    if provider == "openai-compatible":
+        typer.echo("  OpenRouter : https://openrouter.ai/api/v1")
+        typer.echo("  Groq       : https://api.groq.com/openai/v1")
+        typer.echo("  LM Studio  : http://localhost:1234/v1")
+
+    default = current_url or (DEFAULT_BASE_URL.get(provider) or "")
+    raw = typer.prompt(
+        f"New base URL (press Enter to keep '{default}')",
+        default=default,
+    )
+    new_url = raw.strip() or default
+
+    if new_url == current_url:
+        typer.echo(typer.style("\nBase URL unchanged.", fg=typer.colors.CYAN))
+        raise typer.Exit(code=0)
+
+    updated = config.model_copy(update={"base_url": new_url})
+    write_atomic(_config_path(project_dir), updated.model_dump_json(indent=2))
+    typer.echo(typer.style(f"\nBase URL updated: {new_url}", fg=typer.colors.GREEN))
     typer.echo(
         typer.style(
             "Saved to project-ai/minilegion.config.json",
