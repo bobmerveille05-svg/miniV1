@@ -215,6 +215,18 @@ def _default_model_aliases() -> dict[str, dict[str, str]]:
     }
 
 
+class ContextConfig(BaseModel):
+    """Config for context assembly (CTX-01, CFG-08).
+
+    All fields have defaults so omitting 'context' from minilegion.config.json
+    produces identical behavior (CFG-09).
+    """
+
+    max_injection_tokens: int = 3000
+    lookahead_tasks: int = 2
+    warn_threshold: float = 0.7
+
+
 class MiniLegionConfig(BaseModel):
     """Configuration for a MiniLegion project."""
 
@@ -242,6 +254,8 @@ class MiniLegionConfig(BaseModel):
     scan_max_depth: int = 5
     scan_max_files: int = 200
     scan_max_file_size_kb: int = 100
+    # Context assembly config (Phase 2, CTX-01, CFG-08) — optional, backward compatible
+    context: ContextConfig = Field(default_factory=ContextConfig)
 
     @model_validator(mode="after")
     def _normalize_small_model(self) -> "MiniLegionConfig":
