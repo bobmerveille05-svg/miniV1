@@ -8,7 +8,10 @@ import pytest
 
 from minilegion.core.config import MiniLegionConfig
 from minilegion.core.exceptions import ConfigError, LLMError
-from minilegion.core.provider_health import run_provider_healthcheck
+from minilegion.core.provider_health import (
+    fetch_ollama_models,
+    run_provider_healthcheck,
+)
 
 
 def test_healthcheck_disabled_skips_provider_checks(monkeypatch):
@@ -50,13 +53,7 @@ def test_openai_compatible_healthcheck_requires_base_url(monkeypatch):
         run_provider_healthcheck(config)
 
 
-def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
-    """Ollama performs a local readiness probe and validates model is installed."""
-    config = MiniLegionConfig(
-        provider="ollama", provider_healthcheck=True, model="llama3.2"
-    )
-    calls = []
-
+def _make_response(body: bytes):
     class _Response:
         def __enter__(self):
             return self
@@ -65,13 +62,23 @@ def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
             return False
 
         def read(self):
-            return (
-                b'{"models": [{"name": "llama3.2:latest"}, {"name": "mistral:latest"}]}'
-            )
+            return body
+
+    return _Response()
+
+
+def test_ollama_healthcheck_passes_with_exact_model_name(monkeypatch):
+    """Healthcheck passes when configured model exactly matches installed name."""
+    config = MiniLegionConfig(
+        provider="ollama", provider_healthcheck=True, model="deepseek-r1:1.5b"
+    )
+    calls = []
 
     def fake_urlopen(url, timeout=0):
         calls.append((url, timeout))
-        return _Response()
+        return _make_response(
+            b'{"models": [{"name": "deepseek-r1:1.5b"}, {"name": "gemma3:4b"}]}'
+        )
 
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
 
@@ -80,25 +87,35 @@ def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
     assert calls == [("http://localhost:11434/api/tags", config.timeout)]
 
 
-def test_ollama_healthcheck_fails_when_model_not_installed(monkeypatch):
-    """Missing Ollama model raises a clear error with ollama pull hint."""
+def test_ollama_healthcheck_fails_model_not_installed(monkeypatch):
+    """Completely absent model raises LLMError with ollama pull hint."""
     config = MiniLegionConfig(
         provider="ollama", provider_healthcheck=True, model="qwen2.5-coder"
     )
-
-    class _Response:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
-            return False
-
-        def read(self):
-            return b'{"models": [{"name": "deepseek-r1:1.5b"}, {"name": "gemma3:4b"}]}'
-
-    monkeypatch.setattr("urllib.request.urlopen", lambda url, timeout=0: _Response())
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda url, timeout=0: _make_response(
+            b'{"models": [{"name": "deepseek-r1:1.5b"}, {"name": "gemma3:4b"}]}'
+        ),
+    )
 
     with pytest.raises(LLMError, match="ollama pull qwen2.5-coder"):
+        run_provider_healthcheck(config)
+
+
+def test_ollama_healthcheck_suggests_exact_name_for_base_match(monkeypatch):
+    """Base-name-only match surfaces the exact installed name with a hint."""
+    config = MiniLegionConfig(
+        provider="ollama", provider_healthcheck=True, model="deepseek-r1"
+    )
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda url, timeout=0: _make_response(
+            b'{"models": [{"name": "deepseek-r1:1.5b"}, {"name": "gemma3:4b"}]}'
+        ),
+    )
+
+    with pytest.raises(LLMError, match="deepseek-r1:1.5b"):
         run_provider_healthcheck(config)
 
 
@@ -113,3 +130,29 @@ def test_ollama_healthcheck_fails_when_endpoint_unavailable(monkeypatch):
 
     with pytest.raises(LLMError, match="Ollama"):
         run_provider_healthcheck(config)
+
+
+def test_fetch_ollama_models_returns_names(monkeypatch):
+    """fetch_ollama_models returns sorted name list from /api/tags."""
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda url, timeout=0: _make_response(
+            b'{"models": [{"name": "gemma3:4b"}, {"name": "deepseek-r1:1.5b"}]}'
+        ),
+    )
+
+    result = fetch_ollama_models()
+
+    assert result == ["gemma3:4b", "deepseek-r1:1.5b"]
+
+
+def test_fetch_ollama_models_returns_empty_on_error(monkeypatch):
+    """fetch_ollama_models returns [] when Ollama is unreachable."""
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda url, timeout=0: (_ for _ in ()).throw(urllib.error.URLError("refused")),
+    )
+
+    result = fetch_ollama_models()
+
+    assert result == []
