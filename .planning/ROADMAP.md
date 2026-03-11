@@ -171,7 +171,7 @@ Plans:
 **Depends on:** Phase 8
 **Requirements:** CTX-01, CTX-02, CTX-03, CTX-04, CTX-05, CTX-06, CFG-08, CFG-09
 **Gap Closure:** Closes orphaned Phase 2 requirement evidence and the status->context flow gap from v1.1 audit.
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 13-01-PLAN.md — Wire deterministic compact-plan lookahead into context assembly and test CTX-01/CFG-08 behavior
@@ -246,7 +246,7 @@ Plans:
 | 6. Research Brainstorm | v1.1 | 0/1 | Not started | - |
 | 7. Rollback | v1.1 | 0/1 | Not started | - |
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
-| 13. Context Evidence + Verification Backfill | v1.1 gap closure | 0/2 | Not started | - |
+| 13. Context Evidence + Verification Backfill | 1/2 | In Progress|  | - |
 | 14. History Foundation + Migration | v1.1 gap closure | 0/2 | Not started | - |
 | 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | 0/2 | Not started | - |
 | 16. Research Brainstorm Mode | v1.1 gap closure | 0/1 | Not started | - |

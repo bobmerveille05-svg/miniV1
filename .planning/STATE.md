@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Portable Kernel
 status: in_progress
-stopped_at: Completed 02-context-adapters/02-02-PLAN.md — adapters/templates/memory scaffold + ADR-0007 verified, 668 tests
-last_updated: "2026-03-11"
-last_activity: 2026-03-11 — Phase 2 Plan 2 complete (668 tests passing); context adapter scaffold + init wiring done
+stopped_at: Completed 13-context-evidence-verification-backfill/13-01-PLAN.md
+last_updated: "2026-03-11T22:23:41.690Z"
+last_activity: 2026-03-11 — Phase 13 Plan 1 complete (compact plan lookahead verified; 52 targeted tests passing)
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 10
-  completed_plans: 2
-  percent: 20
+  total_phases: 15
+  completed_phases: 10
+  total_plans: 20
+  completed_plans: 19
+  percent: 97
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** A user can open any old project, run `minilegion status` then `minilegion context claude`, and resume work in under 2 minutes — portable, auditable, resumable.
-**Current focus:** Phase 2 — Context + Adapters (COMPLETE ✅)
+**Current focus:** Phase 13 — Context Evidence + Verification Backfill (in progress)
 
 ## Current Position
 
-Phase: 2 of 8 (v1.1) — Context + Adapters ✅ COMPLETE
-Plan: 2 of 2 in current phase ✅
-Status: Phase 2 complete — both plans done; next is Phase 3
-Last activity: 2026-03-11 — Phase 2 Plan 2 complete (668 tests passing); adapters/templates/memory scaffold + init wiring
+Phase: 13 of 17 (v1.1 gap closure)
+Plan: 1 of 2 in current phase ✅
+Status: Phase 13 in progress — Plan 13-01 complete; next is 13-02
+Last activity: 2026-03-11 — Phase 13 Plan 1 complete (compact plan lookahead + fallback behavior)
 
-Progress: [████░░░░░░░░░░░░░░░░] 20% (v1.1 phases 2–8)
+Progress: [██████████] 97% (planner aggregate progress)
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [████░░░░░░░░░░░░░░░░] 20% (v1
 | 02-context-adapters | 02 | ~8 min | 2 | 4 | 12 |
 
 *Updated after each plan completion*
+| Phase 13-context-evidence-verification-backfill P01 | 4 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Progress: [████░░░░░░░░░░░░░░░░] 20% (v1
 - [Phase 02-02]: Adapter/template content as module-level constants in commands.py — simpler than bundled package files
 - [Phase 02-02]: init command extended (not replaced) to add adapters/templates/memory after prompts/
 - [Phase 02-02]: STAGE_TEMPLATES dict covers all 8 Stage enum values — every pipeline stage has a template
+- [Phase 13-01]: `## Compact Plan` is rendered deterministically from PLAN.json pending tasks minus STATE completed task IDs
+- [Phase 13-01]: Missing or malformed PLAN.json is non-fatal and yields `_No plan context available._`
 
 ### Pending Todos
 
@@ -77,10 +80,10 @@ None.
 
 ### Blockers/Concerns
 
-None. 668 tests passing. feat/context-adapters branch ready to merge to master.
+None. Plan 13-01 verification green (52 targeted tests passing).
 
 ## Session Continuity
 
-Last session: 2026-03-11
-Stopped at: Completed 02-context-adapters/02-02-PLAN.md
+Last session: 2026-03-11T22:23:41.677Z
+Stopped at: Completed 13-context-evidence-verification-backfill/13-01-PLAN.md
 Resume file: None
