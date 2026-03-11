@@ -226,6 +226,44 @@ class TestOllamaAdapter:
             with pytest.raises(LLMError, match="Cannot reach Ollama"):
                 adapter.call("sys", "hi")
 
+    def test_404_raises_model_not_installed(self):
+        import urllib.error
+
+        adapter = self._make()
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.HTTPError(None, 404, "Not Found", {}, None),
+        ):
+            with pytest.raises(LLMError, match="ollama pull llama3.2"):
+                adapter.call("sys", "hi")
+
+    def test_503_cloud_model_raises_clear_error(self):
+        import urllib.error
+
+        cfg = _config(provider="ollama", model="deepseek-v3.1:671b-cloud")
+        adapter = OllamaAdapter(cfg)
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.HTTPError(
+                None, 503, "Service Unavailable", {}, None
+            ),
+        ):
+            with pytest.raises(LLMError, match="unavailable.*ollama.com"):
+                adapter.call("sys", "hi")
+
+    def test_503_local_model_raises_loading_message(self):
+        import urllib.error
+
+        adapter = self._make()
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.HTTPError(
+                None, 503, "Service Unavailable", {}, None
+            ),
+        ):
+            with pytest.raises(LLMError, match="loading"):
+                adapter.call("sys", "hi")
+
     def test_custom_base_url(self):
         adapter = self._make(base_url="http://192.168.1.100:11434")
         assert adapter._base_url == "http://192.168.1.100:11434"

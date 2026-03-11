@@ -124,7 +124,7 @@ def _check_ollama(config: MiniLegionConfig) -> None:
         )
 
     # Warn (but don't block) if a cloud-routed model is selected
-    if ":cloud" in model:
+    if model.endswith("-cloud") or ":cloud" in model:
         import warnings
 
         warnings.warn(

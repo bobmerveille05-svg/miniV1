@@ -114,6 +114,21 @@ class OllamaAdapter(LLMAdapter):
                     f"Model '{self._config.model}' is not installed in Ollama.\n"
                     f"Run: ollama pull {self._config.model}"
                 ) from exc
+            if exc.code == 503:
+                if (
+                    self._config.model.endswith("-cloud")
+                    or ":cloud" in self._config.model
+                ):
+                    raise LLMError(
+                        f"Cloud model '{self._config.model}' is unavailable (ollama.com returned 503).\n"
+                        f"The remote service is down or overloaded.\n"
+                        f"Switch to a local model: minilegion config model\n"
+                        f"Recommended local models: deepseek-r1:1.5b, gemma3:4b"
+                    ) from exc
+                raise LLMError(
+                    f"Ollama returned 503 for model '{self._config.model}'. "
+                    f"The model may be loading — wait a moment and retry."
+                ) from exc
             raise LLMError(
                 f"Ollama returned HTTP {exc.code} at {self._base_url}. Error: {exc}"
             ) from exc

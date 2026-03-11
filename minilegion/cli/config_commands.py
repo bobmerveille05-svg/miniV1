@@ -156,7 +156,7 @@ def _choose_model(config: MiniLegionConfig, provider: str) -> str:
             typer.echo(typer.style("Installed Ollama models:", bold=True))
             labels = []
             for m in live_models:
-                if ":cloud" in m.id:
+                if m.id.endswith("-cloud") or ":cloud" in m.id:
                     labels.append(
                         f"{m.id}  "
                         + typer.style(
@@ -170,7 +170,7 @@ def _choose_model(config: MiniLegionConfig, provider: str) -> str:
                     )
             idx = _prompt_choice("Model number", labels)
             chosen = live_models[idx].id
-            if ":cloud" in chosen:
+            if chosen.endswith("-cloud") or ":cloud" in chosen:
                 typer.echo(
                     typer.style(
                         f"  Warning: '{chosen}' is a cloud model routed via ollama.com.\n"
