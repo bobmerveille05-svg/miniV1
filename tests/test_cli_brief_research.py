@@ -635,3 +635,318 @@ class TestResearchCommand:
         assert state_data["current_stage"] == "research", (
             f"Expected 'research', got '{state_data['current_stage']}'"
         )
+
+
+class TestResearchHealthcheckGate:
+    """Tests for provider healthcheck gate wired into research()."""
+
+    def _setup(self, project_ai, monkeypatch):
+        """Common mock setup for research command tests."""
+        _write_brief_state(project_ai)
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+
+    def test_healthcheck_called_before_scanner_when_enabled(
+        self, tmp_path, monkeypatch
+    ):
+        """run_provider_healthcheck() is called before scan_codebase() when enabled."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        call_order = []
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck",
+            lambda cfg: call_order.append("healthcheck"),
+        )
+        original_scan = monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase",
+            lambda pd, cfg: call_order.append("scan") or "ctx",
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert "healthcheck" in call_order, "healthcheck was not called"
+        assert "scan" in call_order, "scan was not called"
+        assert call_order.index("healthcheck") < call_order.index("scan"), (
+            "healthcheck must run before scan"
+        )
+
+    def test_healthcheck_failure_exits_1_without_calling_scanner(
+        self, tmp_path, monkeypatch
+    ):
+        """Failed healthcheck exits code 1 and never calls scan_codebase()."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.exceptions import ConfigError
+
+        scan_called = []
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck",
+            lambda cfg: (_ for _ in ()).throw(
+                ConfigError("OPENAI_API_KEY not set. Export OPENAI_API_KEY first.")
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase",
+            lambda pd, cfg: scan_called.append(True) or "ctx",
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 1, result.output
+        assert len(scan_called) == 0, (
+            "scan_codebase must NOT be called after healthcheck failure"
+        )
+        assert "OPENAI_API_KEY" in result.output or "not set" in result.output.lower()
+
+    def test_healthcheck_failure_exits_1_without_calling_llm(
+        self, tmp_path, monkeypatch
+    ):
+        """Failed healthcheck exits code 1 and never calls validate_with_retry()."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.exceptions import ConfigError
+
+        llm_called = []
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck",
+            lambda cfg: (_ for _ in ()).throw(ConfigError("Provider not ready.")),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: llm_called.append(True),
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 1
+        assert len(llm_called) == 0, "LLM must NOT be called after healthcheck failure"
+
+    def test_healthcheck_skipped_when_disabled_in_config(self, tmp_path, monkeypatch):
+        """run_provider_healthcheck() is not called when provider_healthcheck=False."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        # Write config with healthcheck disabled
+        import json as _json
+
+        config_data = {"provider_healthcheck": False}
+        (project_ai / "minilegion.config.json").write_text(
+            _json.dumps(config_data), encoding="utf-8"
+        )
+
+        healthcheck_called = []
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck",
+            lambda cfg: healthcheck_called.append(True),
+        )
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert len(healthcheck_called) == 0, (
+            "run_provider_healthcheck must NOT be called when provider_healthcheck=False"
+        )
+
+
+class TestResearchContextCompaction:
+    """Tests for context_auto_compact wired into research()."""
+
+    def _setup(self, project_ai, monkeypatch):
+        """Common mock setup — all external calls mocked."""
+        _write_brief_state(project_ai)
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck", lambda cfg: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: (
+                "sys",
+                "Research {{project_name}} {{brief_content}} {{codebase_context}}",
+            ),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda *a, **kw: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+
+    def test_compaction_truncates_oversized_context(self, tmp_path, monkeypatch):
+        """Context exceeding threshold is truncated with explicit marker when auto_compact=True."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        # Produce oversized codebase context (> 50_000 chars)
+        big_context = "x" * 60_000
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: big_context
+        )
+
+        # Write config with compaction enabled
+        import json as _json
+
+        config_data = {"context_auto_compact": True}
+        (project_ai / "minilegion.config.json").write_text(
+            _json.dumps(config_data), encoding="utf-8"
+        )
+
+        # Capture what user_message render_prompt received as codebase_context
+        captured_contexts = []
+        original_render = __import__(
+            "minilegion.prompts.loader", fromlist=["render_prompt"]
+        ).render_prompt
+
+        def capturing_render(template, **kwargs):
+            captured_contexts.append(kwargs.get("codebase_context", ""))
+            return original_render(template, **kwargs)
+
+        monkeypatch.setattr("minilegion.cli.commands.render_prompt", capturing_render)
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert len(captured_contexts) == 1
+        ctx = captured_contexts[0]
+        # Compacted context must be shorter than the original
+        assert len(ctx) < len(big_context), "compacted context should be smaller"
+        # Compacted context must include a truncation marker
+        assert "[CONTEXT TRUNCATED" in ctx or "[truncated" in ctx.lower(), (
+            f"Expected truncation marker in compacted context, got: {ctx[:200]}"
+        )
+
+    def test_compaction_not_applied_when_disabled(self, tmp_path, monkeypatch):
+        """Context is passed through unchanged when context_auto_compact=False."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        big_context = "x" * 60_000
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: big_context
+        )
+
+        import json as _json
+
+        config_data = {"context_auto_compact": False}
+        (project_ai / "minilegion.config.json").write_text(
+            _json.dumps(config_data), encoding="utf-8"
+        )
+
+        captured_contexts = []
+        original_render = __import__(
+            "minilegion.prompts.loader", fromlist=["render_prompt"]
+        ).render_prompt
+
+        def capturing_render(template, **kwargs):
+            captured_contexts.append(kwargs.get("codebase_context", ""))
+            return original_render(template, **kwargs)
+
+        monkeypatch.setattr("minilegion.cli.commands.render_prompt", capturing_render)
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert len(captured_contexts) == 1
+        # Context should be passed unchanged
+        assert captured_contexts[0] == big_context, (
+            "Context must not be modified when context_auto_compact=False"
+        )
+
+    def test_compaction_not_applied_when_context_within_threshold(
+        self, tmp_path, monkeypatch
+    ):
+        """Small context is passed through even when context_auto_compact=True."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        self._setup(project_ai, monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        small_context = "small codebase context"
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: small_context
+        )
+
+        import json as _json
+
+        config_data = {"context_auto_compact": True}
+        (project_ai / "minilegion.config.json").write_text(
+            _json.dumps(config_data), encoding="utf-8"
+        )
+
+        captured_contexts = []
+        original_render = __import__(
+            "minilegion.prompts.loader", fromlist=["render_prompt"]
+        ).render_prompt
+
+        def capturing_render(template, **kwargs):
+            captured_contexts.append(kwargs.get("codebase_context", ""))
+            return original_render(template, **kwargs)
+
+        monkeypatch.setattr("minilegion.cli.commands.render_prompt", capturing_render)
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0, result.output
+        assert len(captured_contexts) == 1
+        assert captured_contexts[0] == small_context, (
+            "Small context must not be compacted"
+        )
+
+
+class TestScanMaxFileSizeNormalization:
+    """Tests for scan_max_file_size vs scan_max_file_size_kb config field normalization."""
+
+    def test_read_source_files_respects_scan_max_file_size_kb(self, tmp_path):
+        """_read_source_files uses scan_max_file_size_kb (not a missing scan_max_file_size)."""
+        from minilegion.cli.commands import _read_source_files
+        from minilegion.core.config import MiniLegionConfig
+
+        # Create a small file and a large file
+        small = tmp_path / "small.py"
+        large = tmp_path / "large.py"
+        small.write_text("print('hello')", encoding="utf-8")
+        large.write_text("x" * 200_000, encoding="utf-8")  # 200 KB
+
+        # Default config: scan_max_file_size_kb = 100 (100 KB)
+        config = MiniLegionConfig(scan_max_file_size_kb=100)
+        result = _read_source_files(["small.py", "large.py"], tmp_path, config)
+
+        assert "print('hello')" in result, "Small file should be included"
+        assert "File too large" in result, "Large file should be flagged as too large"
