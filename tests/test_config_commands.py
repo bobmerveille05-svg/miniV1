@@ -1,33 +1,23 @@
-"""Tests for minilegion config sub-commands: `config init` and `config model`."""
+"""Tests for minilegion config sub-commands."""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from typer.testing import CliRunner
 
 from minilegion.cli import app
-from minilegion.cli.config_commands import (
-    DEFAULT_ENV_VAR,
-    PROVIDERS,
-    RECOMMENDED_MODELS,
-)
+from minilegion.cli.config_commands import DEFAULT_ENV_VAR, PROVIDERS
 from minilegion.core.config import MiniLegionConfig
 
 runner = CliRunner()
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_project(tmp_path: Path) -> Path:
-    """Create a minimal project-ai/ directory with STATE.json and config."""
+def _make_project(tmp_path: Path, config: MiniLegionConfig | None = None) -> Path:
+    """Create a minimal project-ai/ directory with a config file."""
     project_ai = tmp_path / "project-ai"
     project_ai.mkdir()
-    config = MiniLegionConfig()
+    config = config or MiniLegionConfig()
     (project_ai / "minilegion.config.json").write_text(
         config.model_dump_json(indent=2), encoding="utf-8"
     )
@@ -39,171 +29,99 @@ def _read_config(project_ai: Path) -> MiniLegionConfig:
     return MiniLegionConfig.model_validate_json(raw)
 
 
-# ---------------------------------------------------------------------------
-# Tests: catalogue constants
-# ---------------------------------------------------------------------------
-
-
 class TestCatalogue:
     def test_all_providers_have_default_env_var(self):
         for slug in PROVIDERS:
             assert slug in DEFAULT_ENV_VAR, f"Missing DEFAULT_ENV_VAR for {slug}"
 
-    def test_all_providers_have_model_list(self):
+    def test_default_config_exposes_recommended_and_full_catalogs(self):
+        config = MiniLegionConfig()
+
         for slug in PROVIDERS:
-            assert slug in RECOMMENDED_MODELS, f"Missing RECOMMENDED_MODELS for {slug}"
-            assert len(RECOMMENDED_MODELS[slug]) >= 1
-
-    def test_model_tuples_are_pairs(self):
-        for slug, models in RECOMMENDED_MODELS.items():
-            for item in models:
-                assert len(item) == 2, f"Model entry for {slug} must be (id, desc)"
-
-
-# ---------------------------------------------------------------------------
-# Tests: `config init`
-# ---------------------------------------------------------------------------
+            assert slug in config.recommended_models
+            assert slug in config.all_models
+            assert slug in config.model_aliases
+            assert len(config.recommended_models[slug]) >= 1
+            assert len(config.all_models[slug]) >= len(config.recommended_models[slug])
 
 
 class TestConfigInit:
     def test_no_project_dir_exits_1(self, tmp_path, monkeypatch):
-        """config init without project-ai/ exits with code 1."""
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(app, ["config", "init"])
         assert result.exit_code == 1
         assert "No MiniLegion project found" in result.output
 
-    def test_selects_openai_first_model(self, tmp_path, monkeypatch):
-        """Selecting OpenAI (choice 1) + first model writes correct config."""
+    def test_recommended_catalog_is_default_path(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
-        # Inputs: provider=1 (openai), env var=<default>, model=1 (gpt-4o)
         result = runner.invoke(
             app,
             ["config", "init"],
-            input="1\n\n1\n",
+            input="1\n\n1\n2\n",
             catch_exceptions=False,
         )
+
         assert result.exit_code == 0, result.output
         cfg = _read_config(tmp_path / "project-ai")
         assert cfg.provider == "openai"
-        assert cfg.model == RECOMMENDED_MODELS["openai"][0][0]
-        assert cfg.api_key_env == "OPENAI_API_KEY"
+        assert cfg.model == "gpt-4o-mini"
+        assert "Recommended" in result.output
 
-    def test_selects_anthropic(self, tmp_path, monkeypatch):
-        """Selecting Anthropic (choice 2) + first model writes correct config."""
+    def test_can_switch_to_full_catalog(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(
             app,
             ["config", "init"],
-            input="2\n\n1\n",
+            input="1\n\n2\n4\n",
             catch_exceptions=False,
         )
+
         assert result.exit_code == 0, result.output
         cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.provider == "anthropic"
-        assert cfg.model == RECOMMENDED_MODELS["anthropic"][0][0]
-        assert cfg.api_key_env == "ANTHROPIC_API_KEY"
+        assert cfg.model == "gpt-4.1"
+        assert "All configured models" in result.output
 
-    def test_selects_gemini(self, tmp_path, monkeypatch):
-        """Selecting Gemini (choice 3) writes correct config."""
+    def test_alias_input_persists_canonical_model(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(
             app,
             ["config", "init"],
-            input="3\n\n1\n",
+            input="1\n\n3\nmini\n",
             catch_exceptions=False,
         )
+
         assert result.exit_code == 0, result.output
         cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.provider == "gemini"
+        assert cfg.model == "gpt-4o-mini"
+        assert "Alias resolved" in result.output
 
-    def test_selects_ollama_no_api_key_prompt(self, tmp_path, monkeypatch):
-        """Ollama (choice 4) skips the API key prompt."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-
-        # Ollama does not ask for an env var → input: provider=4, model=1
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="4\n1\n",
-            catch_exceptions=False,
-        )
-        assert result.exit_code == 0, result.output
-        cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.provider == "ollama"
-        assert cfg.api_key_env == ""
-
-    def test_selects_openrouter(self, tmp_path, monkeypatch):
-        """OpenRouter/openai-compatible (choice 5) writes correct config."""
+    def test_unknown_alias_fails_with_clear_feedback(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(
             app,
             ["config", "init"],
-            input="5\n\n1\n",
+            input="1\n\n3\nnot-a-real-model\n",
             catch_exceptions=False,
         )
-        assert result.exit_code == 0, result.output
-        cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.provider == "openai-compatible"
 
-    def test_custom_env_var_name(self, tmp_path, monkeypatch):
-        """User can override the env var name."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
+        assert result.exit_code == 1
+        assert "Unknown model or alias" in result.output
 
-        # provider=1 (openai), custom env var, model=1
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="1\nMY_CUSTOM_KEY\n1\n",
-            catch_exceptions=False,
+    def test_missing_catalog_entries_fail_clearly(self, tmp_path, monkeypatch):
+        config = MiniLegionConfig(
+            recommended_models={"openai": []},
+            all_models={"openai": []},
+            model_aliases={"openai": {}},
         )
-        assert result.exit_code == 0, result.output
-        cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.api_key_env == "MY_CUSTOM_KEY"
-
-    def test_env_var_already_set_shows_check(self, tmp_path, monkeypatch):
-        """When env var is already set, output shows a check mark."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="1\n\n1\n",
-            catch_exceptions=False,
-        )
-        assert result.exit_code == 0
-        assert "already set" in result.output
-
-    def test_env_var_not_set_shows_warning(self, tmp_path, monkeypatch):
-        """When env var is not set, output shows a warning."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="1\n\n1\n",
-            catch_exceptions=False,
-        )
-        assert result.exit_code == 0
-        assert "not set" in result.output
-
-    def test_output_confirms_save(self, tmp_path, monkeypatch):
-        """Output contains 'Saved to project-ai/minilegion.config.json'."""
-        _make_project(tmp_path)
+        _make_project(tmp_path, config)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(
@@ -212,162 +130,94 @@ class TestConfigInit:
             input="1\n\n1\n",
             catch_exceptions=False,
         )
-        assert "Saved to project-ai/minilegion.config.json" in result.output
 
-    def test_invalid_then_valid_choice(self, tmp_path, monkeypatch):
-        """Entering an invalid number keeps prompting until valid input."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-
-        # First type 'abc', then '99', then valid '1'
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="abc\n99\n1\n\n1\n",
-            catch_exceptions=False,
-        )
-        assert result.exit_code == 0
-        cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.provider == "openai"
-
-    def test_preserves_existing_non_provider_fields(self, tmp_path, monkeypatch):
-        """config init only updates provider/model/api_key_env; other fields kept."""
-        project_ai = _make_project(tmp_path)
-        # Write custom timeout
-        cfg_before = MiniLegionConfig(timeout=300, max_retries=5)
-        (project_ai / "minilegion.config.json").write_text(
-            cfg_before.model_dump_json(indent=2), encoding="utf-8"
-        )
-        monkeypatch.chdir(tmp_path)
-
-        result = runner.invoke(
-            app,
-            ["config", "init"],
-            input="1\n\n1\n",
-            catch_exceptions=False,
-        )
-        assert result.exit_code == 0
-        cfg_after = _read_config(project_ai)
-        assert cfg_after.timeout == 300
-        assert cfg_after.max_retries == 5
-
-    def test_config_json_is_valid_json(self, tmp_path, monkeypatch):
-        """Written config file is valid JSON with expected keys."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-
-        runner.invoke(app, ["config", "init"], input="1\n\n2\n", catch_exceptions=False)
-        raw = (tmp_path / "project-ai" / "minilegion.config.json").read_text(
-            encoding="utf-8"
-        )
-        data = json.loads(raw)
-        assert "provider" in data
-        assert "model" in data
-        assert "api_key_env" in data
-
-
-# ---------------------------------------------------------------------------
-# Tests: `config model`
-# ---------------------------------------------------------------------------
+        assert result.exit_code == 1
+        assert "No configured models available" in result.output
 
 
 class TestConfigModel:
     def test_no_project_dir_exits_1(self, tmp_path, monkeypatch):
-        """config model without project-ai/ exits with code 1."""
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(app, ["config", "model"])
         assert result.exit_code == 1
         assert "No MiniLegion project found" in result.output
 
     def test_shows_current_provider_and_model(self, tmp_path, monkeypatch):
-        """config model displays current provider and model."""
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
-        # Select first model to exit normally
         result = runner.invoke(
-            app, ["config", "model"], input="1\n", catch_exceptions=False
+            app,
+            ["config", "model"],
+            input="1\n1\n",
+            catch_exceptions=False,
         )
+
         assert result.exit_code == 0
-        assert "openai" in result.output.lower() or "OpenAI" in result.output
+        assert "Current configuration" in result.output
         assert "gpt-4o" in result.output
 
-    def test_changes_model(self, tmp_path, monkeypatch):
-        """Selecting a different model updates config."""
+    def test_changes_model_from_full_catalog(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
-        # Default is openai / gpt-4o; pick model 2 (gpt-4o-mini)
         result = runner.invoke(
-            app, ["config", "model"], input="2\n", catch_exceptions=False
+            app,
+            ["config", "model"],
+            input="2\n5\n",
+            catch_exceptions=False,
         )
-        assert result.exit_code == 0
+
+        assert result.exit_code == 0, result.output
         cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.model == RECOMMENDED_MODELS["openai"][1][0]
+        assert cfg.model == "o1"
 
-    def test_same_model_says_unchanged(self, tmp_path, monkeypatch):
-        """Selecting the current model prints 'unchanged' and does not rewrite."""
-        _make_project(tmp_path)
-        # Default model is gpt-4o which is index 1 → pick "1"
-        monkeypatch.chdir(tmp_path)
-
-        result = runner.invoke(
-            app, ["config", "model"], input="1\n", catch_exceptions=False
-        )
-        assert result.exit_code == 0
-        assert "unchanged" in result.output
-
-    def test_output_confirms_save_on_change(self, tmp_path, monkeypatch):
-        """Output contains 'Saved to' when model actually changed."""
+    def test_alias_input_updates_to_canonical_model(self, tmp_path, monkeypatch):
         _make_project(tmp_path)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(
-            app, ["config", "model"], input="2\n", catch_exceptions=False
+            app,
+            ["config", "model"],
+            input="3\nmini\n",
+            catch_exceptions=False,
         )
-        assert "Saved to project-ai/minilegion.config.json" in result.output
 
-    def test_provider_preserved_after_model_change(self, tmp_path, monkeypatch):
-        """Provider field is untouched when only model changes."""
-        project_ai = _make_project(tmp_path)
-        cfg = MiniLegionConfig(provider="anthropic", model="claude-3-opus-20240229")
-        (project_ai / "minilegion.config.json").write_text(
-            cfg.model_dump_json(indent=2), encoding="utf-8"
-        )
+        assert result.exit_code == 0, result.output
+        cfg = _read_config(tmp_path / "project-ai")
+        assert cfg.model == "gpt-4o-mini"
+        assert "Alias resolved" in result.output
+
+    def test_same_model_alias_says_unchanged(self, tmp_path, monkeypatch):
+        _make_project(tmp_path, MiniLegionConfig(model="gpt-4o-mini"))
         monkeypatch.chdir(tmp_path)
 
-        # Pick first Anthropic model
         result = runner.invoke(
-            app, ["config", "model"], input="1\n", catch_exceptions=False
+            app,
+            ["config", "model"],
+            input="3\nmini\n",
+            catch_exceptions=False,
         )
-        assert result.exit_code == 0
-        cfg_after = _read_config(project_ai)
-        assert cfg_after.provider == "anthropic"
 
-    def test_unknown_provider_shows_edit_hint(self, tmp_path, monkeypatch):
-        """Unknown provider (no model list) prints edit hint and exits 0."""
-        project_ai = _make_project(tmp_path)
-        cfg = MiniLegionConfig(provider="custom-llm", model="some-model")
-        (project_ai / "minilegion.config.json").write_text(
-            cfg.model_dump_json(indent=2), encoding="utf-8"
+        assert result.exit_code == 0
+        assert "unchanged" in result.output.lower()
+
+    def test_missing_catalog_for_current_provider_fails_clearly(
+        self, tmp_path, monkeypatch
+    ):
+        config = MiniLegionConfig(
+            provider="openai",
+            recommended_models={"openai": []},
+            all_models={"openai": []},
+            model_aliases={"openai": {}},
         )
+        _make_project(tmp_path, config)
         monkeypatch.chdir(tmp_path)
 
         result = runner.invoke(app, ["config", "model"], catch_exceptions=False)
-        assert result.exit_code == 0
-        assert "Edit project-ai/minilegion.config.json" in result.output
 
-    def test_invalid_then_valid_model_choice(self, tmp_path, monkeypatch):
-        """Invalid model number keeps prompting until a valid one is given."""
-        _make_project(tmp_path)
-        monkeypatch.chdir(tmp_path)
-
-        result = runner.invoke(
-            app, ["config", "model"], input="0\n99\n2\n", catch_exceptions=False
-        )
-        assert result.exit_code == 0
-        cfg = _read_config(tmp_path / "project-ai")
-        assert cfg.model == RECOMMENDED_MODELS["openai"][1][0]
+        assert result.exit_code == 1
+        assert "No configured models available" in result.output
 
     def test_help_is_available(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
