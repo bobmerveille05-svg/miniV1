@@ -75,7 +75,7 @@ Ollama requires no extra package — communication uses the standard library.
 minilegion init my-feature
 cd my-feature
 
-# 2. Interactive config (provider, API key env var, model)
+# 2. Interactive config (provider, API key env var, model catalogs)
 minilegion config init
 
 # 3. Write a brief
@@ -111,19 +111,23 @@ minilegion config model   # change the model at any time
 
 1. Choose a provider from a numbered menu
 2. Set the API key environment variable name (default is suggested; Ollama is skipped)
-3. Choose from the recommended model list for that provider
+3. Pick from the recommended catalog, switch to the full configured catalog, or type an alias/model ID
 
 The result is written to `project-ai/minilegion.config.json`.
 
-### Providers and recommended models
+`config model` uses the same flow later: it reads `recommended_models`, `all_models`, and `model_aliases` from config, then writes the canonical model ID back to disk.
 
-| Provider | Slug | Env var | Recommended models |
-|----------|------|---------|-------------------|
-| OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-4o`, `gpt-4o-mini`, `o3-mini` |
-| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `claude-3-7-sonnet-20250219`, `claude-3-5-haiku-20241022`, `claude-3-opus-20240229` |
-| Google Gemini | `gemini` | `GEMINI_API_KEY` | `gemini-2.0-flash`, `gemini-2.0-pro`, `gemini-1.5-flash` |
-| Ollama (local) | `ollama` | *(none)* | `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5-coder` |
-| OpenRouter / compatible | `openai-compatible` | `OPENROUTER_API_KEY` | `openrouter/auto`, `anthropic/claude-3.7-sonnet`, `openai/gpt-4o-mini`, `google/gemini-2.0-flash`, `meta-llama/llama-3.3-70b-instruct` |
+### Providers and default catalogs
+
+| Provider | Slug | Env var | Recommended models | Additional full-catalog examples |
+|----------|------|---------|--------------------|----------------------------------|
+| OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-4o`, `gpt-4o-mini`, `o3-mini` | `gpt-4.1`, `o1` |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `claude-3-7-sonnet-20250219`, `claude-3-5-haiku-20241022`, `claude-3-opus-20240229` | `claude-3-5-sonnet-20241022` |
+| Google Gemini | `gemini` | `GEMINI_API_KEY` | `gemini-2.0-flash`, `gemini-2.0-pro`, `gemini-1.5-flash` | `gemini-1.5-pro` |
+| Ollama (local) | `ollama` | *(none)* | `llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5-coder` | `phi4` |
+| OpenRouter / compatible | `openai-compatible` | `OPENROUTER_API_KEY` | `openrouter/auto`, `anthropic/claude-3.7-sonnet`, `openai/gpt-4o-mini`, `google/gemini-2.0-flash`, `meta-llama/llama-3.3-70b-instruct` | `deepseek/deepseek-r1` |
+
+Aliases are provider-specific shortcuts stored in `model_aliases`. Examples from the shipped defaults include `mini -> gpt-4o-mini`, `reasoning -> o3-mini`, and `claude -> anthropic/claude-3.7-sonnet`. Aliases resolve before the config file is saved, so the persisted `model` value is always the canonical model ID.
 
 ### Manual config
 
@@ -133,16 +137,54 @@ The result is written to `project-ai/minilegion.config.json`.
 {
   "provider": "openai",
   "model": "gpt-4o",
+  "small_model": "gpt-4o-mini",
   "api_key_env": "OPENAI_API_KEY",
   "base_url": null,
   "timeout": 120,
   "max_retries": 2,
+  "tool_permissions": "confirm",
+  "recommended_models": {
+    "openai": [
+      {"id": "gpt-4o", "description": "GPT-4o - fast, multimodal flagship"},
+      {"id": "gpt-4o-mini", "description": "GPT-4o mini - cheap, fast"},
+      {"id": "o3-mini", "description": "o3-mini - reasoning model"}
+    ]
+  },
+  "all_models": {
+    "openai": [
+      {"id": "gpt-4o", "description": "GPT-4o - fast, multimodal flagship"},
+      {"id": "gpt-4o-mini", "description": "GPT-4o mini - cheap, fast"},
+      {"id": "o3-mini", "description": "o3-mini - reasoning model"},
+      {"id": "gpt-4.1", "description": "GPT-4.1 - newer general flagship"},
+      {"id": "o1", "description": "o1 - high reasoning model"}
+    ]
+  },
+  "model_aliases": {
+    "openai": {
+      "default": "gpt-4o",
+      "fast": "gpt-4o-mini",
+      "mini": "gpt-4o-mini",
+      "reasoning": "o3-mini"
+    }
+  },
+  "context_auto_compact": true,
+  "provider_healthcheck": true,
   "engines": {},
   "scan_max_depth": 5,
   "scan_max_files": 200,
   "scan_max_file_size_kb": 100
 }
 ```
+
+Key config fields:
+
+- `small_model` - first-class secondary default for cheaper or lighter-weight work.
+- `tool_permissions` - validated at config load time; supported values are `confirm`, `allow`, and `deny`. Default is `confirm`.
+- `recommended_models` - curated provider catalog shown first in `config init` and `config model`.
+- `all_models` - broader provider catalog available from the same interactive flow.
+- `model_aliases` - provider-keyed shortcuts resolved to canonical model IDs before persistence.
+- `context_auto_compact` - reserved config switch for deterministic pre-prompt context shrinking in later research work.
+- `provider_healthcheck` - reserved config switch for fail-fast provider readiness checks before later research work.
 
 **`base_url`** — required for `openai-compatible` and Ollama endpoints:
 
