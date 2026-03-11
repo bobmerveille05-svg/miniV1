@@ -1,7 +1,7 @@
 ---
 phase: 02-context-adapters
-verified: 2026-03-11T00:00:00Z
-status: in_progress
+verified: 2026-03-11T22:30:20Z
+status: passed
 scope: CTX-01..CTX-06, CFG-08..CFG-09
 ---
 
@@ -29,3 +29,7 @@ Primary regression command:
 `python -m pytest tests/test_context_assembler.py tests/test_config.py tests/test_init.py -q`
 
 This command validates the end-to-end Phase 2 context adapter behavior and config defaults used by the matrix above.
+
+Latest regression output:
+
+`69 passed in 5.08s`
