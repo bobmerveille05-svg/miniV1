@@ -95,11 +95,11 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CTX-01 | Phase 13 | Complete |
-| CTX-02 | Phase 13 | Pending |
-| CTX-03 | Phase 13 | Pending |
-| CTX-04 | Phase 13 | Pending |
-| CTX-05 | Phase 13 | Pending |
-| CTX-06 | Phase 13 | Pending |
+| CTX-02 | Phase 13 | Complete |
+| CTX-03 | Phase 13 | Complete |
+| CTX-04 | Phase 13 | Complete |
+| CTX-05 | Phase 13 | Complete |
+| CTX-06 | Phase 13 | Complete |
 | HST-01 | Phase 14 | Pending |
 | HST-02 | Phase 14 | Pending |
 | HST-03 | Phase 14 | Pending |
@@ -123,7 +123,7 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 | DOC-03 | Phase 17 | Pending |
 | CFG-07 | Phase 15 | Pending |
 | CFG-08 | Phase 13 | Complete |
-| CFG-09 | Phase 13 | Pending |
+| CFG-09 | Phase 13 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 30 total
