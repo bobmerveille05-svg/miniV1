@@ -10,7 +10,9 @@ import json
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from minilegion.cli import app
 from minilegion.core.config import ContextConfig, MiniLegionConfig
 from minilegion.core.context_assembler import assemble_context
 from minilegion.core.state import ProjectState, save_state
@@ -288,3 +290,102 @@ class TestAssembleContextConfig:
 
         result = assemble_context("claude", pa, config)
         assert "[TRUNCATED]" in result
+
+
+# ---------------------------------------------------------------------------
+# CLI command tests
+# ---------------------------------------------------------------------------
+
+runner = CliRunner()
+
+
+class TestContextCLICommand:
+    """Tests for `minilegion context <tool>` CLI command."""
+
+    def _make_project(self, tmp_path: Path) -> Path:
+        """Create minimal project in tmp_path, chdir to it."""
+        project_dir = tmp_path / "project-ai"
+        project_dir.mkdir(parents=True)
+        state = ProjectState()
+        state.add_history("init", "Project initialized")
+        save_state(state, project_dir / "STATE.json")
+        return project_dir
+
+    def test_context_command_writes_file(self, tmp_path, monkeypatch):
+        """minilegion context claude writes project-ai/context/claude.md."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "claude"])
+        assert result.exit_code == 0, f"Command failed: {result.output}"
+
+        context_file = tmp_path / "project-ai" / "context" / "claude.md"
+        assert context_file.exists(), "context/claude.md was not created"
+
+    def test_context_command_file_content_matches_stdout(self, tmp_path, monkeypatch):
+        """Content of context/claude.md matches stdout output."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "claude"])
+        assert result.exit_code == 0
+
+        context_file = tmp_path / "project-ai" / "context" / "claude.md"
+        file_content = context_file.read_text(encoding="utf-8")
+        # stdout includes a trailing newline from typer.echo; strip both for comparison
+        assert file_content.strip() == result.output.strip()
+
+    def test_context_command_prints_to_stdout(self, tmp_path, monkeypatch):
+        """minilegion context claude prints the context block to stdout."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "claude"])
+        assert result.exit_code == 0
+        assert "## Current State" in result.output
+
+    def test_context_command_chatgpt(self, tmp_path, monkeypatch):
+        """minilegion context chatgpt writes project-ai/context/chatgpt.md."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "chatgpt"])
+        assert result.exit_code == 0
+
+        context_file = tmp_path / "project-ai" / "context" / "chatgpt.md"
+        assert context_file.exists()
+
+    def test_context_command_copilot(self, tmp_path, monkeypatch):
+        """minilegion context copilot writes project-ai/context/copilot.md."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "copilot"])
+        assert result.exit_code == 0
+
+        context_file = tmp_path / "project-ai" / "context" / "copilot.md"
+        assert context_file.exists()
+
+    def test_context_command_opencode(self, tmp_path, monkeypatch):
+        """minilegion context opencode writes project-ai/context/opencode.md."""
+        monkeypatch.chdir(tmp_path)
+        self._make_project(tmp_path)
+
+        result = runner.invoke(app, ["context", "opencode"])
+        assert result.exit_code == 0
+
+        context_file = tmp_path / "project-ai" / "context" / "opencode.md"
+        assert context_file.exists()
+
+    def test_context_command_no_project_exits_1(self, tmp_path, monkeypatch):
+        """minilegion context claude without project-ai/ exits with code 1."""
+        monkeypatch.chdir(tmp_path)  # no project-ai/ created
+
+        result = runner.invoke(app, ["context", "claude"])
+        assert result.exit_code == 1
+        assert "No MiniLegion project found" in result.output
+
+    def test_context_command_registered_in_app(self):
+        """'context' command appears in --help output."""
+        result = runner.invoke(app, ["--help"])
+        assert "context" in result.output

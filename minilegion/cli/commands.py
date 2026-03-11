@@ -51,6 +51,7 @@ from minilegion.core.state import (
 from minilegion.prompts.loader import load_prompt, render_prompt
 from minilegion.adapters.factory import get_adapter
 from minilegion.core.coherence import check_coherence
+from minilegion.core.context_assembler import assemble_context
 
 
 # ---------------------------------------------------------------------------
@@ -1101,5 +1102,35 @@ def archive() -> None:
 
     except MiniLegionError as exc:
         # NOTE: No ApprovalError block — archive has no approval gate
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def context(
+    tool: Annotated[
+        str,
+        typer.Argument(help="Target AI tool: claude, chatgpt, copilot, opencode"),
+    ],
+) -> None:
+    """Assemble and output a portable context block for the given AI tool.
+
+    Writes project-ai/context/<tool>.md and prints the block to stdout.
+    Reads STATE.json, adapter files, memory, stage templates, and recent
+    artifacts from project-ai/. All optional files degrade gracefully.
+    """
+    try:
+        project_dir = find_project_dir()
+        config = load_config(project_dir.parent)
+
+        block = assemble_context(tool, project_dir, config)
+
+        # Write context/<tool>.md atomically — create context/ dir if needed
+        context_path = project_dir / "context" / f"{tool}.md"
+        write_atomic(context_path, block)
+
+        typer.echo(block)
+
+    except MiniLegionError as exc:
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
         raise typer.Exit(code=1)
