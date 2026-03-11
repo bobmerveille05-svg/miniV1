@@ -51,8 +51,10 @@ def test_openai_compatible_healthcheck_requires_base_url(monkeypatch):
 
 
 def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
-    """Ollama performs only a lightweight local readiness probe."""
-    config = MiniLegionConfig(provider="ollama", provider_healthcheck=True)
+    """Ollama performs a local readiness probe and validates model is installed."""
+    config = MiniLegionConfig(
+        provider="ollama", provider_healthcheck=True, model="llama3.2"
+    )
     calls = []
 
     class _Response:
@@ -63,7 +65,9 @@ def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
             return False
 
         def read(self):
-            return b'{"models": []}'
+            return (
+                b'{"models": [{"name": "llama3.2:latest"}, {"name": "mistral:latest"}]}'
+            )
 
     def fake_urlopen(url, timeout=0):
         calls.append((url, timeout))
@@ -74,6 +78,28 @@ def test_ollama_healthcheck_probes_local_endpoint(monkeypatch):
     run_provider_healthcheck(config)
 
     assert calls == [("http://localhost:11434/api/tags", config.timeout)]
+
+
+def test_ollama_healthcheck_fails_when_model_not_installed(monkeypatch):
+    """Missing Ollama model raises a clear error with ollama pull hint."""
+    config = MiniLegionConfig(
+        provider="ollama", provider_healthcheck=True, model="qwen2.5-coder"
+    )
+
+    class _Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return b'{"models": [{"name": "deepseek-r1:1.5b"}, {"name": "gemma3:4b"}]}'
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda url, timeout=0: _Response())
+
+    with pytest.raises(LLMError, match="ollama pull qwen2.5-coder"):
+        run_provider_healthcheck(config)
 
 
 def test_ollama_healthcheck_fails_when_endpoint_unavailable(monkeypatch):
