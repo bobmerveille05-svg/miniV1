@@ -15,6 +15,7 @@ import typer
 from minilegion.core.config import MiniLegionConfig, ModelCatalogEntry, load_config
 from minilegion.core.exceptions import ConfigError
 from minilegion.core.file_io import write_atomic
+from minilegion.core.provider_health import fetch_ollama_models
 
 # ---------------------------------------------------------------------------
 # Provider catalogue
@@ -135,7 +136,35 @@ def _resolve_model_input(
     return canonical
 
 
+def _fetch_ollama_catalog(
+    base_url: str | None = None,
+) -> list[ModelCatalogEntry] | None:
+    """Fetch installed Ollama models as a catalog. Returns None if Ollama unreachable."""
+    names = fetch_ollama_models(base_url=base_url)
+    if not names:
+        return None
+    return [
+        ModelCatalogEntry(id=name, description="installed") for name in sorted(names)
+    ]
+
+
 def _choose_model(config: MiniLegionConfig, provider: str) -> str:
+    # For Ollama: try to fetch live installed models first
+    if provider == "ollama":
+        live_models = _fetch_ollama_catalog(base_url=config.base_url)
+        if live_models:
+            typer.echo(typer.style("Installed Ollama models:", bold=True))
+            labels = [f"{m.id}" for m in live_models]
+            idx = _prompt_choice("Model number", labels)
+            return live_models[idx].id
+        else:
+            typer.echo(
+                typer.style(
+                    "Ollama not reachable — showing default catalog (models may not be installed).",
+                    fg=typer.colors.YELLOW,
+                )
+            )
+
     if not _get_catalog(config, provider, "recommended") and not _get_catalog(
         config, provider, "all"
     ):

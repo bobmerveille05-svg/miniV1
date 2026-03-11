@@ -21,6 +21,22 @@ _LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 _DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
 
+def fetch_ollama_models(base_url: str | None = None, timeout: int = 10) -> list[str]:
+    """Return list of model names installed in a running Ollama instance.
+
+    Returns an empty list if Ollama is unreachable (no exception raised).
+    """
+    import json as _json
+
+    url = f"{(base_url or _DEFAULT_OLLAMA_URL).rstrip('/')}/api/tags"
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+        return [m.get("name", "") for m in data.get("models", []) if m.get("name")]
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def provider_healthcheck_enabled(config: MiniLegionConfig) -> bool:
     """Return whether provider readiness checks should run."""
     return bool(config.provider_healthcheck)
@@ -79,17 +95,32 @@ def _check_ollama(config: MiniLegionConfig) -> None:
             f"Ollama healthcheck timed out after {config.timeout}s at {base_url}."
         ) from exc
 
-    # Check that the configured model is actually installed
-    installed = {m.get("name", "").split(":")[0] for m in data.get("models", [])}
-    installed |= {m.get("name", "") for m in data.get("models", [])}
+    # Check that the configured model is actually installed.
+    # Match by exact name OR by base name (strip tag suffix after ':').
+    # Prefer exact match; if only base matches, suggest the exact installed name.
     model = config.model
     model_base = model.split(":")[0]
-    if model not in installed and model_base not in installed:
-        available = ", ".join(sorted(installed)) or "none"
+    installed_names = [m.get("name", "") for m in data.get("models", [])]
+
+    exact_match = model in installed_names
+    base_matches = [n for n in installed_names if n.split(":")[0] == model_base]
+
+    if not exact_match and not base_matches:
+        available = ", ".join(sorted(installed_names)) or "none"
         raise LLMError(
             f"Model '{model}' is not installed in Ollama.\n"
             f"Run: ollama pull {model}\n"
             f"Installed models: {available}"
+        )
+
+    if not exact_match and base_matches:
+        # The user typed 'deepseek-r1' but installed name is 'deepseek-r1:1.5b' —
+        # surface this so they know the exact name to use.
+        suggestion = base_matches[0]
+        raise LLMError(
+            f"Model '{model}' not found. Did you mean '{suggestion}'?\n"
+            f"Update your config: minilegion config model\n"
+            f"Or use the exact name in config: {suggestion}"
         )
 
 
