@@ -20,7 +20,7 @@ class TestMiniLegionConfig:
         assert config.model == "gpt-4o"
         assert config.small_model == "gpt-4o-mini"
         assert config.api_key_env == "OPENAI_API_KEY"
-        assert config.timeout == 120
+        assert config.timeout == 300
         assert config.max_retries == 2
         assert config.engines == {}
         assert config.tool_permissions == "confirm"
@@ -72,7 +72,7 @@ class TestLoadConfig:
         assert config.provider == "openai"  # default
         assert config.small_model == "gpt-4o-mini"
         assert config.tool_permissions == "confirm"
-        assert config.timeout == 120  # default
+        assert config.timeout == 300  # default
         assert config.engines == {}  # default
         assert config.context_auto_compact is True
         assert config.provider_healthcheck is True

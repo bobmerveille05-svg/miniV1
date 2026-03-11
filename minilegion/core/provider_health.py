@@ -123,6 +123,17 @@ def _check_ollama(config: MiniLegionConfig) -> None:
             f"Or use the exact name in config: {suggestion}"
         )
 
+    # Warn (but don't block) if a cloud-routed model is selected
+    if ":cloud" in model:
+        import warnings
+
+        warnings.warn(
+            f"Model '{model}' is routed via ollama.com (cloud). "
+            "It requires internet access and may be slow. "
+            "Consider a local model like deepseek-r1:1.5b or gemma3:4b.",
+            stacklevel=3,
+        )
+
 
 def _require_env_var(env_name: str, provider: str) -> None:
     if os.environ.get(env_name):

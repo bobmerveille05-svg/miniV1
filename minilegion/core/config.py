@@ -223,7 +223,7 @@ class MiniLegionConfig(BaseModel):
     small_model: str = "gpt-4o-mini"
     api_key_env: str = "OPENAI_API_KEY"
     base_url: str | None = None  # For openai-compatible and ollama providers
-    timeout: int = 120
+    timeout: int = 300
     max_retries: int = 2
     tool_permissions: Literal["confirm", "allow", "deny"] = "confirm"
     recommended_models: dict[str, list[ModelCatalogEntry]] = Field(

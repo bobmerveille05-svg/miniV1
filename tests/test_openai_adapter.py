@@ -129,7 +129,7 @@ class TestAPIKeyFromConfig:
             adapter.call("system", "user")
             mock_cls.assert_called_once_with(
                 api_key="my-secret-key",
-                timeout=120.0,
+                timeout=300.0,
                 max_retries=0,
             )
 
