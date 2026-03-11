@@ -412,6 +412,7 @@ def run_execute(
         project_name=project_dir.parent.name,
         plan_json=plan_json_str,
         source_files=source_files,
+        corrective_actions="",
     )
 
     execution_log = validate_with_retry(

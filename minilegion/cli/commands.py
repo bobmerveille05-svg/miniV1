@@ -693,6 +693,7 @@ def execute(
             project_name=project_name,
             plan_json=plan_json_str,
             source_files=source_files,
+            corrective_actions="",
         )
 
         # LLM call — use get_adapter(config) so the configured provider is used
