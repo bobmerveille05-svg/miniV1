@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: MVP
-status: completed
-stopped_at: Milestone v1.0 archived and tagged
-last_updated: "2026-03-10T22:29:59.316Z"
-last_activity: 2026-03-10 — milestone v1.0 archived (roadmap + requirements), ready for next milestone
+milestone_name: v1.1 planning
+status: in_progress
+stopped_at: Completed 01-action-immediate-harden-config-with-small-model-tool-permissions-confirm-default-recommended-models-vs-all-models-model-aliases-context-auto-compact-and-provider-healthcheck-before-research-01-PLAN.md
+last_updated: "2026-03-11T03:49:38.509Z"
+last_activity: 2026-03-11 — completed Phase 01 Plan 01 (config hardening and catalog-backed config CLI)
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 23
-  completed_plans: 23
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** A complete, validated pipeline from brief to committed code that proves AI-assisted workflows can be rigorous, safe, and portable.
-**Current focus:** Milestone complete; start next milestone planning
+**Current focus:** Phase 1 config hardening and pre-research safety improvements
 
 ## Current Position
 
-Phase: 12 of 12 (Fast Mode) — COMPLETE
+Phase: 1 of 1 — Action immediate: harden config with small_model, tool_permissions confirm default, recommended_models vs all_models, model_aliases, context_auto_compact, and provider_healthcheck before research
 Plan: 2 of 2 in current phase
-Status: ALL PHASES COMPLETE
-Last activity: 2026-03-10 — Phase 12 verified (556 tests GREEN, all FAST requirements met)
+Status: IN PROGRESS
+Last activity: 2026-03-11 — completed Phase 01 Plan 01 (config hardening and catalog-backed config CLI)
 
-Progress: [████████████████████] 92%
+Progress: [██████████░░░░░░░░░░] 50%
 
 ## Performance Metrics
 
@@ -74,8 +74,13 @@ Progress: [████████████████████] 92%
 | Phase 09 P02 | ~15 min | 3 tasks | 3 files |
 | Phase 10 P01 | ~10 min | 2 tasks | 5 files |
 | Phase 10 P02 | ~15 min | 3 tasks | 3 files |
+| Phase 01-action-immediate-harden-config-with-small-model-tool-permissions-confirm-default-recommended-models-vs-all-models-model-aliases-context-auto-compact-and-provider-healthcheck-before-research P01 | 7min | 3 tasks | 5 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 1 added: Action immediate: harden config with small_model, tool_permissions confirm default, recommended_models vs all_models, model_aliases, context_auto_compact, and provider_healthcheck before research
 
 ### Decisions
 
@@ -156,6 +161,8 @@ Recent decisions affecting current work:
 - [Phase 11]: COHR-01/02/05: severity="warning"; COHR-03/04: severity="error"
 - [Phase 11]: state.current_stage = Stage.ARCHIVE.value (with .value!) before save_state() — sync gap fix
 - [Phase 11]: DECISIONS.md written to project_dir / "DECISIONS.md" via write_atomic() before save_state()
+- [Phase 01]: Model catalogs and aliases now live in MiniLegionConfig as provider-keyed defaults instead of CLI-only constants.
+- [Phase 01]: config init and config model share one branching flow for recommended, full-catalog, and alias-based model selection.
 
 ### Pending Todos
 
@@ -167,6 +174,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T22:00:00.000Z
-Stopped at: Completed Phase 11 (Archivist & Coherence)
+Last session: 2026-03-11T03:49:38.491Z
+Stopped at: Completed 01-action-immediate-harden-config-with-small-model-tool-permissions-confirm-default-recommended-models-vs-all-models-model-aliases-context-auto-compact-and-provider-healthcheck-before-research-01-PLAN.md
 Resume file: None
