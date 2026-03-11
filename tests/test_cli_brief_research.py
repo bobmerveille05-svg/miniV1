@@ -2,6 +2,7 @@
 
 import json
 
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 from typer.testing import CliRunner
@@ -229,6 +230,13 @@ VALID_RESEARCH = {
 
 
 class TestResearchCommand:
+    @pytest.fixture(autouse=True)
+    def _noop_healthcheck(self, monkeypatch):
+        """Disable healthcheck for all tests in this class — tested separately."""
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck", lambda cfg: None
+        )
+
     def test_research_calls_preflight(self, tmp_path, monkeypatch):
         """research() calls check_preflight(Stage.RESEARCH, project_dir)."""
         project_ai = tmp_path / "project-ai"

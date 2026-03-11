@@ -31,6 +31,7 @@ from minilegion.core.exceptions import (
 from minilegion.core.file_io import write_atomic
 from minilegion.core.patcher import apply_patch
 from minilegion.core.preflight import check_preflight
+from minilegion.core.provider_health import run_provider_healthcheck
 from minilegion.core.renderer import save_dual, render_decisions_md
 from minilegion.core.retry import validate_with_retry
 from minilegion.core.schemas import (
@@ -125,23 +126,24 @@ def _pipeline_stub(stage: Stage, extra_info: str = "") -> None:
 def _read_source_files(
     file_paths: list[str], project_root: Path, config: MiniLegionConfig
 ) -> str:
-    """Read source files for builder context, capped at scan_max_file_size.
+    """Read source files for builder context, capped at scan_max_file_size_kb.
 
     Args:
         file_paths: Relative paths of files to read (from PLAN.json touched_files).
         project_root: Root directory to resolve relative paths from.
-        config: Config with scan_max_file_size limit.
+        config: Config with scan_max_file_size_kb limit.
 
     Returns:
         Formatted string of file contents for the builder prompt.
     """
     parts: list[str] = []
+    size_limit = config.scan_max_file_size_kb * 1024
     for path_str in file_paths:
         fpath = project_root / path_str
         if not fpath.exists() or not fpath.is_file():
             continue
         size = fpath.stat().st_size
-        if size > config.scan_max_file_size:
+        if size > size_limit:
             parts.append(f"## {path_str}\n[File too large: {size} bytes]\n---\n")
             continue
         content = fpath.read_text(encoding="utf-8", errors="replace")
@@ -322,12 +324,28 @@ def research() -> None:
         #     load_config(project_dir)        → myproject/project-ai/project-ai/minilegion.config.json ✗
         config = load_config(project_dir.parent)
 
+        # Provider healthcheck — fail fast before any research work
+        if config.provider_healthcheck:
+            run_provider_healthcheck(config)
+
         # Preflight validation (requires BRIEF.md + brief_approved in STATE.json)
         check_preflight(Stage.RESEARCH, project_dir)
 
         # Scan codebase for context
         typer.echo("Scanning codebase...")
         codebase_context = scan_codebase(project_dir, config)
+
+        # Context compaction — truncate deterministically if over threshold
+        _CONTEXT_COMPACT_THRESHOLD = 50_000
+        if (
+            config.context_auto_compact
+            and len(codebase_context) > _CONTEXT_COMPACT_THRESHOLD
+        ):
+            codebase_context = (
+                codebase_context[:_CONTEXT_COMPACT_THRESHOLD]
+                + f"\n[CONTEXT TRUNCATED: original length {len(codebase_context)} chars, "
+                f"truncated to {_CONTEXT_COMPACT_THRESHOLD} chars for prompt budget]"
+            )
 
         # Load and render researcher prompt
         system_prompt, user_template = load_prompt("researcher")
