@@ -96,10 +96,10 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 |-------------|-------|--------|
 | CTX-01 | Phase 2 | ✅ Complete (02-01) |
 | CTX-02 | Phase 2 | ✅ Complete (02-01) |
-| CTX-03 | Phase 2 | Pending |
-| CTX-04 | Phase 2 | Pending |
-| CTX-05 | Phase 2 | Pending |
-| CTX-06 | Phase 2 | Pending |
+| CTX-03 | Phase 2 | Complete |
+| CTX-04 | Phase 2 | Complete |
+| CTX-05 | Phase 2 | Complete |
+| CTX-06 | Phase 2 | Complete |
 | HST-01 | Phase 3 | Pending |
 | HST-02 | Phase 3 | Pending |
 | HST-03 | Phase 3 | Pending |
