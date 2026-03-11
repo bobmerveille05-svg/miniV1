@@ -246,6 +246,59 @@ class TestAssembleContextOptionalFiles:
 
 
 # ---------------------------------------------------------------------------
+# Init integration: adapter/template/memory appear after init
+# ---------------------------------------------------------------------------
+
+
+class TestAssembleContextAfterInit:
+    """Assembler uses real adapter/template/memory files written by init command."""
+
+    def test_adapter_file_included_after_init(self, tmp_path, monkeypatch):
+        """After minilegion init, assemble_context uses the real claude adapter."""
+        monkeypatch.chdir(tmp_path)
+        from typer.testing import CliRunner as _Runner
+
+        _runner = _Runner()
+        _runner.invoke(app, ["init", "myproject"])
+
+        project_dir = tmp_path / "myproject" / "project-ai"
+        cfg = MiniLegionConfig()
+        result = assemble_context("claude", project_dir, cfg)
+        # ADAPTER_CLAUDE starts with "# Claude — MiniLegion Context"
+        assert "Claude" in result
+        # Should NOT be the stub text
+        assert "Paste this context block at the start" not in result
+
+    def test_template_included_after_init(self, tmp_path, monkeypatch):
+        """After minilegion init, assemble_context includes the init stage template."""
+        monkeypatch.chdir(tmp_path)
+        from typer.testing import CliRunner as _Runner
+
+        _runner = _Runner()
+        _runner.invoke(app, ["init", "myproject"])
+
+        project_dir = tmp_path / "myproject" / "project-ai"
+        cfg = MiniLegionConfig()
+        result = assemble_context("claude", project_dir, cfg)
+        # init stage template text
+        assert "minilegion brief" in result
+
+    def test_memory_included_after_init(self, tmp_path, monkeypatch):
+        """After minilegion init, assemble_context includes memory scaffold files."""
+        monkeypatch.chdir(tmp_path)
+        from typer.testing import CliRunner as _Runner
+
+        _runner = _Runner()
+        _runner.invoke(app, ["init", "myproject"])
+
+        project_dir = tmp_path / "myproject" / "project-ai"
+        cfg = MiniLegionConfig()
+        result = assemble_context("claude", project_dir, cfg)
+        # Memory section should appear because decisions.md, glossary.md, constraints.md exist
+        assert "## Memory" in result
+
+
+# ---------------------------------------------------------------------------
 # Config integration tests
 # ---------------------------------------------------------------------------
 

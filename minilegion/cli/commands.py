@@ -178,6 +178,132 @@ BRIEF_TEMPLATE = """\
 
 
 # ---------------------------------------------------------------------------
+# Adapter content (CTX-03)
+# ---------------------------------------------------------------------------
+
+ADAPTER_BASE = """\
+# MiniLegion Context Block
+
+You are resuming work on a MiniLegion project. The context block below was assembled
+by `minilegion context` and describes the current project state.
+
+## How to use this context
+1. Read the **Current State** section to understand where the pipeline is.
+2. Read the **Previous Artifact** section for the most recent output.
+3. Read the **Stage Template** section for guidance on what to produce next.
+4. Check **Memory** for decisions and constraints that must be respected.
+5. Proceed based on this context — do not ask the user to re-explain the project.
+"""
+
+ADAPTER_CLAUDE = """\
+# Claude — MiniLegion Context
+
+<!-- Paste this at the start of a new Claude conversation. -->
+
+You are a senior software engineer resuming a MiniLegion-orchestrated project.
+The structured context below is authoritative — trust it over your prior knowledge of the codebase.
+Follow the stage template exactly. Respect all constraints in the Memory section.
+"""
+
+ADAPTER_CHATGPT = """\
+# ChatGPT — MiniLegion Context
+
+<!-- Paste this at the start of a new ChatGPT conversation. -->
+
+You are resuming a software project managed by MiniLegion. Use the structured context
+below as your single source of truth. Follow the current stage template and respect all
+constraints listed in the Memory section.
+"""
+
+ADAPTER_COPILOT = """\
+# GitHub Copilot — MiniLegion Context
+
+<!-- Paste this into a Copilot Chat conversation in VS Code or GitHub.com. -->
+
+Use the project context below to assist with the current pipeline stage.
+Do not suggest changes outside the scope defined in the Stage Template.
+"""
+
+ADAPTER_OPENCODE = """\
+# OpenCode — MiniLegion Context
+
+<!-- Paste this as the initial message in an OpenCode session. -->
+
+You are resuming a MiniLegion project. The context block below is authoritative.
+Execute the task described in the Stage Template section. Follow all constraints in Memory.
+Produce output in the format expected by MiniLegion's schema validation.
+"""
+
+
+# ---------------------------------------------------------------------------
+# Stage templates (CTX-04) — one per Stage enum value
+# ---------------------------------------------------------------------------
+
+STAGE_TEMPLATES: dict[str, str] = {
+    "init": "No active pipeline stage. Run `minilegion brief <text>` to start.\n",
+    "brief": (
+        "# Brief Stage\n\n"
+        "Review the project brief. Ensure it clearly states goals, constraints, "
+        "and success criteria.\n"
+    ),
+    "research": (
+        "# Research Stage\n\n"
+        "Analyze the codebase and brief. Produce RESEARCH.json with: "
+        "project_overview, tech_stack, existing_conventions, open_questions, "
+        "codebase_insights.\n"
+    ),
+    "design": (
+        "# Design Stage\n\n"
+        "Based on research, produce DESIGN.json with: design_approach, "
+        "architecture_decisions, components, data_models, api_contracts, "
+        "integration_points, design_patterns_used, conventions_to_follow, "
+        "technical_risks, out_of_scope, test_strategy, estimated_complexity.\n"
+    ),
+    "plan": (
+        "# Plan Stage\n\n"
+        "Based on design, produce PLAN.json with: summary, tasks (each with id, "
+        "description, type, action, touched_files), total_tasks, estimated_complexity.\n"
+    ),
+    "execute": (
+        "# Execute Stage\n\n"
+        "Implement the plan tasks. Produce EXECUTION_LOG.json with: tasks (each with "
+        "task_id, status, changed_files, notes), summary.\n"
+    ),
+    "review": (
+        "# Review Stage\n\n"
+        "Review the execution log against the plan and design. Produce REVIEW.json "
+        "with: verdict (pass/revise), summary, issues_found, corrective_actions, "
+        "design_conformity.\n"
+    ),
+    "archive": (
+        "# Archive Stage\n\n"
+        "Pipeline complete. Run `minilegion archive` to finalize. "
+        "No LLM output required.\n"
+    ),
+}
+
+
+# ---------------------------------------------------------------------------
+# Memory scaffold content (CTX-05)
+# ---------------------------------------------------------------------------
+
+MEMORY_DECISIONS = (
+    "# Decisions\n\n"
+    "_Add key project decisions here. Each entry: date, decision, rationale._\n"
+)
+
+MEMORY_GLOSSARY = (
+    "# Glossary\n\n_Add domain terms here. Each entry: term — definition._\n"
+)
+
+MEMORY_CONSTRAINTS = (
+    "# Constraints\n\n"
+    "_Add hard constraints here (technical, business, security). "
+    "Each entry: constraint — why it applies._\n"
+)
+
+
+# ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
 
@@ -216,6 +342,23 @@ def init(
 
     # Create BRIEF.md via write_atomic
     write_atomic(project_ai / "BRIEF.md", BRIEF_TEMPLATE)
+
+    # Create context scaffolding (CTX-03, CTX-04, CTX-05)
+    (project_ai / "adapters").mkdir()
+    write_atomic(project_ai / "adapters" / "_base.md", ADAPTER_BASE)
+    write_atomic(project_ai / "adapters" / "claude.md", ADAPTER_CLAUDE)
+    write_atomic(project_ai / "adapters" / "chatgpt.md", ADAPTER_CHATGPT)
+    write_atomic(project_ai / "adapters" / "copilot.md", ADAPTER_COPILOT)
+    write_atomic(project_ai / "adapters" / "opencode.md", ADAPTER_OPENCODE)
+
+    (project_ai / "templates").mkdir()
+    for stage_name, content in STAGE_TEMPLATES.items():
+        write_atomic(project_ai / "templates" / f"{stage_name}.md", content)
+
+    (project_ai / "memory").mkdir()
+    write_atomic(project_ai / "memory" / "decisions.md", MEMORY_DECISIONS)
+    write_atomic(project_ai / "memory" / "glossary.md", MEMORY_GLOSSARY)
+    write_atomic(project_ai / "memory" / "constraints.md", MEMORY_CONSTRAINTS)
 
     typer.echo(typer.style(f"Created project: {name}", fg=typer.colors.GREEN))
 
