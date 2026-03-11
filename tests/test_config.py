@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from minilegion.core.config import MiniLegionConfig, load_config
+from minilegion.core.config import ContextConfig, MiniLegionConfig, load_config
 from minilegion.core.exceptions import ConfigError
 
 
@@ -127,3 +127,57 @@ class TestLoadConfig:
 
         with pytest.raises(ConfigError):
             load_config(tmp_project_dir)
+
+
+class TestContextConfig:
+    """Tests for ContextConfig sub-model (CFG-08, CFG-09)."""
+
+    def test_context_config_defaults(self):
+        """ContextConfig() has correct defaults."""
+        ctx = ContextConfig()
+        assert ctx.max_injection_tokens == 3000
+        assert ctx.lookahead_tasks == 2
+        assert ctx.warn_threshold == 0.7
+
+    def test_minilegion_config_has_context_field(self):
+        """MiniLegionConfig() has a context field of type ContextConfig."""
+        config = MiniLegionConfig()
+        assert hasattr(config, "context")
+        assert isinstance(config.context, ContextConfig)
+
+    def test_minilegion_config_context_defaults(self):
+        """MiniLegionConfig().context has correct defaults (CFG-09)."""
+        config = MiniLegionConfig()
+        assert config.context.max_injection_tokens == 3000
+        assert config.context.lookahead_tasks == 2
+        assert config.context.warn_threshold == 0.7
+
+    def test_context_partial_override(self, tmp_project_dir):
+        """Config JSON with partial context block sets specified fields; unset fields keep defaults."""
+        config_path = tmp_project_dir / "project-ai" / "minilegion.config.json"
+        config_path.write_text(json.dumps({"context": {"max_injection_tokens": 1500}}))
+
+        config = load_config(tmp_project_dir)
+        assert config.context.max_injection_tokens == 1500
+        assert config.context.lookahead_tasks == 2  # unchanged default
+        assert config.context.warn_threshold == 0.7  # unchanged default
+
+    def test_context_absent_in_config_json_gives_defaults(self, tmp_project_dir):
+        """Config JSON without a 'context' key produces identical ContextConfig defaults (CFG-09)."""
+        config_path = tmp_project_dir / "project-ai" / "minilegion.config.json"
+        config_path.write_text(json.dumps({"model": "gpt-4o-mini"}))
+
+        config = load_config(tmp_project_dir)
+        assert config.context.max_injection_tokens == 3000
+        assert config.context.lookahead_tasks == 2
+        assert config.context.warn_threshold == 0.7
+
+    def test_existing_config_tests_unaffected(self):
+        """Regression: Adding ContextConfig does not break existing MiniLegionConfig defaults."""
+        config = MiniLegionConfig()
+        assert config.provider == "openai"
+        assert config.model == "gpt-4o"
+        assert config.small_model == "gpt-4o-mini"
+        assert config.timeout == 300
+        assert config.max_retries == 2
+        assert config.engines == {}
