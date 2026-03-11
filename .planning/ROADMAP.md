@@ -185,11 +185,11 @@ Plans:
 **Depends on:** Phase 13
 **Requirements:** HST-01, HST-02, HST-03, HST-04, HST-05
 **Gap Closure:** Closes history extraction integration and E2E flow gaps from v1.1 audit.
-**Plans:** TBD
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 14-01: Implement `core/history.py` append/read APIs and history/ storage contract
-- [ ] 14-02: Add old STATE history migration and `minilegion history` CLI output
+- [ ] 14-01-PLAN.md — Build `core/history.py` append/read APIs, remove persisted STATE history, and add first-access legacy migration
+- [ ] 14-02-PLAN.md — Wire command/context surfaces to history events and add `minilegion history` timeline output
 
 ---
 
@@ -247,7 +247,7 @@ Plans:
 | 7. Rollback | v1.1 | 0/1 | Not started | - |
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
 | 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
-| 14. History Foundation + Migration | v1.1 gap closure | 0/2 | Not started | - |
+| 14. History Foundation + Migration | v1.1 gap closure | Complete    | 2026-03-11 | - |
 | 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | 0/2 | Not started | - |
 | 16. Research Brainstorm Mode | v1.1 gap closure | 0/1 | Not started | - |
 | 17. Rollback + Doctor Health Surface | v1.1 gap closure | 0/2 | Not started | - |
