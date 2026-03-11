@@ -17,4 +17,6 @@ Use `/gsd-new-milestone` to define the next milestone roadmap.
 
 Plans:
 - [x] 01-01-PLAN.md - Extend config schema and config CLI for small model, tool permissions, recommended vs all models, and aliases
-- [ ] 01-02-PLAN.md - Add provider healthcheck gate and deterministic context compaction in research orchestration
+- [x] 01-02-PLAN.md - Add provider healthcheck gate and deterministic context compaction in research orchestration
+
+**Status:** COMPLETE — verified 7/7 must-haves, 613 tests passing. Closed 2026-03-11.
