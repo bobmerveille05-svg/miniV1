@@ -183,8 +183,13 @@ Key config fields:
 - `recommended_models` - curated provider catalog shown first in `config init` and `config model`.
 - `all_models` - broader provider catalog available from the same interactive flow.
 - `model_aliases` - provider-keyed shortcuts resolved to canonical model IDs before persistence.
+- `context.max_injection_tokens` - max characters of the current-stage artifact injected into assembled context before truncation (default `3000`).
+- `context.lookahead_tasks` - number of pending PLAN tasks included in `## Compact Plan` (default `2`).
+- `context.warn_threshold` - warning ratio for assembled context size vs `max_injection_tokens`; emits stderr warning when exceeded (default `0.7`).
 - `context_auto_compact` - when true, deterministically truncates scanned codebase context to 50,000 chars before prompt rendering; appends an explicit truncation marker so the LLM knows data was cut.
 - `provider_healthcheck` - when true, runs a fail-fast readiness check immediately after config load and before preflight, scanning, or any LLM calls in the research stage.
+
+`context` is optional. If the `context` block is omitted entirely in `project-ai/minilegion.config.json`, MiniLegion uses the same defaults (`3000`, `2`, `0.7`) via `ContextConfig` defaults, so behavior is unchanged.
 
 **`base_url`** — required for `openai-compatible` and Ollama endpoints:
 
