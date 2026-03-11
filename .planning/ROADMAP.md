@@ -246,7 +246,7 @@ Plans:
 | 6. Research Brainstorm | v1.1 | 0/1 | Not started | - |
 | 7. Rollback | v1.1 | 0/1 | Not started | - |
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
-| 13. Context Evidence + Verification Backfill | 2/2 | Complete   | 2026-03-11 | - |
+| 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
 | 14. History Foundation + Migration | v1.1 gap closure | 0/2 | Not started | - |
 | 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | 0/2 | Not started | - |
 | 16. Research Brainstorm Mode | v1.1 gap closure | 0/1 | Not started | - |
