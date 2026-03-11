@@ -10,6 +10,7 @@ stdout; this module is a pure function — no file writes happen here.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -62,6 +63,7 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
     project_dir = Path(project_dir)
     max_tokens = config.context.max_injection_tokens
     parts: list[str] = []
+    completed_task_ids: set[str] = set()
 
     # -----------------------------------------------------------------------
     # Section 1: Current State
@@ -71,6 +73,7 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
         state = load_state(state_path)
         current_stage = state.current_stage
         completed_count = len(state.completed_tasks)
+        completed_task_ids = set(state.completed_tasks)
         history_lines: list[str] = []
         for entry in state.history[-3:]:
             history_lines.append(
@@ -93,7 +96,52 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
     parts.append(state_section)
 
     # -----------------------------------------------------------------------
-    # Section 2: Previous Artifact
+    # Section 2: Compact Plan
+    # -----------------------------------------------------------------------
+    compact_plan_lines: list[str] = []
+    plan_path = project_dir / "PLAN.json"
+    if plan_path.exists():
+        try:
+            plan_data = json.loads(plan_path.read_text(encoding="utf-8"))
+            tasks = plan_data.get("tasks") if isinstance(plan_data, dict) else None
+            if isinstance(tasks, list):
+                pending_tasks: list[tuple[str, str]] = []
+                for task in tasks:
+                    if not isinstance(task, dict):
+                        continue
+                    task_id = task.get("id")
+                    if not isinstance(task_id, str) or not task_id.strip():
+                        continue
+                    if task_id in completed_task_ids:
+                        continue
+                    task_name = task.get("name")
+                    display_name = (
+                        task_name.strip()
+                        if isinstance(task_name, str) and task_name.strip()
+                        else "(unnamed task)"
+                    )
+                    pending_tasks.append((task_id, display_name))
+
+                lookahead_limit = max(config.context.lookahead_tasks, 0)
+                if pending_tasks and lookahead_limit > 0:
+                    compact_plan_lines = [
+                        f"- {task_id}: {task_name}"
+                        for task_id, task_name in pending_tasks[:lookahead_limit]
+                    ]
+                elif pending_tasks:
+                    compact_plan_lines = ["_Lookahead disabled (lookahead_tasks=0)._"]
+                else:
+                    compact_plan_lines = ["_No pending tasks in plan._"]
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            compact_plan_lines = []
+
+    if not compact_plan_lines:
+        compact_plan_lines = ["_No plan context available._"]
+
+    parts.append("## Compact Plan\n\n" + "\n".join(compact_plan_lines) + "\n")
+
+    # -----------------------------------------------------------------------
+    # Section 3: Previous Artifact
     # -----------------------------------------------------------------------
     artifact_name = _STAGE_ARTIFACTS.get(current_stage)
     if artifact_name:
@@ -105,7 +153,7 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
             parts.append(f"## Previous Artifact\n\n{artifact_content}\n")
 
     # -----------------------------------------------------------------------
-    # Section 3: Stage Template
+    # Section 4: Stage Template
     # -----------------------------------------------------------------------
     template_path = project_dir / "templates" / f"{current_stage}.md"
     if template_path.exists():
@@ -117,7 +165,7 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
         )
 
     # -----------------------------------------------------------------------
-    # Section 4: Memory
+    # Section 5: Memory
     # -----------------------------------------------------------------------
     memory_parts: list[str] = []
     memory_dir = project_dir / "memory"
@@ -133,7 +181,7 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
         parts.append("## Memory\n\n" + "\n\n---\n\n".join(memory_parts) + "\n")
 
     # -----------------------------------------------------------------------
-    # Section 5: Adapter Instructions
+    # Section 6: Adapter Instructions
     # -----------------------------------------------------------------------
     adapters_dir = project_dir / "adapters"
     tool_adapter = adapters_dir / f"{tool}.md"
