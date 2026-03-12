@@ -112,10 +112,10 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 | VAD-02 | Phase 15 | Complete |
 | VAD-03 | Phase 15 | Complete |
 | VAD-04 | Phase 15 | Complete |
-| RSM-01 | Phase 16 | Pending |
-| RSM-02 | Phase 16 | Pending |
-| RSM-03 | Phase 16 | Pending |
-| RSM-04 | Phase 16 | Pending |
+| RSM-01 | Phase 16 | Complete |
+| RSM-02 | Phase 16 | Complete |
+| RSM-03 | Phase 16 | Complete |
+| RSM-04 | Phase 16 | Complete |
 | RBK-01 | Phase 17 | Pending |
 | RBK-02 | Phase 17 | Pending |
 | DOC-01 | Phase 17 | Pending |

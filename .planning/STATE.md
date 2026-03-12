@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Portable Kernel
 status: in-progress
-stopped_at: Completed 16-research-brainstorm-mode/16-01-PLAN.md
-last_updated: "2026-03-12T01:27:29Z"
-last_activity: 2026-03-12 — Phase 16 Plan 1 complete (Research brainstorm mode with config defaults)
+stopped_at: Completed 16-research-brainstorm-mode/16-02-PLAN.md
+last_updated: "2026-03-12T05:00:00Z"
+last_activity: 2026-03-12 — Phase 16 Plan 2 complete (ResearchSchema brainstorm fields + recommendation enforcement)
 progress:
   total_phases: 17
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 28
-  completed_plans: 26
-  percent: 93
+  completed_plans: 28
+  percent: 100
 ---
 
 
@@ -22,28 +22,29 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** A user can open any old project, run `minilegion status` then `minilegion context claude`, and resume work in under 2 minutes — portable, auditable, resumable.
-**Current focus:** Phase 14 — History Foundation + Migration (ready)
+**Current focus:** Phase 16 — Research brainstorm mode (gap closure) — COMPLETE
 
 ## Current Position
 
-Phase: 16 of 17 (v1.1 gap closure) — research brainstorm mode complete
-Plan: 1 of 2 in current phase ✅
-Status: Phase 16 Plan 1 complete — next is 16-02
-Last activity: 2026-03-12 — Phase 16 Plan 1 complete (Research brainstorm mode with config defaults)
+Phase: 16 of 17 (v1.1 gap closure) — research brainstorm mode COMPLETE
+Plan: 2 of 2 in current phase ✅
+Status: Phase 16 complete — all plans done
+Last activity: 2026-03-12 — Phase 16 Plan 2 complete (ResearchSchema brainstorm fields + recommendation enforcement)
 
-Progress: [██████████████] 93% (26 of 28 plans complete)
+Progress: [██████████] 100% (28 of 28 plans complete)
 
 ## Performance Metrics
 
 **Velocity (v1.1 so far):**
-- Total plans completed: 6 (Phase 1: 2, Phase 13: 2, Phase 16: 2)
-- Average duration: ~10 min
-- Total execution time: ~70 min
+- Total plans completed: 8 (Phase 1: 2, Phase 13: 2, Phase 16: 4)
+- Average duration: ~11 min
+- Total execution time: ~85 min
 
 **Recent Trend:**
 - Phase 1: 2 plans, ~11 min total
 - Phase 13: 2 plans, ~6 min total
 - Phase 16 Plan 1: ~18 min
+- Phase 16 Plan 2: ~15 min
 - Trend: Maintaining velocity
 
 | Phase | Plan | Duration | Tasks | Files |
@@ -53,6 +54,7 @@ Progress: [██████████████] 93% (26 of 28 plans compl
 | 13-context-evidence-verification-backfill | 01 | ~4 min | 2 | 2 |
 | 13-context-evidence-verification-backfill | 02 | ~2 min | 3 | 2 |
 | 16-research-brainstorm-mode | 01 | ~18 min | 5 | 5 |
+| 16-research-brainstorm-mode | 02 | ~15 min | 2 | 4 |
 
 ## Accumulated Context
 
@@ -79,6 +81,9 @@ Progress: [██████████████] 93% (26 of 28 plans compl
 - [Phase 16-01]: ResearchConfig follows ContextConfig/WorkflowConfig pattern with default_factory for non-breaking backward compatibility
 - [Phase 16-01]: Brainstorm mode uses dual prompts in single researcher.md file with mode-aware template substitution
 - [Phase 16-01]: Schema supports both fact and brainstorm modes via optional fields (no discriminator needed)
+- [Phase 16-02]: facts/assumptions/tradeoffs/risks use Field(default_factory=list) not None — preserves array semantics (empty array vs null) in brainstorm serialization
+- [Phase 16-02]: Recommendation enforcement is Python-level in commands.py (not Pydantic validator) — JSON Schema cannot enforce conditional requirements
+- [Phase 16-02]: research.schema.json regenerated from model_json_schema() to maintain single source of truth; test_schema_matches_model enforces ongoing sync
 
 ### Pending Todos
 
@@ -86,10 +91,10 @@ None.
 
 ### Blockers/Concerns
 
-None. Plan 13-02 regression gate green (69 targeted tests passing).
+None. Phase 16 complete — all RSM requirements satisfied. 11 TestResearchBrainstormMode tests passing.
 
 ## Session Continuity
 
-Last session: 2026-03-12T01:27:29Z
-Stopped at: Completed 16-research-brainstorm-mode/16-01-PLAN.md
+Last session: 2026-03-12T05:00:00Z
+Stopped at: Completed 16-research-brainstorm-mode/16-02-PLAN.md
 Resume file: None
