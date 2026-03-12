@@ -29,8 +29,23 @@ def project_dir(tmp_path: Path) -> Path:
     pa = tmp_path / "project-ai"
     pa.mkdir()
     state = ProjectState()
-    state.add_history("init", "Project initialized")
     save_state(state, pa / "STATE.json")
+    history_dir = pa / "history"
+    history_dir.mkdir()
+    (history_dir / "001_init.json").write_text(
+        json.dumps(
+            {
+                "event_type": "init",
+                "stage": "init",
+                "timestamp": "2026-01-01T00:00:00",
+                "actor": "system",
+                "tool_used": "minilegion",
+                "notes": "Project initialized",
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return pa
 
 
@@ -113,8 +128,23 @@ class TestAssembleContextState:
         pa.mkdir()
         state = ProjectState()
         state.current_stage = "brief"
-        state.add_history("brief", "Brief created")
         save_state(state, pa / "STATE.json")
+        history_dir = pa / "history"
+        history_dir.mkdir()
+        (history_dir / "001_brief.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "brief",
+                    "stage": "brief",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Brief created",
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
 
         result = assemble_context("claude", pa, config)
         assert "brief" in result
@@ -448,8 +478,23 @@ class TestContextCLICommand:
         project_dir = tmp_path / "project-ai"
         project_dir.mkdir(parents=True)
         state = ProjectState()
-        state.add_history("init", "Project initialized")
         save_state(state, project_dir / "STATE.json")
+        history_dir = project_dir / "history"
+        history_dir.mkdir()
+        (history_dir / "001_init.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "init",
+                    "stage": "init",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Project initialized",
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         return project_dir
 
     def test_context_command_writes_file(self, tmp_path, monkeypatch):

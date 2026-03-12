@@ -10,12 +10,14 @@ downstream approvals.
 
 from datetime import datetime
 from enum import Enum
+import json
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from minilegion.core.exceptions import InvalidTransitionError
 from minilegion.core.file_io import write_atomic
+from minilegion.core.history import HistoryEvent, append_event
 
 
 class Stage(str, Enum):
@@ -168,7 +170,8 @@ def save_state(state: ProjectState, path: Path) -> None:
         state: The ProjectState to serialize.
         path: File path to write to.
     """
-    write_atomic(path, state.model_dump_json(indent=2))
+    payload = state.model_dump(exclude={"history"})
+    write_atomic(path, json.dumps(payload, indent=2))
 
 
 def load_state(path: Path) -> ProjectState:
@@ -180,5 +183,28 @@ def load_state(path: Path) -> ProjectState:
     Returns:
         Validated ProjectState.
     """
-    raw = Path(path).read_text(encoding="utf-8")
-    return ProjectState.model_validate_json(raw)
+    state_path = Path(path)
+    raw = state_path.read_text(encoding="utf-8")
+    raw_data = json.loads(raw)
+
+    if isinstance(raw_data, dict) and isinstance(raw_data.get("history"), list):
+        project_dir = state_path.parent
+        stage = str(raw_data.get("current_stage", "init"))
+        for entry in raw_data["history"]:
+            if not isinstance(entry, dict):
+                continue
+            append_event(
+                project_dir,
+                HistoryEvent(
+                    event_type=str(entry.get("action", "legacy")),
+                    stage=stage,
+                    timestamp=str(entry.get("timestamp", datetime.now().isoformat())),
+                    actor="system",
+                    tool_used="minilegion",
+                    notes=str(entry.get("details", "")),
+                ),
+            )
+        raw_data.pop("history", None)
+        write_atomic(state_path, json.dumps(raw_data, indent=2))
+
+    return ProjectState.model_validate(raw_data)

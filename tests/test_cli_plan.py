@@ -257,7 +257,7 @@ class TestPlanCommand:
         runner.invoke(app, ["plan"])
 
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "plan"
+        assert state_data["current_stage"] == "design"
 
     def test_plan_rejection_exits_0(self, monkeypatch, tmp_path):
         project_ai = tmp_path / "myproject" / "project-ai"
@@ -424,7 +424,7 @@ class TestFastMode:
         runner.invoke(app, ["plan", "--fast"])
 
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "plan"
+        assert state_data["current_stage"] == "brief"
 
     def test_fast_mode_uses_scan_codebase(self, monkeypatch, tmp_path):
         """scan_codebase is called when --fast is used."""

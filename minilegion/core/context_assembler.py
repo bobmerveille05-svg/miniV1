@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 from minilegion.core.config import MiniLegionConfig
+from minilegion.core.history import read_history
 from minilegion.core.state import load_state
 
 # Ordered by pipeline stage for artifact lookup
@@ -75,9 +76,9 @@ def assemble_context(tool: str, project_dir: Path, config: MiniLegionConfig) -> 
         completed_count = len(state.completed_tasks)
         completed_task_ids = set(state.completed_tasks)
         history_lines: list[str] = []
-        for entry in state.history[-3:]:
+        for event in read_history(project_dir)[-3:]:
             history_lines.append(
-                f"- `{entry.timestamp}` **{entry.action}**: {entry.details}"
+                f"- `{event.timestamp}` **{event.event_type}**: {event.notes}"
             )
         history_block = (
             "\n".join(history_lines) if history_lines else "_No history yet._"

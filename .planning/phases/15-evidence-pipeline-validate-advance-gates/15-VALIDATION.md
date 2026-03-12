@@ -21,7 +21,7 @@ created: 2026-03-12
 | **Config file** | `pyproject.toml` `[tool.pytest.ini_options]` |
 | **Quick run command** | `python -m pytest tests/test_evidence.py tests/test_cli_validate_advance.py tests/test_config.py -q` |
 | **Full suite command** | `python -m pytest tests/ -x -q` |
-| **Estimated runtime** | ~35 seconds |
+| **Estimated runtime** | ~28-30 seconds (smoke) |
 
 ---
 
@@ -30,7 +30,7 @@ created: 2026-03-12
 - **After every task commit:** Run `python -m pytest tests/test_evidence.py tests/test_cli_validate_advance.py -q`
 - **After every plan wave:** Run `python -m pytest tests/test_evidence.py tests/test_cli_validate_advance.py tests/test_config.py tests/test_cli_brief_research.py tests/test_cli_design.py tests/test_cli_plan.py tests/test_cli_execute.py tests/test_cli_review.py -q`
 - **Before `/gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 35 seconds
+- **Max feedback latency:** 30 seconds (smoke target)
 
 ---
 
@@ -69,7 +69,7 @@ All phase behaviors have automated verification.
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
-- [ ] Feedback latency < 35s
+- [ ] Feedback latency <= 30s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
