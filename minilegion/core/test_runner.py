@@ -7,6 +7,7 @@ Raises no exceptions on test failure — returns a TestResult with success=False
 from __future__ import annotations
 
 import json
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -55,3 +56,63 @@ def detect_test_command(project_root: Path) -> list[str] | None:
             return ["make", "test"]
 
     return None
+
+
+_MAX_OUTPUT_CHARS = 10_000
+
+
+def run_tests(
+    project_root: Path,
+    timeout: int = 120,
+    command_override: list[str] | None = None,
+) -> TestResult:
+    """Run the detected (or overridden) test command.
+
+    Returns a TestResult. Never raises on test failure — callers decide what to do.
+    Output is truncated to _MAX_OUTPUT_CHARS to avoid flooding prompts.
+    """
+    command = command_override or detect_test_command(project_root)
+
+    if command is None:
+        return TestResult(
+            success=True,
+            command=[],
+            output="",
+            exit_code=0,
+            skipped=True,
+        )
+
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return TestResult(
+            success=False,
+            command=command,
+            output=f"Test command timed out after {timeout}s.",
+            exit_code=-1,
+        )
+    except FileNotFoundError as exc:
+        return TestResult(
+            success=False,
+            command=command,
+            output=f"Test command not found: {exc}",
+            exit_code=-1,
+        )
+
+    raw_output = (proc.stdout or "") + (proc.stderr or "")
+    if len(raw_output) > _MAX_OUTPUT_CHARS:
+        raw_output = raw_output[:_MAX_OUTPUT_CHARS] + "\n[...output truncated...]"
+
+    return TestResult(
+        success=(proc.returncode == 0),
+        command=command,
+        output=raw_output,
+        exit_code=proc.returncode,
+        skipped=False,
+    )

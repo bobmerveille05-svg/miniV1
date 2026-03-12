@@ -68,3 +68,65 @@ def test_detect_from_makefile_with_crlf(tmp_path):
     (tmp_path / "Makefile").write_bytes(b"test:\r\n\tpytest tests/\r\n")
     cmd = detect_test_command(tmp_path)
     assert cmd == ["make", "test"]
+
+
+from unittest.mock import patch, MagicMock
+from minilegion.core.test_runner import run_tests, TestResult
+
+
+def test_run_tests_returns_skipped_when_no_command(tmp_path):
+    result = run_tests(tmp_path, timeout=30)
+    assert result.skipped is True
+    assert result.success is True  # skipped = not a failure
+
+
+def test_run_tests_returns_success_on_zero_exit(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.pytest.ini_options]\n")
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "5 passed"
+    mock_result.stderr = ""
+    with patch("minilegion.core.test_runner.subprocess.run", return_value=mock_result):
+        result = run_tests(tmp_path, timeout=30)
+    assert result.success is True
+    assert result.exit_code == 0
+    assert "5 passed" in result.output
+    assert result.skipped is False
+
+
+def test_run_tests_returns_failure_on_nonzero_exit(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.pytest.ini_options]\n")
+    mock_result = MagicMock()
+    mock_result.returncode = 1
+    mock_result.stdout = "1 failed"
+    mock_result.stderr = "AssertionError"
+    with patch("minilegion.core.test_runner.subprocess.run", return_value=mock_result):
+        result = run_tests(tmp_path, timeout=30)
+    assert result.success is False
+    assert result.exit_code == 1
+    assert "1 failed" in result.output
+
+
+def test_run_tests_respects_custom_command(tmp_path):
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "ok"
+    mock_result.stderr = ""
+    with patch(
+        "minilegion.core.test_runner.subprocess.run", return_value=mock_result
+    ) as mock_run:
+        run_tests(tmp_path, timeout=30, command_override=["make", "test"])
+    call_args = mock_run.call_args[0][0]
+    assert call_args == ["make", "test"]
+
+
+def test_run_tests_truncates_long_output(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.pytest.ini_options]\n")
+    long_output = "x" * 20_000
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = long_output
+    mock_result.stderr = ""
+    with patch("minilegion.core.test_runner.subprocess.run", return_value=mock_result):
+        result = run_tests(tmp_path, timeout=30)
+    assert len(result.output) <= 10_100  # 10k chars + truncation notice
