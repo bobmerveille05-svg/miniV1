@@ -227,11 +227,11 @@ Plans:
 **Depends on:** Phase 16
 **Requirements:** RBK-01, RBK-02, DOC-01, DOC-02, DOC-03
 **Gap Closure:** Closes rollback/doctor integration and E2E flow gaps from v1.1 audit.
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 17-01: Implement rollback command with artifact preservation and history events
-- [ ] 17-02: Implement doctor command with coherence checks and green/yellow/red output
+- [ ] 17-01-PLAN.md — Implement `minilegion rollback "<reason>"` with artifact preservation and history event (RBK-01, RBK-02)
+- [ ] 17-02-PLAN.md — Implement `minilegion doctor` with 6 coherence checks and green/yellow/red output (DOC-01, DOC-02, DOC-03)
 
 ---
 
