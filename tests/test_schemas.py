@@ -54,6 +54,33 @@ class TestArchitectureDecision:
         assert ad.rationale == "Simple and well-understood"
         assert ad.alternatives_rejected == ["GraphQL", "gRPC"]
 
+    def test_alternatives_rejected_coerces_objects_to_strings(self):
+        """LLM sometimes emits {name, reason} objects — must be coerced to strings."""
+        ad = ArchitectureDecision(
+            decision="Use REST API",
+            rationale="Simple",
+            alternatives_rejected=[
+                {"name": "GraphQL", "reason": "Too complex"},
+                {"name": "gRPC", "reason": "Requires protobuf"},
+            ],
+        )
+        assert len(ad.alternatives_rejected) == 2
+        assert isinstance(ad.alternatives_rejected[0], str)
+        assert "GraphQL" in ad.alternatives_rejected[0]
+        assert "Too complex" in ad.alternatives_rejected[0]
+
+    def test_alternatives_rejected_coerces_name_description_objects(self):
+        """Objects with 'name'/'description' keys are also coerced."""
+        ad = ArchitectureDecision(
+            decision="Use Module Pattern",
+            rationale="Clean separation",
+            alternatives_rejected=[
+                {"name": "Monolith", "description": "Hard to test"},
+            ],
+        )
+        assert isinstance(ad.alternatives_rejected[0], str)
+        assert "Monolith" in ad.alternatives_rejected[0]
+
     def test_missing_decision_field_rejected(self):
         with pytest.raises(PydanticValidationError):
             ArchitectureDecision(
@@ -181,6 +208,40 @@ class TestDesignSchema:
         json_str = d.model_dump_json()
         d2 = DesignSchema.model_validate_json(json_str)
         assert d2.estimated_complexity == "high"
+
+    def test_design_schema_coerces_llm_object_lists(self):
+        """DesignSchema must accept LLM object output for list[str] fields and coerce to strings."""
+        d = DesignSchema(
+            design_approach="Modular",
+            test_strategy="Unit tests",
+            integration_points=[
+                {
+                    "name": "Keyboard Input",
+                    "description": "Browser keyboard events",
+                    "type": "event-based",
+                }
+            ],
+            design_patterns_used=[
+                {
+                    "name": "Observer Pattern",
+                    "description": "State changes notify display",
+                }
+            ],
+            technical_risks=[
+                {"risk": "Floating-point precision", "mitigation": "Use rounding"}
+            ],
+        )
+        assert len(d.integration_points) == 1
+        assert isinstance(d.integration_points[0], str)
+        assert "Keyboard Input" in d.integration_points[0]
+
+        assert len(d.design_patterns_used) == 1
+        assert isinstance(d.design_patterns_used[0], str)
+        assert "Observer Pattern" in d.design_patterns_used[0]
+
+        assert len(d.technical_risks) == 1
+        assert isinstance(d.technical_risks[0], str)
+        assert "Floating-point precision" in d.technical_risks[0]
 
 
 # ── PlanSchema ────────────────────────────────────────────────────────

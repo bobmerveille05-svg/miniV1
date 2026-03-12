@@ -12,9 +12,36 @@ registered in the schema registry without duplication.
 """
 
 from enum import Enum
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
+
+
+def _coerce_str_or_obj(v: Any) -> str:
+    """Coerce a value to string.
+
+    LLMs sometimes emit objects like ``{"name": "X", "reason": "Y"}`` for
+    fields that should be plain strings.  We flatten those to a readable
+    string so validation never fails on well-intentioned LLM output.
+    """
+    if isinstance(v, str):
+        return v
+    if isinstance(v, dict):
+        # Try common key patterns the LLM uses
+        name = v.get("name") or v.get("pattern") or v.get("risk") or v.get("type") or ""
+        extra = (
+            v.get("reason")
+            or v.get("description")
+            or v.get("mitigation")
+            or v.get("rationale")
+            or ""
+        )
+        parts = [str(p) for p in (name, extra) if p]
+        return ": ".join(parts) if parts else str(v)
+    return str(v)
+
+
+CoercedStr = Annotated[str, BeforeValidator(_coerce_str_or_obj)]
 
 
 # ── Enums ─────────────────────────────────────────────────────────────
@@ -35,7 +62,7 @@ class ArchitectureDecision(BaseModel):
 
     decision: str
     rationale: str
-    alternatives_rejected: list[str] = Field(default_factory=list, min_length=1)
+    alternatives_rejected: list[CoercedStr] = Field(default_factory=list, min_length=1)
 
 
 class Component(BaseModel):
@@ -118,13 +145,13 @@ class DesignSchema(BaseModel):
     design_approach: str
     architecture_decisions: list[ArchitectureDecision] = Field(default_factory=list)
     components: list[Component] = Field(default_factory=list)
-    data_models: list[str] = Field(default_factory=list)
-    api_contracts: list[str] = Field(default_factory=list)
-    integration_points: list[str] = Field(default_factory=list)
-    design_patterns_used: list[str] = Field(default_factory=list)
-    conventions_to_follow: list[str] = Field(default_factory=list)
-    technical_risks: list[str] = Field(default_factory=list)
-    out_of_scope: list[str] = Field(default_factory=list)
+    data_models: list[CoercedStr] = Field(default_factory=list)
+    api_contracts: list[CoercedStr] = Field(default_factory=list)
+    integration_points: list[CoercedStr] = Field(default_factory=list)
+    design_patterns_used: list[CoercedStr] = Field(default_factory=list)
+    conventions_to_follow: list[CoercedStr] = Field(default_factory=list)
+    technical_risks: list[CoercedStr] = Field(default_factory=list)
+    out_of_scope: list[CoercedStr] = Field(default_factory=list)
     test_strategy: str
     estimated_complexity: str = "medium"
 
