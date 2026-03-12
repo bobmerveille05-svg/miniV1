@@ -279,6 +279,27 @@ class ResearchConfig(BaseModel):
         return self
 
 
+class GitConfig(BaseModel):
+    """Git integration settings."""
+
+    enabled: bool = True
+    commit_artifacts: list[str] = Field(
+        default_factory=lambda: [
+            "project-ai/EXECUTION_LOG.json",
+            "project-ai/EXECUTION_LOG.md",
+            "project-ai/STATE.json",
+        ]
+    )
+
+
+class TestConfig(BaseModel):
+    """Auto-test settings."""
+
+    enabled: bool = True
+    timeout: int = 120
+    command: list[str] | None = None  # None = auto-detect
+
+
 class MiniLegionConfig(BaseModel):
     """Configuration for a MiniLegion project."""
 
@@ -311,6 +332,10 @@ class MiniLegionConfig(BaseModel):
     workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
     # Research stage config (Phase 6, RSM-01 through RSM-04) — optional, backward compatible
     research: ResearchConfig = Field(default_factory=ResearchConfig)
+    # Git-native workflow config — optional, backward compatible
+    git: GitConfig = Field(default_factory=GitConfig)
+    # Auto-test config — optional, backward compatible
+    test: TestConfig = Field(default_factory=TestConfig)
 
     @model_validator(mode="after")
     def _normalize_small_model(self) -> "MiniLegionConfig":

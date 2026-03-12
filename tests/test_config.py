@@ -4,7 +4,13 @@ import json
 
 import pytest
 
-from minilegion.core.config import ContextConfig, MiniLegionConfig, load_config
+from minilegion.core.config import (
+    ContextConfig,
+    GitConfig,
+    MiniLegionConfig,
+    TestConfig,
+    load_config,
+)
 from minilegion.core.exceptions import ConfigError
 
 
@@ -203,3 +209,46 @@ class TestWorkflowConfig:
         config = load_config(tmp_project_dir)
         assert config.workflow.strict_mode is False
         assert config.workflow.require_validation is True
+
+
+class TestGitConfig:
+    """Tests for GitConfig sub-model."""
+
+    def test_default_git_config(self):
+        config = MiniLegionConfig()
+        assert config.git.enabled is True
+        assert "project-ai/EXECUTION_LOG.json" in config.git.commit_artifacts
+        assert "project-ai/STATE.json" in config.git.commit_artifacts
+
+    def test_git_config_can_be_disabled(self):
+        config = MiniLegionConfig.model_validate({"git": {"enabled": False}})
+        assert config.git.enabled is False
+
+
+class TestTestConfig:
+    """Tests for TestConfig sub-model."""
+
+    def test_default_test_config(self):
+        config = MiniLegionConfig()
+        assert config.test.enabled is True
+        assert config.test.timeout == 120
+        assert config.test.command is None
+
+    def test_test_config_accepts_command_override(self):
+        config = MiniLegionConfig.model_validate(
+            {"test": {"command": ["make", "test"]}}
+        )
+        assert config.test.command == ["make", "test"]
+
+    def test_config_loads_without_git_test_fields(self, tmp_path):
+        """Old config files without git/test fields must still load."""
+        cfg_path = tmp_path / "project-ai"
+        cfg_path.mkdir()
+        (cfg_path / "minilegion.config.json").write_text(
+            json.dumps({"provider": "openai", "model": "gpt-4o"})
+        )
+        from minilegion.core.config import load_config
+
+        config = load_config(tmp_path)
+        assert config.git.enabled is True
+        assert config.test.enabled is True
