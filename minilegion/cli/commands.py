@@ -6,7 +6,7 @@ Commands register themselves with the Typer app imported from minilegion.cli.
 from __future__ import annotations
 
 import json as _json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated
 
@@ -47,6 +47,7 @@ from minilegion.core.schemas import (
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
     FORWARD_TRANSITIONS,
+    STAGE_ORDER,
     ProjectState,
     Stage,
     StateMachine,
@@ -185,6 +186,17 @@ VALIDATION_TARGETS: dict[str, Stage] = {
     "plan": Stage.EXECUTE,
     "execute": Stage.REVIEW,
     "review": Stage.ARCHIVE,
+}
+
+# Maps each stage to the artifact it produces (used by rollback and doctor)
+STAGE_CURRENT_ARTIFACT: dict[Stage, str] = {
+    Stage.BRIEF: "BRIEF.md",
+    Stage.RESEARCH: "RESEARCH.json",
+    Stage.DESIGN: "DESIGN.json",
+    Stage.PLAN: "PLAN.json",
+    Stage.EXECUTE: "EXECUTION_LOG.json",
+    Stage.REVIEW: "REVIEW.json",
+    Stage.ARCHIVE: "REVIEW.json",
 }
 
 
@@ -1489,6 +1501,236 @@ def context(
         write_atomic(context_path, block)
 
         typer.echo(block)
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+# ---------------------------------------------------------------------------
+# Rollback helpers
+# ---------------------------------------------------------------------------
+
+
+def _rejected_filename(original_name: str) -> str:
+    """Build rejected artifact filename: e.g. DESIGN.20260312T051000Z.rejected.json"""
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stem, _, ext = original_name.partition(".")
+    return f"{stem}.{ts}.rejected.{ext}"
+
+
+def _move_artifact_to_rejected(project_dir: Path, stage: Stage) -> str | None:
+    """Move current stage artifact to rejected/. Returns dest path string or None."""
+    artifact_name = STAGE_CURRENT_ARTIFACT.get(stage)
+    if artifact_name is None:
+        return None
+    artifact_path = project_dir / artifact_name
+    if not artifact_path.exists():
+        return None
+    rejected_dir = project_dir / "rejected"
+    rejected_dir.mkdir(parents=True, exist_ok=True)
+    dest = rejected_dir / _rejected_filename(artifact_name)
+    artifact_path.rename(dest)
+    return str(dest)
+
+
+# ---------------------------------------------------------------------------
+# Doctor helpers
+# ---------------------------------------------------------------------------
+
+
+def _check_state_valid(project_dir: Path) -> tuple[str, str]:
+    """Check that STATE.json exists and is a valid ProjectState."""
+    state_path = project_dir / "STATE.json"
+    if not state_path.exists():
+        return ("FAIL", "state_valid: STATE.json not found")
+    try:
+        load_state(state_path)
+        return ("PASS", "state_valid: STATE.json valid")
+    except Exception as exc:
+        return ("FAIL", f"state_valid: {exc}")
+
+
+def _check_artifact_present(project_dir: Path) -> tuple[str, str]:
+    """Check that the current-stage artifact exists and is non-empty."""
+    try:
+        state = load_state(project_dir / "STATE.json")
+        stage = Stage(state.current_stage)
+    except Exception:
+        return ("PASS", "artifact_present: skipped (state invalid)")
+    artifact_name = STAGE_CURRENT_ARTIFACT.get(stage)
+    if artifact_name is None:
+        return ("PASS", "artifact_present: no artifact required for init stage")
+    artifact_path = project_dir / artifact_name
+    if not artifact_path.exists():
+        return ("FAIL", f"artifact_present: {artifact_name} missing")
+    if not artifact_path.read_text(encoding="utf-8").strip():
+        return ("FAIL", f"artifact_present: {artifact_name} is empty/whitespace")
+    return ("PASS", f"artifact_present: {artifact_name} present")
+
+
+def _check_history_readable(project_dir: Path) -> tuple[str, str]:
+    """Check that history/ exists and all events parse cleanly."""
+    history_dir = project_dir / "history"
+    if not history_dir.exists():
+        return ("WARN", "history_readable: history/ directory missing")
+    json_files = list(history_dir.glob("*.json"))
+    for path in json_files:
+        try:
+            HistoryEvent.model_validate_json(path.read_text(encoding="utf-8"))
+        except Exception:
+            return ("WARN", f"history_readable: {path.name} failed to parse")
+    return ("PASS", f"history_readable: {len(json_files)} event(s) readable")
+
+
+def _check_stage_coherence(project_dir: Path) -> tuple[str, str]:
+    """Check that the stage-expected artifact actually exists on disk."""
+    try:
+        state = load_state(project_dir / "STATE.json")
+        stage = Stage(state.current_stage)
+    except Exception:
+        return ("PASS", "stage_coherence: skipped (state invalid)")
+    artifact_name = STAGE_CURRENT_ARTIFACT.get(stage)
+    if artifact_name is None:
+        return ("PASS", "stage_coherence: init stage has no artifact requirement")
+    if not (project_dir / artifact_name).exists():
+        return (
+            "FAIL",
+            f"stage_coherence: stage={stage.value} but {artifact_name} absent",
+        )
+    return (
+        "PASS",
+        f"stage_coherence: stage={stage.value} coherent with {artifact_name}",
+    )
+
+
+def _check_adapter_base(project_dir: Path) -> tuple[str, str]:
+    """Check that adapters/_base.md exists."""
+    base_path = project_dir / "adapters" / "_base.md"
+    if not base_path.exists():
+        return ("WARN", "adapter_base: adapters/_base.md missing")
+    return ("PASS", "adapter_base: adapters/_base.md present")
+
+
+def _check_adapter_active(
+    project_dir: Path, config: MiniLegionConfig
+) -> tuple[str, str]:
+    """Check that at least one non-base tool adapter exists."""
+    adapters_dir = project_dir / "adapters"
+    if not adapters_dir.exists():
+        return (
+            "PASS",
+            "adapter_active: no adapters/ directory (covered by adapter_base)",
+        )
+    tool_adapters = [p for p in adapters_dir.glob("*.md") if p.name != "_base.md"]
+    if not tool_adapters:
+        return ("WARN", "adapter_active: no tool adapters present in adapters/")
+    return ("PASS", f"adapter_active: {len(tool_adapters)} tool adapter(s) present")
+
+
+# ---------------------------------------------------------------------------
+# Commands: rollback, doctor
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def rollback(
+    reason: Annotated[
+        str, typer.Argument(help="Reason for rolling back to the previous stage")
+    ],
+) -> None:
+    """Roll back to the previous pipeline stage, preserving the current artifact."""
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        current = Stage(state.current_stage)
+        current_idx = STAGE_ORDER.index(current)
+
+        if current_idx == 0:
+            typer.echo(
+                typer.style(
+                    "Cannot roll back: already at the first stage (init). No previous stage exists.",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        to_stage = STAGE_ORDER[current_idx - 1]
+
+        # Move artifact BEFORE state mutation (safe — if rename fails, state unchanged)
+        artifact_moved = _move_artifact_to_rejected(project_dir, current)
+
+        # Transition state machine (clears approvals at/after to_stage index)
+        sm = StateMachine(current, state.approvals)
+        sm.transition(to_stage)
+        state.current_stage = to_stage.value
+        state.approvals = sm.approvals
+
+        notes = _json.dumps(
+            {
+                "reason": reason,
+                "from_stage": current.value,
+                "to_stage": to_stage.value,
+                "artifact_moved": artifact_moved,
+            }
+        )
+        append_event(
+            project_dir,
+            HistoryEvent(
+                event_type="rollback",
+                stage=to_stage.value,
+                timestamp=datetime.now().isoformat(),
+                actor="system",
+                tool_used="minilegion",
+                notes=notes,
+            ),
+        )
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(
+            typer.style(
+                f"Rolled back: {current.value} \u2192 {to_stage.value}. Reason: {reason}",
+                fg=typer.colors.GREEN,
+            )
+        )
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def doctor() -> None:
+    """Check project health: state validity, artifacts, history, and adapters."""
+    try:
+        project_dir = find_project_dir()
+        config = load_config(project_dir.parent)
+
+        results: list[tuple[str, str]] = [
+            _check_state_valid(project_dir),
+            _check_artifact_present(project_dir),
+            _check_history_readable(project_dir),
+            _check_stage_coherence(project_dir),
+            _check_adapter_base(project_dir),
+            _check_adapter_active(project_dir, config),
+        ]
+
+        color_map = {
+            "PASS": typer.colors.GREEN,
+            "WARN": typer.colors.YELLOW,
+            "FAIL": typer.colors.RED,
+        }
+        for status, message in results:
+            typer.echo(typer.style(f"[{status}] {message}", fg=color_map[status]))
+
+        if any(s == "FAIL" for s, _ in results):
+            summary_status, summary_color, exit_code = "fail", typer.colors.RED, 2
+        elif any(s == "WARN" for s, _ in results):
+            summary_status, summary_color, exit_code = "warn", typer.colors.YELLOW, 1
+        else:
+            summary_status, summary_color, exit_code = "pass", typer.colors.GREEN, 0
+
+        typer.echo(typer.style(f"Doctor: {summary_status}", fg=summary_color))
+        raise typer.Exit(code=exit_code)
 
     except MiniLegionError as exc:
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
