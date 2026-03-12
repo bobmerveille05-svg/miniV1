@@ -23,6 +23,7 @@ _PROVIDER_MAP: dict[str, str] = {
     "ollama": "minilegion.adapters.ollama_adapter.OllamaAdapter",
     "gemini": "minilegion.adapters.gemini_adapter.GeminiAdapter",
     "anthropic": "minilegion.adapters.anthropic_adapter.AnthropicAdapter",
+    "copilot": "minilegion.adapters.copilot_adapter.CopilotAdapter",
 }
 
 
