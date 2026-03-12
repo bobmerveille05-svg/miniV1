@@ -199,11 +199,11 @@ Plans:
 **Depends on:** Phase 14
 **Requirements:** EVD-01, EVD-02, EVD-03, VAD-01, VAD-02, VAD-03, VAD-04, CFG-07
 **Gap Closure:** Closes evidence/advance integration and validate->advance flow gaps from v1.1 audit.
-**Plans:** TBD
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 15-01: Add `validate <step>` command and evidence bundle writes
-- [ ] 15-02: Add `advance` command with hard pass/fail gate and strict workflow config support
+- [ ] 15-01-PLAN.md — Introduce evidence subsystem and `validate <step>` command with machine-readable overwrite semantics
+- [ ] 15-02-PLAN.md — Enforce `advance` evidence gate, restore workflow strict config defaults, and remove stage auto-advance side effects
 
 ---
 
@@ -248,6 +248,6 @@ Plans:
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
 | 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
 | 14. History Foundation + Migration | v1.1 gap closure | Complete    | 2026-03-11 | - |
-| 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | 0/2 | Not started | - |
+| 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | Complete    | 2026-03-12 | - |
 | 16. Research Brainstorm Mode | v1.1 gap closure | 0/1 | Not started | - |
 | 17. Rollback + Doctor Health Surface | v1.1 gap closure | 0/2 | Not started | - |

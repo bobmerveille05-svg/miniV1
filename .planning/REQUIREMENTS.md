@@ -105,13 +105,13 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 | HST-03 | Phase 14 | Complete |
 | HST-04 | Phase 14 | Complete |
 | HST-05 | Phase 14 | Complete |
-| EVD-01 | Phase 15 | Pending |
-| EVD-02 | Phase 15 | Pending |
-| EVD-03 | Phase 15 | Pending |
-| VAD-01 | Phase 15 | Pending |
-| VAD-02 | Phase 15 | Pending |
-| VAD-03 | Phase 15 | Pending |
-| VAD-04 | Phase 15 | Pending |
+| EVD-01 | Phase 15 | Complete |
+| EVD-02 | Phase 15 | Complete |
+| EVD-03 | Phase 15 | Complete |
+| VAD-01 | Phase 15 | Complete |
+| VAD-02 | Phase 15 | Complete |
+| VAD-03 | Phase 15 | Complete |
+| VAD-04 | Phase 15 | Complete |
 | RSM-01 | Phase 16 | Pending |
 | RSM-02 | Phase 16 | Pending |
 | RSM-03 | Phase 16 | Pending |
@@ -121,7 +121,7 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 | DOC-01 | Phase 17 | Pending |
 | DOC-02 | Phase 17 | Pending |
 | DOC-03 | Phase 17 | Pending |
-| CFG-07 | Phase 15 | Pending |
+| CFG-07 | Phase 15 | Complete |
 | CFG-08 | Phase 13 | Complete |
 | CFG-09 | Phase 13 | Complete |
 
