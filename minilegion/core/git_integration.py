@@ -152,6 +152,7 @@ def open_pr(
       - path: Path to PR.md (only for method="markdown")
     """
     gh_path = shutil.which("gh")
+    gh_error: str | None = None
 
     if gh_path:
         result = subprocess.run(
@@ -172,10 +173,14 @@ def open_pr(
         )
         if result.returncode == 0:
             return {"method": "gh", "url": result.stdout.strip()}
+        gh_error = result.stderr.strip()
         # gh failed — fall through to markdown
 
     # Fallback: write PR.md
     pr_path = repo_root / "PR.md"
     pr_content = f"# {title}\n\n{body}"
     pr_path.write_text(pr_content, encoding="utf-8")
-    return {"method": "markdown", "path": str(pr_path)}
+    out: dict = {"method": "markdown", "path": str(pr_path)}
+    if gh_error is not None:
+        out["gh_error"] = gh_error
+    return out

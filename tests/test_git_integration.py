@@ -261,7 +261,7 @@ def test_build_pr_body_handles_missing_review():
 
 
 def test_open_pr_writes_pr_md_when_gh_not_available(tmp_path):
-    with patch("shutil.which", return_value=None):
+    with patch("minilegion.core.git_integration.shutil.which", return_value=None):
         result = open_pr(
             repo_root=tmp_path,
             title="feat: add dark mode",
@@ -279,8 +279,12 @@ def test_open_pr_uses_gh_when_available(tmp_path):
     mock_result = MagicMock()
     mock_result.returncode = 0
     mock_result.stdout = "https://github.com/owner/repo/pull/1\n"
-    with patch("shutil.which", return_value="/usr/bin/gh"):
-        with patch("subprocess.run", return_value=mock_result) as mock_run:
+    with patch(
+        "minilegion.core.git_integration.shutil.which", return_value="/usr/bin/gh"
+    ):
+        with patch(
+            "minilegion.core.git_integration.subprocess.run", return_value=mock_result
+        ) as mock_run:
             result = open_pr(
                 repo_root=tmp_path,
                 title="feat: add dark mode",
@@ -300,8 +304,12 @@ def test_open_pr_falls_back_to_markdown_when_gh_fails(tmp_path):
     mock_result = MagicMock()
     mock_result.returncode = 1
     mock_result.stderr = "not a git repo"
-    with patch("shutil.which", return_value="/usr/bin/gh"):
-        with patch("subprocess.run", return_value=mock_result):
+    with patch(
+        "minilegion.core.git_integration.shutil.which", return_value="/usr/bin/gh"
+    ):
+        with patch(
+            "minilegion.core.git_integration.subprocess.run", return_value=mock_result
+        ):
             result = open_pr(
                 repo_root=tmp_path,
                 title="feat: dark mode",
