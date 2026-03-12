@@ -290,6 +290,7 @@ Valid role names: `researcher`, `designer`, `planner`, `builder`, `reviewer`.
 | `minilegion context <tool>` | Assemble a portable context block for `claude`, `chatgpt`, `copilot`, or `opencode` |
 | `minilegion rollback <reason>` | Roll back to the previous stage, preserving the current artifact in `rejected/` |
 | `minilegion doctor` | Check project health: state validity, artifacts, history, and adapters |
+| `minilegion pr [--base BRANCH] [--title TEXT]` | Create GitHub PR via gh CLI, or write PR.md as fallback |
 
 ### Flags
 
@@ -484,6 +485,58 @@ Exit codes: `0` = all pass, `1` = warnings only, `2` = at least one failure.
 ### Atomic writes
 
 Every file write uses `write_atomic()`: write to a temp file → `os.fsync()` → `os.replace()`. An interrupted write never corrupts the existing file.
+
+### Git-native workflow
+
+When `git.enabled` is `true` (the default), `execute` automatically:
+
+1. **Creates a feature branch** at the start of execution:
+   `minilegion/<project-name>-<timestamp>`. If already on a `minilegion/*` branch, it is reused.
+2. **Commits after each task** completes. Commit message format:
+   `feat(execute): <task-id> — <task-name>`
+   The commit includes the changed source files plus the artifacts listed in `git.commit_artifacts` (default: `EXECUTION_LOG.json`, `EXECUTION_LOG.md`, `STATE.json`).
+3. **Skips silently** when not inside a git repository.
+
+Git operations never block the pipeline — failures produce a yellow warning and execution continues.
+
+Disable via config:
+```json
+{ "git": { "enabled": false } }
+```
+
+### Auto-tests
+
+When `test.enabled` is `true` (the default), `execute` runs your test suite after all patches are applied.
+
+**Detection order:**
+1. `pyproject.toml` mentioning pytest → `python -m pytest`
+2. `package.json` with `scripts.test` → `npm test`
+3. `Makefile` with a `test:` target → `make test`
+
+On failure: output is printed and execution stops with exit code 1. Files already written remain in place.
+
+Override or disable via config:
+```json
+{
+  "test": {
+    "enabled": true,
+    "timeout": 120,
+    "command": ["make", "test"]
+  }
+}
+```
+
+### `minilegion pr`
+
+```bash
+minilegion pr
+minilegion pr --base develop
+minilegion pr --title "feat: add dark mode"
+```
+
+Assembles a PR description from `BRIEF.md`, `PLAN.json`, and `REVIEW.json`, then:
+- Uses `gh pr create` if the `gh` CLI is installed and authenticated
+- Otherwise writes `PR.md` to the project root with instructions to paste into GitHub
 
 ---
 
