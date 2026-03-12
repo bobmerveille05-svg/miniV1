@@ -44,6 +44,8 @@ from minilegion.core.schemas import (
     PlanSchema,
     ReviewSchema,
 )
+from minilegion.core.git_integration import ensure_feature_branch, commit_task, GitError
+from minilegion.core.test_runner import run_tests
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
     FORWARD_TRANSITIONS,
@@ -177,6 +179,14 @@ def _read_source_files(
         content = fpath.read_text(encoding="utf-8", errors="replace")
         parts.append(f"## {path_str}\n{content}\n---\n")
     return "\n".join(parts) if parts else "(no existing source files)"
+
+
+def _task_name_from_plan(plan_data: PlanSchema, task_id: str) -> str:
+    """Look up task name by ID from plan. Falls back to task_id if not found."""
+    for t in plan_data.tasks:
+        if t.id == task_id:
+            return t.name
+    return task_id
 
 
 VALIDATION_TARGETS: dict[str, Stage] = {
@@ -1115,6 +1125,14 @@ def execute(
             return
 
         # Normal: per-patch approval + apply (BUILD-03, BUILD-04)
+
+        # Ensure feature branch before any writes
+        if config.git.enabled and not dry_run:
+            try:
+                ensure_feature_branch(project_root, project_name)
+            except GitError as exc:
+                typer.echo(typer.style(f"Git warning: {exc}", fg=typer.colors.YELLOW))
+
         for tr in execution_log.tasks:
             for cf in tr.changed_files:
                 # Preview the change (dry_run=True generates description without writing)
@@ -1123,6 +1141,20 @@ def execute(
                 approve_patch(state, project_dir / "STATE.json", desc)
                 # Apply only after confirmed approval
                 apply_patch(cf, project_root, dry_run=False)
+            # Commit this task's changes
+            if config.git.enabled:
+                try:
+                    commit_task(
+                        repo_root=project_root,
+                        task_id=tr.task_id,
+                        task_name=_task_name_from_plan(plan_data, tr.task_id),
+                        changed_files=[cf.path for cf in tr.changed_files],
+                        artifact_files=config.git.commit_artifacts,
+                    )
+                except GitError as exc:
+                    typer.echo(
+                        typer.style(f"Git warning: {exc}", fg=typer.colors.YELLOW)
+                    )
 
         # Save dual output after all patches applied and approved
         save_dual(
@@ -1135,6 +1167,34 @@ def execute(
                 "EXECUTION_LOG.json + EXECUTION_LOG.md saved.", fg=typer.colors.GREEN
             )
         )
+
+        # Run tests after all patches applied
+        if config.test.enabled and not dry_run:
+            typer.echo("Running tests...")
+            test_result = run_tests(
+                project_root,
+                timeout=config.test.timeout,
+                command_override=config.test.command,
+            )
+            if test_result.skipped:
+                typer.echo(
+                    typer.style(
+                        "No test command detected — skipping.", fg=typer.colors.CYAN
+                    )
+                )
+            elif test_result.success:
+                typer.echo(typer.style("Tests passed.", fg=typer.colors.GREEN))
+            else:
+                typer.echo(typer.style("Tests FAILED:", fg=typer.colors.RED))
+                typer.echo(test_result.output)
+                typer.echo(
+                    typer.style(
+                        "Execution stopped due to test failure. "
+                        "Fix the issues and re-run, or run `minilegion review` to proceed.",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
 
         state.current_stage = Stage.EXECUTE.value
         _append_state_event(

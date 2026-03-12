@@ -314,3 +314,257 @@ class TestExecuteCommand:
         result = runner.invoke(app, ["execute"])
 
         assert result.exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# Git + test integration tests (Task 8)
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch
+
+
+def test_execute_calls_ensure_feature_branch_when_git_enabled(tmp_path, monkeypatch):
+    """execute should call ensure_feature_branch when config.git.enabled=True."""
+    monkeypatch.chdir(tmp_path)
+    project_ai = tmp_path / "myproject" / "project-ai"
+    project_ai.mkdir(parents=True)
+    _write_plan_state(project_ai)
+    # Also write a config enabling git
+    (project_ai / "minilegion.config.json").write_text(
+        json.dumps({"provider": "openai", "model": "gpt-4o", "git": {"enabled": True}})
+    )
+
+    # Use same mock setup as existing tests but add git/test mocks
+    from minilegion.core.schemas import ExecutionLogSchema
+
+    mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)
+
+    monkeypatch.setattr(
+        "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.load_prompt",
+        lambda role: ("sys", "Build {{project_name}} {{plan_json}} {{source_files}}"),
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_with_retry", lambda *a, **kw: mock_log
+    )
+    monkeypatch.setattr("minilegion.core.approval.typer.confirm", lambda *a, **kw: True)
+    monkeypatch.setattr("minilegion.cli.commands.find_project_dir", lambda: project_ai)
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_scope", lambda changed, allowed: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.apply_patch",
+        lambda cf, root, dry_run=False: f"CREATE {cf.path}",
+    )
+
+    with patch("minilegion.cli.commands.ensure_feature_branch") as mock_branch:
+        with patch("minilegion.cli.commands.commit_task"):
+            with patch("minilegion.cli.commands.run_tests") as mock_tests:
+                from minilegion.core.test_runner import TestResult
+
+                mock_tests.return_value = TestResult(
+                    success=True, command=[], output="", exit_code=0, skipped=True
+                )
+                result = runner.invoke(app, ["execute"])
+
+    assert result.exit_code == 0
+    mock_branch.assert_called_once()
+
+
+def test_execute_calls_commit_task_per_task(tmp_path, monkeypatch):
+    """commit_task should be called once per task in execution_log."""
+    monkeypatch.chdir(tmp_path)
+    project_ai = tmp_path / "myproject" / "project-ai"
+    project_ai.mkdir(parents=True)
+    _write_plan_state(project_ai)
+    (project_ai / "minilegion.config.json").write_text(
+        json.dumps({"provider": "openai", "model": "gpt-4o", "git": {"enabled": True}})
+    )
+
+    from minilegion.core.schemas import ExecutionLogSchema
+
+    mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)  # 1 task
+
+    monkeypatch.setattr(
+        "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.load_prompt",
+        lambda role: ("sys", "Build {{project_name}} {{plan_json}} {{source_files}}"),
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_with_retry", lambda *a, **kw: mock_log
+    )
+    monkeypatch.setattr("minilegion.core.approval.typer.confirm", lambda *a, **kw: True)
+    monkeypatch.setattr("minilegion.cli.commands.find_project_dir", lambda: project_ai)
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_scope", lambda changed, allowed: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.apply_patch",
+        lambda cf, root, dry_run=False: f"CREATE {cf.path}",
+    )
+
+    with patch("minilegion.cli.commands.ensure_feature_branch"):
+        with patch("minilegion.cli.commands.commit_task") as mock_commit:
+            with patch("minilegion.cli.commands.run_tests") as mock_tests:
+                from minilegion.core.test_runner import TestResult
+
+                mock_tests.return_value = TestResult(
+                    success=True, command=[], output="", exit_code=0, skipped=True
+                )
+                result = runner.invoke(app, ["execute"])
+
+    assert result.exit_code == 0
+    assert mock_commit.call_count == 1  # 1 task in VALID_EXECUTION_LOG
+
+
+def test_execute_runs_tests_after_all_patches(tmp_path, monkeypatch):
+    """run_tests is called once after all patches, not per-patch."""
+    monkeypatch.chdir(tmp_path)
+    project_ai = tmp_path / "myproject" / "project-ai"
+    project_ai.mkdir(parents=True)
+    _write_plan_state(project_ai)
+    (project_ai / "minilegion.config.json").write_text(
+        json.dumps({"provider": "openai", "model": "gpt-4o", "test": {"enabled": True}})
+    )
+
+    from minilegion.core.schemas import ExecutionLogSchema
+
+    mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)
+
+    monkeypatch.setattr(
+        "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.load_prompt",
+        lambda role: ("sys", "Build {{project_name}} {{plan_json}} {{source_files}}"),
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_with_retry", lambda *a, **kw: mock_log
+    )
+    monkeypatch.setattr("minilegion.core.approval.typer.confirm", lambda *a, **kw: True)
+    monkeypatch.setattr("minilegion.cli.commands.find_project_dir", lambda: project_ai)
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_scope", lambda changed, allowed: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.apply_patch",
+        lambda cf, root, dry_run=False: f"CREATE {cf.path}",
+    )
+
+    with patch("minilegion.cli.commands.ensure_feature_branch"):
+        with patch("minilegion.cli.commands.commit_task"):
+            with patch("minilegion.cli.commands.run_tests") as mock_tests:
+                from minilegion.core.test_runner import TestResult
+
+                mock_tests.return_value = TestResult(
+                    success=True, command=[], output="", exit_code=0, skipped=False
+                )
+                result = runner.invoke(app, ["execute"])
+
+    assert result.exit_code == 0
+    assert mock_tests.call_count == 1  # called exactly once, after all patches
+
+
+def test_execute_stops_on_test_failure(tmp_path, monkeypatch):
+    """If run_tests returns success=False, execute exits with code 1."""
+    monkeypatch.chdir(tmp_path)
+    project_ai = tmp_path / "myproject" / "project-ai"
+    project_ai.mkdir(parents=True)
+    _write_plan_state(project_ai)
+    (project_ai / "minilegion.config.json").write_text(
+        json.dumps({"provider": "openai", "model": "gpt-4o", "test": {"enabled": True}})
+    )
+
+    from minilegion.core.schemas import ExecutionLogSchema
+
+    mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)
+
+    monkeypatch.setattr(
+        "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.load_prompt",
+        lambda role: ("sys", "Build {{project_name}} {{plan_json}} {{source_files}}"),
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_with_retry", lambda *a, **kw: mock_log
+    )
+    monkeypatch.setattr("minilegion.core.approval.typer.confirm", lambda *a, **kw: True)
+    monkeypatch.setattr("minilegion.cli.commands.find_project_dir", lambda: project_ai)
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_scope", lambda changed, allowed: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.apply_patch",
+        lambda cf, root, dry_run=False: f"CREATE {cf.path}",
+    )
+
+    with patch("minilegion.cli.commands.ensure_feature_branch"):
+        with patch("minilegion.cli.commands.commit_task"):
+            with patch("minilegion.cli.commands.run_tests") as mock_tests:
+                from minilegion.core.test_runner import TestResult
+
+                mock_tests.return_value = TestResult(
+                    success=False,
+                    command=["pytest"],
+                    output="FAILED test_foo.py",
+                    exit_code=1,
+                    skipped=False,
+                )
+                result = runner.invoke(app, ["execute"])
+
+    assert result.exit_code == 1
+    assert "failed" in result.output.lower() or "FAILED" in result.output
+
+
+def test_execute_skips_git_when_disabled(tmp_path, monkeypatch):
+    """When config.git.enabled=False, ensure_feature_branch is not called."""
+    monkeypatch.chdir(tmp_path)
+    project_ai = tmp_path / "myproject" / "project-ai"
+    project_ai.mkdir(parents=True)
+    _write_plan_state(project_ai)
+    (project_ai / "minilegion.config.json").write_text(
+        json.dumps({"provider": "openai", "model": "gpt-4o", "git": {"enabled": False}})
+    )
+
+    from minilegion.core.schemas import ExecutionLogSchema
+
+    mock_log = ExecutionLogSchema(**VALID_EXECUTION_LOG)
+
+    monkeypatch.setattr(
+        "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.load_prompt",
+        lambda role: ("sys", "Build {{project_name}} {{plan_json}} {{source_files}}"),
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_with_retry", lambda *a, **kw: mock_log
+    )
+    monkeypatch.setattr("minilegion.core.approval.typer.confirm", lambda *a, **kw: True)
+    monkeypatch.setattr("minilegion.cli.commands.find_project_dir", lambda: project_ai)
+    monkeypatch.setattr(
+        "minilegion.cli.commands.validate_scope", lambda changed, allowed: None
+    )
+    monkeypatch.setattr(
+        "minilegion.cli.commands.apply_patch",
+        lambda cf, root, dry_run=False: f"CREATE {cf.path}",
+    )
+
+    with patch("minilegion.cli.commands.ensure_feature_branch") as mock_branch:
+        with patch("minilegion.cli.commands.commit_task") as mock_commit:
+            with patch("minilegion.cli.commands.run_tests") as mock_tests:
+                from minilegion.core.test_runner import TestResult
+
+                mock_tests.return_value = TestResult(
+                    success=True, command=[], output="", exit_code=0, skipped=True
+                )
+                result = runner.invoke(app, ["execute"])
+
+    assert result.exit_code == 0
+    mock_branch.assert_not_called()
+    mock_commit.assert_not_called()
