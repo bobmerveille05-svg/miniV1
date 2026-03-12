@@ -958,3 +958,163 @@ class TestScanMaxFileSizeNormalization:
 
         assert "print('hello')" in result, "Small file should be included"
         assert "File too large" in result, "Large file should be flagged as too large"
+
+
+# Brainstorm mode test data
+VALID_BRAINSTORM_RESEARCH = {
+    "project_overview": "Test project overview",
+    "tech_stack": ["python"],
+    "architecture_patterns": ["layered"],
+    "relevant_files": ["minilegion/cli/commands.py"],
+    "existing_conventions": ["type hints"],
+    "dependencies_map": {},
+    "potential_impacts": ["none"],
+    "constraints": ["constraint1"],
+    "assumptions_verified": ["assumption1"],
+    "open_questions": ["question1"],
+    "recommended_focus_files": ["commands.py"],
+    "problem_framing": "How to add brainstorm mode to research",
+    "facts": ["Current research only supports fact mode"],
+    "assumptions": ["Users need to explore multiple directions"],
+    "candidate_directions": [
+        {"name": "Direction 1", "description": "First candidate direction"},
+        {"name": "Direction 2", "description": "Second candidate direction"},
+        {"name": "Direction 3", "description": "Third candidate direction"},
+    ],
+    "tradeoffs": ["Complexity vs flexibility"],
+    "risks": ["Risk of over-engineering"],
+    "recommendation": "Direction 2 provides best balance",
+}
+
+
+class TestResearchBrainstormMode:
+    """Tests for research brainstorm mode (RSM-01 through RSM-04)."""
+
+    @pytest.fixture(autouse=True)
+    def _noop_healthcheck(self, monkeypatch):
+        """Disable healthcheck for all tests."""
+        monkeypatch.setattr(
+            "minilegion.cli.commands.run_provider_healthcheck", lambda cfg: None
+        )
+
+    def test_research_no_flags_uses_fact_mode_default(self, tmp_path, monkeypatch):
+        """research() with no --mode flag defaults to fact mode (RSM-01)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+        captured_args = []
+
+        def mock_render(template, **kwargs):
+            captured_args.append(kwargs)
+            return "rendered"
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: ("sys", "template {{mode}} {{num_options}}"),
+        )
+        monkeypatch.setattr("minilegion.cli.commands.render_prompt", mock_render)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda llm_call, prompt, artifact_name, config, project_dir: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research" + chr(10), encoding="utf-8")
+
+        runner.invoke(app, ["research"])
+        assert len(captured_args) == 1
+        assert captured_args[0]["mode"] == "fact"
+
+    def test_research_brainstorm_mode_passes_mode_parameter(self, tmp_path, monkeypatch):
+        """research --mode brainstorm passes mode to render_prompt (RSM-02)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+        mock_research = ResearchSchema(**VALID_BRAINSTORM_RESEARCH)
+        captured_args = []
+
+        def mock_render(template, **kwargs):
+            captured_args.append(kwargs)
+            return "rendered"
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: ("sys", "template"),
+        )
+        monkeypatch.setattr("minilegion.cli.commands.render_prompt", mock_render)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda llm_call, prompt, artifact_name, config, project_dir: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research" + chr(10), encoding="utf-8")
+
+        runner.invoke(app, ["research", "--mode", "brainstorm"])
+        assert len(captured_args) == 1
+        assert captured_args[0]["mode"] == "brainstorm"
+
+    def test_research_config_default_mode_is_fact(self, tmp_path, monkeypatch):
+        """ResearchConfig defaults to fact mode (RSM-04)."""
+        from minilegion.core.config import ResearchConfig
+        config = ResearchConfig()
+        assert config.default_mode == "fact"
+
+    def test_research_config_default_options_is_3(self, tmp_path, monkeypatch):
+        """ResearchConfig defaults to 3 options (RSM-04)."""
+        from minilegion.core.config import ResearchConfig
+        config = ResearchConfig()
+        assert config.default_options == 3
+
+    def test_research_options_below_min_rejected(self, tmp_path, monkeypatch):
+        """research --options 0 is rejected (< min_options) (RSM-04)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        result = runner.invoke(app, ["research", "--options", "0"])
+        assert result.exit_code == 1
+        assert "Options must be between" in result.output
+
+    def test_research_options_above_max_rejected(self, tmp_path, monkeypatch):
+        """research --options 6 is rejected (> max_options) (RSM-04)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        result = runner.invoke(app, ["research", "--options", "6"])
+        assert result.exit_code == 1
+        assert "Options must be between" in result.output
