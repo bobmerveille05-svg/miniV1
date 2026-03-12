@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import pytest
 from minilegion.core.git_integration import (
     is_git_repo,
@@ -9,6 +9,8 @@ from minilegion.core.git_integration import (
     ensure_feature_branch,
     GitError,
     commit_task,
+    build_pr_body,
+    open_pr,
 )
 
 
@@ -230,3 +232,81 @@ def test_commit_task_skips_when_files_do_not_exist(tmp_path):
         text=True,
     )
     assert result.stdout.count("\n") == 1  # only the initial empty commit
+
+
+def test_build_pr_body_includes_review_summary():
+    body = build_pr_body(
+        project_name="my-feature",
+        brief_text="Add dark mode",
+        review_summary="All checks passed. No violations.",
+        branch="minilegion/my-feature-20260101_120000",
+        tasks=[{"id": "task-1", "name": "Add toggle component"}],
+    )
+    assert "Add dark mode" in body
+    assert "All checks passed" in body
+    assert "task-1" in body
+    assert "Add toggle component" in body
+
+
+def test_build_pr_body_handles_missing_review():
+    body = build_pr_body(
+        project_name="my-feature",
+        brief_text="Add dark mode",
+        review_summary=None,
+        branch="minilegion/my-feature-20260101_120000",
+        tasks=[],
+    )
+    assert "Add dark mode" in body
+    assert "review" in body.lower() or "N/A" in body
+
+
+def test_open_pr_writes_pr_md_when_gh_not_available(tmp_path):
+    with patch("shutil.which", return_value=None):
+        result = open_pr(
+            repo_root=tmp_path,
+            title="feat: add dark mode",
+            body="## Summary\n- Added toggle",
+            base_branch="main",
+        )
+    assert result["method"] == "markdown"
+    assert (tmp_path / "PR.md").exists()
+    content = (tmp_path / "PR.md").read_text()
+    assert "feat: add dark mode" in content
+    assert "Added toggle" in content
+
+
+def test_open_pr_uses_gh_when_available(tmp_path):
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = "https://github.com/owner/repo/pull/1\n"
+    with patch("shutil.which", return_value="/usr/bin/gh"):
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            result = open_pr(
+                repo_root=tmp_path,
+                title="feat: add dark mode",
+                body="## Summary",
+                base_branch="main",
+            )
+    assert result["method"] == "gh"
+    assert "github.com" in result["url"]
+    mock_run.assert_called_once()
+    call_args = mock_run.call_args[0][0]
+    assert "gh" in call_args
+    assert "pr" in call_args
+    assert "create" in call_args
+
+
+def test_open_pr_falls_back_to_markdown_when_gh_fails(tmp_path):
+    mock_result = MagicMock()
+    mock_result.returncode = 1
+    mock_result.stderr = "not a git repo"
+    with patch("shutil.which", return_value="/usr/bin/gh"):
+        with patch("subprocess.run", return_value=mock_result):
+            result = open_pr(
+                repo_root=tmp_path,
+                title="feat: dark mode",
+                body="body",
+                base_branch="main",
+            )
+    assert result["method"] == "markdown"
+    assert (tmp_path / "PR.md").exists()
