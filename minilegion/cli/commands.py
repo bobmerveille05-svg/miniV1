@@ -44,7 +44,15 @@ from minilegion.core.schemas import (
     PlanSchema,
     ReviewSchema,
 )
-from minilegion.core.git_integration import ensure_feature_branch, commit_task, GitError
+from minilegion.core.git_integration import (
+    ensure_feature_branch,
+    commit_task,
+    build_pr_body,
+    open_pr,
+    get_current_branch,
+    is_git_repo,
+    GitError,
+)
 from minilegion.core.test_runner import run_tests
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
@@ -1567,6 +1575,107 @@ def context(
         write_atomic(context_path, block)
 
         typer.echo(block)
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def pr(
+    base: Annotated[
+        str, typer.Option("--base", help="Base branch for the PR (default: main)")
+    ] = "main",
+    title: Annotated[
+        str | None, typer.Option("--title", help="PR title (default: auto-generated)")
+    ] = None,
+) -> None:
+    """Create a GitHub PR (via gh CLI) or write PR.md from the current pipeline state."""
+    try:
+        project_dir = find_project_dir()
+        project_root = project_dir.parent
+        project_name = project_root.name
+
+        # Load artifacts
+        brief_text = ""
+        brief_path = project_dir / "BRIEF.md"
+        if brief_path.exists():
+            brief_text = brief_path.read_text(encoding="utf-8").strip()
+
+        review_summary: str | None = None
+        review_path = project_dir / "REVIEW.json"
+        if review_path.exists():
+            try:
+                review_data = ReviewSchema.model_validate_json(
+                    review_path.read_text(encoding="utf-8")
+                )
+                parts = [f"Verdict: **{review_data.verdict}**"]
+                if review_data.success_criteria_met:
+                    parts.append(
+                        "Criteria met: " + ", ".join(review_data.success_criteria_met)
+                    )
+                if review_data.corrective_actions:
+                    parts.append(
+                        "Actions: " + "; ".join(review_data.corrective_actions)
+                    )
+                review_summary = "\n".join(parts)
+            except Exception:
+                pass
+
+        tasks: list[dict] = []
+        plan_path = project_dir / "PLAN.json"
+        if plan_path.exists():
+            try:
+                plan_data = PlanSchema.model_validate_json(
+                    plan_path.read_text(encoding="utf-8")
+                )
+                tasks = [{"id": t.id, "name": t.name} for t in plan_data.tasks]
+            except Exception:
+                pass
+
+        # Detect current branch
+        branch = "unknown"
+        if is_git_repo(project_root):
+            try:
+                branch = get_current_branch(project_root)
+            except GitError:
+                pass
+
+        # Build PR title
+        pr_title = (
+            title
+            or f"feat({project_name}): {brief_text[:60].splitlines()[0] if brief_text else 'MiniLegion changes'}"
+        )
+
+        # Build PR body
+        body = build_pr_body(
+            project_name=project_name,
+            brief_text=brief_text or "_No brief found_",
+            review_summary=review_summary,
+            branch=branch,
+            tasks=tasks,
+        )
+
+        # Open PR or write markdown
+        result = open_pr(
+            repo_root=project_root,
+            title=pr_title,
+            body=body,
+            base_branch=base,
+        )
+
+        if result["method"] == "gh":
+            typer.echo(
+                typer.style(f"PR created: {result['url']}", fg=typer.colors.GREEN)
+            )
+        else:
+            typer.echo(
+                typer.style(
+                    f"PR.md written to {result['path']}\n"
+                    f"(gh CLI not available — paste PR.md into GitHub manually)",
+                    fg=typer.colors.CYAN,
+                )
+            )
 
     except MiniLegionError as exc:
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
