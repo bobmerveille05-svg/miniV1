@@ -250,5 +250,5 @@ Plans:
 | 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
 | 14. History Foundation + Migration | v1.1 gap closure | Complete    | 2026-03-11 | - |
 | 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | Complete    | 2026-03-12 | - |
-| 16. Research Brainstorm Mode | 2/2 | Complete   | 2026-03-12 | - |
+| 16. Research Brainstorm Mode | 2/2 | Complete    | 2026-03-12 | - |
 | 17. Rollback + Doctor Health Surface | v1.1 gap closure | 0/2 | Not started | - |
