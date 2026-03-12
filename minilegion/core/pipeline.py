@@ -188,6 +188,8 @@ def run_research(
         project_name=project_dir.parent.name,
         brief_content=brief_content,
         codebase_context=codebase_context,
+        mode="fact",
+        num_options="3",
     )
 
     research_data = validate_with_retry(

@@ -148,6 +148,78 @@ class TestRenderPrompt:
         result = render_prompt("{{a}}", a="X", b="Y")
         assert result == "X"
 
+    # ── {{#if}} conditional block tests ──────────────────────────────
+
+    def test_if_true_branch_selected(self):
+        """{{#if}} selects if-branch when condition is true."""
+        result = render_prompt(
+            '{{#if mode == "brainstorm"}}BRAINSTORM{{else}}FACT{{/if}}',
+            mode="brainstorm",
+        )
+        assert result == "BRAINSTORM"
+
+    def test_if_false_branch_selected(self):
+        """{{#if}} selects else-branch when condition is false."""
+        result = render_prompt(
+            '{{#if mode == "brainstorm"}}BRAINSTORM{{else}}FACT{{/if}}',
+            mode="fact",
+        )
+        assert result == "FACT"
+
+    def test_if_no_else_branch_empty_when_false(self):
+        """{{#if}} without {{else}} produces empty string when condition is false."""
+        result = render_prompt(
+            '{{#if mode == "brainstorm"}}BRAINSTORM{{/if}}',
+            mode="fact",
+        )
+        assert result == ""
+
+    def test_if_variables_substituted_in_branch(self):
+        """Variables inside the selected branch are substituted normally."""
+        result = render_prompt(
+            '{{#if mode == "brainstorm"}}Generate {{num_options}} options{{else}}Just facts{{/if}}',
+            mode="brainstorm",
+            num_options="5",
+        )
+        assert result == "Generate 5 options"
+
+    def test_if_else_not_raised_as_unresolved(self):
+        """{{else}} inside an if block must NOT raise 'Unresolved placeholder'."""
+        # This was the original bug — {{else}} was treated as a variable
+        result = render_prompt(
+            '{{#if mode == "fact"}}FACT{{else}}OTHER{{/if}}',
+            mode="fact",
+        )
+        assert result == "FACT"
+
+    def test_researcher_template_renders_fact_mode(self):
+        """researcher.md USER_TEMPLATE renders without error in fact mode."""
+        _, user_template = load_prompt("researcher")
+        result = render_prompt(
+            user_template,
+            project_name="TestProject",
+            brief_content="Build a thing",
+            codebase_context="src/main.py",
+            mode="fact",
+            num_options="3",
+        )
+        assert "Fact Research" in result
+        assert "Brainstorm" not in result
+
+    def test_researcher_template_renders_brainstorm_mode(self):
+        """researcher.md USER_TEMPLATE renders without error in brainstorm mode."""
+        _, user_template = load_prompt("researcher")
+        result = render_prompt(
+            user_template,
+            project_name="TestProject",
+            brief_content="Build a thing",
+            codebase_context="src/main.py",
+            mode="brainstorm",
+            num_options="3",
+        )
+        assert "Brainstorm" in result
+        assert "Fact Research" not in result
+
 
 # ── TestPromptPlaceholders ────────────────────────────────────────────
 
