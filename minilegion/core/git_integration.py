@@ -9,12 +9,7 @@ from __future__ import annotations
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from minilegion.core.exceptions import MiniLegionError
-
-if TYPE_CHECKING:
-    pass
 
 
 class GitError(MiniLegionError):

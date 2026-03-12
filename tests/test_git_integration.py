@@ -144,11 +144,10 @@ def _init_repo_with_commit(tmp_path: Path) -> None:
         capture_output=True,
         env=env,
     )
-    return env
 
 
 def test_commit_task_creates_commit(tmp_path):
-    env = _init_repo_with_commit(tmp_path)
+    _init_repo_with_commit(tmp_path)
     (tmp_path / "foo.py").write_text("x = 1")
     commit_task(
         repo_root=tmp_path,
@@ -168,7 +167,7 @@ def test_commit_task_creates_commit(tmp_path):
 
 
 def test_commit_task_includes_artifact_files(tmp_path):
-    env = _init_repo_with_commit(tmp_path)
+    _init_repo_with_commit(tmp_path)
     (tmp_path / "foo.py").write_text("x = 1")
     (tmp_path / "project-ai").mkdir()
     (tmp_path / "project-ai" / "EXECUTION_LOG.json").write_text("{}")
@@ -211,3 +210,23 @@ def test_commit_task_skips_when_not_git_repo(tmp_path):
         changed_files=["foo.py"],
         artifact_files=[],
     )
+
+
+def test_commit_task_skips_when_files_do_not_exist(tmp_path):
+    """commit_task should be a no-op when listed files don't exist on disk."""
+    _init_repo_with_commit(tmp_path)
+    commit_task(
+        repo_root=tmp_path,
+        task_id="task-1",
+        task_name="No-op",
+        changed_files=["nonexistent.py"],
+        artifact_files=["also_missing.json"],
+    )
+    # Should complete without raising or creating a commit beyond the initial one
+    result = subprocess.run(
+        ["git", "log", "--oneline"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout.count("\n") == 1  # only the initial empty commit
