@@ -7,7 +7,6 @@ Raises no exceptions on test failure — returns a TestResult with success=False
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -35,6 +34,7 @@ def detect_test_command(project_root: Path) -> list[str] | None:
     pyproject = project_root / "pyproject.toml"
     if pyproject.exists():
         content = pyproject.read_text(encoding="utf-8", errors="replace")
+        # Any mention of pytest in pyproject.toml (incl. dependencies) signals python test runner
         if "[tool.pytest" in content or "pytest" in content.lower():
             return ["python", "-m", "pytest"]
 
@@ -50,7 +50,8 @@ def detect_test_command(project_root: Path) -> list[str] | None:
     makefile = project_root / "Makefile"
     if makefile.exists():
         content = makefile.read_text(encoding="utf-8", errors="replace")
-        if "\ntest:" in content or content.startswith("test:"):
+        normalized = content.replace("\r\n", "\n")
+        if "\ntest:" in normalized or normalized.startswith("test:"):
             return ["make", "test"]
 
     return None
