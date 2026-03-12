@@ -7,6 +7,7 @@ Raises GitError (a MiniLegionError subclass) on all failures.
 from __future__ import annotations
 
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -45,3 +46,31 @@ def is_git_repo(path: Path) -> bool:
         text=True,
     )
     return result.returncode == 0 and result.stdout.strip() == "true"
+
+
+def get_current_branch(repo_root: Path) -> str:
+    """Return the name of the currently checked-out branch."""
+    result = _git(["branch", "--show-current"], cwd=repo_root)
+    return result.stdout.strip()
+
+
+def ensure_feature_branch(repo_root: Path, project_name: str) -> str | None:
+    """Ensure we are on a minilegion feature branch.
+
+    - If not in a git repo: returns None silently.
+    - If already on a minilegion/* branch: stay, return current branch name.
+    - Otherwise: create and checkout minilegion/<project_name>-<timestamp>.
+
+    Returns the branch name (or None if not a git repo).
+    """
+    if not is_git_repo(repo_root):
+        return None
+
+    current = get_current_branch(repo_root)
+    if current.startswith("minilegion/"):
+        return current
+
+    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
+    branch_name = f"minilegion/{project_name}-{timestamp}"
+    _git(["checkout", "-b", branch_name], cwd=repo_root)
+    return branch_name
