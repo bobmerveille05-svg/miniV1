@@ -213,10 +213,11 @@ Plans:
 **Depends on:** Phase 15
 **Requirements:** RSM-01, RSM-02, RSM-03, RSM-04
 **Gap Closure:** Closes brainstorm integration and E2E flow gaps from v1.1 audit.
-**Plans:** 1/1 plans complete
+**Plans:** 2 plans (1 complete, 1 gap closure)
 
 Plans:
 - [x] 16-01-PLAN.md — Add ResearchConfig to config, dual researcher prompts (fact+brainstorm), --mode/--options flags, schema validation, tests
+- [ ] 16-02-PLAN.md — Gap closure: sync Pydantic ResearchSchema with JSON schema (7 brainstorm fields), add recommendation enforcement, add real-Pydantic-path tests
 
 ---
 
