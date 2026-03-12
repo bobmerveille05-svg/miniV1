@@ -63,3 +63,37 @@ class FileIOError(MiniLegionError):
     """File read/write failure."""
 
     pass
+
+
+class AuthError(MiniLegionError):
+    """Base exception for authentication errors."""
+
+    pass
+
+
+class AuthExpiredError(AuthError):
+    """Token has expired — user must re-authenticate."""
+
+    def __init__(self, provider: str) -> None:
+        super().__init__(
+            f"Authentication expired for '{provider}'. "
+            f"Run: minilegion auth login {provider}"
+        )
+        self.provider = provider
+
+
+class AuthProviderError(AuthError):
+    """OAuth flow failure (network error, access denied, etc.)."""
+
+    pass
+
+
+class AuthNotConfiguredError(AuthError):
+    """No credentials found for this provider."""
+
+    def __init__(self, provider: str) -> None:
+        super().__init__(
+            f"Not authenticated with '{provider}'. "
+            f"Run: minilegion auth login {provider}"
+        )
+        self.provider = provider

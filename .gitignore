@@ -14,3 +14,6 @@ nul
 
 # Local test/demo projects created with minilegion init
 demo-*/
+
+# Git worktrees
+.worktrees/

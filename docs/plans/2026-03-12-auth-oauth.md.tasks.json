@@ -1,0 +1,15 @@
+{
+  "planPath": "docs/plans/2026-03-12-auth-oauth.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Auth exceptions", "status": "pending"},
+    {"id": 2, "subject": "Task 2: CredentialStore", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: AuthProvider base class and registry", "status": "pending", "blockedBy": [2]},
+    {"id": 4, "subject": "Task 4: CopilotAuthProvider — GitHub Device Flow", "status": "pending", "blockedBy": [3]},
+    {"id": 5, "subject": "Task 5: Copilot LLM adapter", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 6: CLI auth commands", "status": "pending", "blockedBy": [4]},
+    {"id": 7, "subject": "Task 7: config init — skip API key prompt for copilot", "status": "pending", "blockedBy": [6]},
+    {"id": 8, "subject": "Task 8: Full test suite green", "status": "pending", "blockedBy": [5, 7]},
+    {"id": 9, "subject": "Task 9: Final integration check", "status": "pending", "blockedBy": [8]}
+  ],
+  "lastUpdated": "2026-03-12T00:00:00Z"
+}

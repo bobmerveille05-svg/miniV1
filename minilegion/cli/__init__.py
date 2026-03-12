@@ -32,3 +32,8 @@ from minilegion.cli import commands  # noqa: F401, E402
 from minilegion.cli.config_commands import config_app  # noqa: E402
 
 app.add_typer(config_app, name="config")
+
+# Register auth sub-app (minilegion auth login/logout/status)
+from minilegion.cli.auth_commands import auth_app  # noqa: E402
+
+app.add_typer(auth_app, name="auth")
