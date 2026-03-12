@@ -215,9 +215,16 @@ class TestArchiveStateUpdates:
         result = runner.invoke(app, ["archive"])
         assert result.exit_code == 0, result.output
 
-        state = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        actions = [entry.get("action") for entry in state["history"]]
-        assert "archive" in actions
+        # Since Phase 14, history lives in history/*.json files, not in STATE.json
+        history_dir = project_ai / "history"
+        assert history_dir.exists(), "history/ directory should exist after archive"
+        event_files = list(history_dir.glob("*.json"))
+        assert event_files, "at least one history event file should exist"
+        event_types = []
+        for f in event_files:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            event_types.append(data.get("event_type", ""))
+        assert "archive" in event_types, f"expected 'archive' event, got: {event_types}"
 
     def test_archive_transitions_state(self, tmp_project_dir, monkeypatch):
         project_ai = tmp_project_dir / "project-ai"
