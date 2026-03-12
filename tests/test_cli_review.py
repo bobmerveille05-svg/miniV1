@@ -249,7 +249,7 @@ class TestReviewCommand:
         runner.invoke(app, ["review"])
 
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "execute"
+        assert state_data["current_stage"] == "review"
 
     def test_review_pass_sets_review_approved(self, monkeypatch, tmp_path):
         project_ai = tmp_path / "myproject" / "project-ai"
@@ -403,7 +403,7 @@ class TestReviewCommand:
 
         # After revise(1) + review(pass), state should be at "review"
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "execute"
+        assert state_data["current_stage"] == "review"
 
     def test_review_revise_limit_escalates(self, monkeypatch, tmp_path):
         """When revise_count reaches max, escalation message is shown."""

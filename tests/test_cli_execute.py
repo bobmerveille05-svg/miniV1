@@ -266,7 +266,7 @@ class TestExecuteCommand:
         runner.invoke(app, ["execute"])
 
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "plan"
+        assert state_data["current_stage"] == "execute"
 
     def test_execute_patch_rejected_exits_0(self, monkeypatch, tmp_path):
         project_ai = tmp_path / "myproject" / "project-ai"

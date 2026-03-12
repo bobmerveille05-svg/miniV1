@@ -478,9 +478,8 @@ class TestResearchCommand:
         result = runner.invoke(app, ["research"])
         assert result.exit_code == 0, result.output
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        # Since Phase 15, research does NOT advance current_stage — only `advance` does.
-        # current_stage stays 'brief' until the user runs `minilegion advance`.
-        assert state_data["current_stage"] == "brief"
+        # research advances current_stage to 'research' on approval
+        assert state_data["current_stage"] == "research"
         assert state_data["approvals"].get("research_approved") is True
 
     def test_research_rejection_leaves_state_unchanged(self, tmp_path, monkeypatch):
@@ -646,10 +645,9 @@ class TestResearchCommand:
         result = runner.invoke(app, ["research"])
         assert result.exit_code == 0, result.output
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        # Since Phase 15, research does NOT advance current_stage — only `advance` does.
-        # current_stage stays 'brief' until the user runs `minilegion advance`.
-        assert state_data["current_stage"] == "brief", (
-            f"Expected 'brief' (advance required), got '{state_data['current_stage']}'"
+        # research advances current_stage to 'research' on approval
+        assert state_data["current_stage"] == "research", (
+            f"Expected 'research' after approval, got '{state_data['current_stage']}'"
         )
 
 

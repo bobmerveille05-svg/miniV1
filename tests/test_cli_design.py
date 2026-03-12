@@ -253,7 +253,7 @@ class TestDesignCommand:
         runner.invoke(app, ["design"])
 
         state_data = json.loads((project_ai / "STATE.json").read_text(encoding="utf-8"))
-        assert state_data["current_stage"] == "research"
+        assert state_data["current_stage"] == "design"
 
     def test_design_rejection_exits_0(self, monkeypatch, tmp_path):
         project_ai = tmp_path / "myproject" / "project-ai"

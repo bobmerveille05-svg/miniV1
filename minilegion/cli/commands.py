@@ -770,6 +770,7 @@ def research(
         research_md = (project_dir / "RESEARCH.md").read_text(encoding="utf-8")
         approve_research(state, project_dir / "STATE.json", research_md)
 
+        state.current_stage = Stage.RESEARCH.value
         _append_state_event(
             project_dir, state, "research", "Research completed and approved"
         )
@@ -836,6 +837,7 @@ def design() -> None:
         design_md = (project_dir / "DESIGN.md").read_text(encoding="utf-8")
         approve_design(state, project_dir / "STATE.json", design_md)
 
+        state.current_stage = Stage.DESIGN.value
         _append_state_event(
             project_dir, state, "design", "Design completed and approved"
         )
@@ -954,6 +956,7 @@ def plan(
             state.approvals["research_approved"] = True
             state.approvals["design_approved"] = True
 
+            state.current_stage = Stage.PLAN.value
             state.metadata["skipped_stages"] = _json.dumps(sorted(skip_stages))
             _append_state_event(
                 project_dir,
@@ -1009,6 +1012,7 @@ def plan(
             plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
             approve_plan(state, project_dir / "STATE.json", plan_md)
 
+            state.current_stage = Stage.PLAN.value
             _append_state_event(
                 project_dir, state, "plan", "Plan completed and approved"
             )
@@ -1132,6 +1136,7 @@ def execute(
             )
         )
 
+        state.current_stage = Stage.EXECUTE.value
         _append_state_event(
             project_dir, state, "execute", "Execution completed and approved"
         )
@@ -1245,6 +1250,7 @@ def review() -> None:
             from minilegion.core.schemas import Verdict
 
             if review_data.verdict == Verdict.PASS:
+                state.current_stage = Stage.REVIEW.value
                 _append_state_event(
                     project_dir, state, "review", "Review passed and approved"
                 )
