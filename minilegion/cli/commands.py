@@ -6,6 +6,7 @@ Commands register themselves with the Typer app imported from minilegion.cli.
 from __future__ import annotations
 
 import json as _json
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -27,8 +28,11 @@ from minilegion.core.diff import generate_diff_text
 from minilegion.core.exceptions import (
     ConfigError,
     MiniLegionError,
+    PreflightError,
 )
+from minilegion.core.evidence import ValidationEvidence, read_evidence, write_evidence
 from minilegion.core.file_io import write_atomic
+from minilegion.core.history import HistoryEvent, append_event, read_history
 from minilegion.core.patcher import apply_patch
 from minilegion.core.preflight import check_preflight
 from minilegion.core.provider_health import run_provider_healthcheck
@@ -42,6 +46,7 @@ from minilegion.core.schemas import (
 )
 from minilegion.core.scope_lock import validate_scope
 from minilegion.core.state import (
+    FORWARD_TRANSITIONS,
     ProjectState,
     Stage,
     StateMachine,
@@ -124,6 +129,27 @@ def _pipeline_stub(stage: Stage, extra_info: str = "") -> None:
         raise typer.Exit(code=1)
 
 
+def _append_state_event(
+    project_dir: Path,
+    state: ProjectState,
+    event_type: str,
+    notes: str,
+    stage_override: str | None = None,
+) -> None:
+    """Append a durable history event for a state transition/lifecycle action."""
+    append_event(
+        project_dir,
+        HistoryEvent(
+            event_type=event_type,
+            stage=stage_override or state.current_stage,
+            timestamp=datetime.now().isoformat(),
+            actor="system",
+            tool_used="minilegion",
+            notes=notes,
+        ),
+    )
+
+
 def _read_source_files(
     file_paths: list[str], project_root: Path, config: MiniLegionConfig
 ) -> str:
@@ -150,6 +176,16 @@ def _read_source_files(
         content = fpath.read_text(encoding="utf-8", errors="replace")
         parts.append(f"## {path_str}\n{content}\n---\n")
     return "\n".join(parts) if parts else "(no existing source files)"
+
+
+VALIDATION_TARGETS: dict[str, Stage] = {
+    "brief": Stage.RESEARCH,
+    "research": Stage.DESIGN,
+    "design": Stage.PLAN,
+    "plan": Stage.EXECUTE,
+    "execute": Stage.REVIEW,
+    "review": Stage.ARCHIVE,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -331,8 +367,8 @@ def init(
 
     # Create STATE.json via ProjectState model + save_state (uses write_atomic)
     state = ProjectState()
-    state.add_history("init", "Project initialized")
     save_state(state, project_ai / "STATE.json")
+    _append_state_event(project_ai, state, "init", "Project initialized", "init")
 
     # Create minilegion.config.json via write_atomic
     config = MiniLegionConfig()
@@ -384,9 +420,162 @@ def status() -> None:
         typer.echo(f"Completed tasks: {len(state.completed_tasks)}")
 
         # Last history entry
-        if state.history:
-            last = state.history[-1]
-            typer.echo(f"Last action: {last.action} — {last.details}")
+        events = read_history(project_dir)
+        if events:
+            last = events[-1]
+            typer.echo(f"Last action: {last.event_type} — {last.notes}")
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def history(
+    limit: Annotated[
+        int,
+        typer.Option("--limit", "-n", help="Show newest N events", min=1),
+    ] = 10,
+) -> None:
+    """Show chronological project history from append-only event files."""
+    try:
+        project_dir = find_project_dir()
+        events = read_history(project_dir)
+        if not events:
+            typer.echo("_No history yet._")
+            return
+
+        for event in events[-limit:]:
+            line = (
+                f"{event.timestamp} {event.event_type} {event.stage} {event.notes}"
+            ).strip()
+            typer.echo(line)
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def validate(step: Annotated[str, typer.Argument(help="Step to validate")]) -> None:
+    """Validate a stage artifact set and write machine-readable evidence."""
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        normalized = step.strip().lower()
+        target_stage = VALIDATION_TARGETS.get(normalized)
+        if target_stage is None:
+            typer.echo(
+                typer.style(
+                    "Unsupported step. Use one of: brief, research, design, plan, execute, review.",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        checks_passed: list[str] = []
+        status = "pass"
+        notes = "Validation passed"
+        try:
+            check_preflight(
+                target_stage,
+                project_dir,
+                skip_stages=_get_skip_stages(state),
+            )
+            checks_passed.append(f"preflight:{target_stage.value}")
+        except PreflightError as exc:
+            status = "fail"
+            notes = str(exc)
+
+        evidence = ValidationEvidence(
+            step=normalized,
+            status=status,
+            checks_passed=checks_passed,
+            validator="preflight",
+            tool_used="minilegion",
+            date=datetime.now().isoformat(),
+            notes=notes,
+        )
+        write_evidence(project_dir, evidence)
+
+        if status == "pass":
+            typer.echo(
+                typer.style(f"validate {normalized}: PASS", fg=typer.colors.GREEN)
+            )
+            return
+
+        typer.echo(
+            typer.style(f"validate {normalized}: FAIL - {notes}", fg=typer.colors.RED)
+        )
+        raise typer.Exit(code=1)
+
+    except MiniLegionError as exc:
+        typer.echo(typer.style(str(exc), fg=typer.colors.RED))
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def advance() -> None:
+    """Advance one stage when current-step evidence is passing."""
+    try:
+        project_dir = find_project_dir()
+        state = load_state(project_dir / "STATE.json")
+        config = load_config(project_dir.parent)
+        current = Stage(state.current_stage)
+        next_stage = FORWARD_TRANSITIONS.get(current)
+
+        if next_stage is None:
+            typer.echo(
+                typer.style(
+                    "Already at final stage; cannot advance.", fg=typer.colors.RED
+                )
+            )
+            raise typer.Exit(code=1)
+
+        if config.workflow.require_validation and current != Stage.INIT:
+            evidence = read_evidence(project_dir, current.value)
+            if evidence is None:
+                typer.echo(
+                    typer.style(
+                        f"Validation required before advance: no evidence for '{current.value}'.",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
+            if evidence.status != "pass":
+                typer.echo(
+                    typer.style(
+                        f"Validation required before advance: '{current.value}' is not passing.",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
+
+        sm = StateMachine(current, state.approvals)
+        if not sm.can_transition(next_stage):
+            typer.echo(
+                typer.style(
+                    f"Cannot transition from {current.value} to {next_stage.value}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
+
+        sm.transition(next_stage)
+        state.current_stage = next_stage.value
+        _append_state_event(
+            project_dir,
+            state,
+            "advance",
+            f"Advanced from {current.value} to {next_stage.value}",
+        )
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(
+            typer.style(
+                f"Advanced: {current.value} -> {next_stage.value}",
+                fg=typer.colors.GREEN,
+            )
+        )
 
     except MiniLegionError as exc:
         typer.echo(typer.style(str(exc), fg=typer.colors.RED))
@@ -426,12 +615,9 @@ def brief(
         # Approval gate — raises ApprovalError on rejection
         approve_brief(state, project_dir / "STATE.json", brief_content)
 
-        # State mutation ONLY after confirmed approval
-        sm.transition(Stage.BRIEF)
-        state.current_stage = Stage.BRIEF.value  # CRITICAL: sync ProjectState manually
-        state.add_history("brief", "Brief created and approved")
+        _append_state_event(project_dir, state, "brief", "Brief created and approved")
         save_state(state, project_dir / "STATE.json")
-        typer.echo(typer.style("Brief approved. Stage: brief", fg=typer.colors.GREEN))
+        typer.echo(typer.style("Brief approved.", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -444,7 +630,21 @@ def brief(
 
 
 @app.command()
-def research() -> None:
+def research(
+    mode: Annotated[
+        str | None,
+        typer.Option(
+            "--mode",
+            help="Research mode: fact (codebase scan) or brainstorm (explore directions)",
+        ),
+    ] = None,
+    options: Annotated[
+        int | None,
+        typer.Option(
+            "--options", help="Max candidate directions in brainstorm mode (1-5)"
+        ),
+    ] = None,
+) -> None:
     """Run the research stage."""
     try:
         project_dir = find_project_dir()
@@ -467,6 +667,22 @@ def research() -> None:
         # So: load_config(project_dir.parent) → myproject/project-ai/minilegion.config.json ✓
         #     load_config(project_dir)        → myproject/project-ai/project-ai/minilegion.config.json ✗
         config = load_config(project_dir.parent)
+
+        # Apply defaults from config for non-specified CLI args
+        if mode is None:
+            mode = config.research.default_mode
+        if options is None:
+            options = config.research.default_options
+
+        # Validate options range
+        if not (config.research.min_options <= options <= config.research.max_options):
+            typer.echo(
+                typer.style(
+                    f"Options must be between {config.research.min_options} and {config.research.max_options}",
+                    fg=typer.colors.RED,
+                )
+            )
+            raise typer.Exit(code=1)
 
         # Provider healthcheck — fail fast before any research work
         if config.provider_healthcheck:
@@ -497,6 +713,8 @@ def research() -> None:
         project_name = project_dir.parent.name  # directory name user chose at init
         user_message = render_prompt(
             user_template,
+            mode=mode,
+            num_options=options,
             project_name=project_name,
             brief_content=brief_content,
             codebase_context=codebase_context,
@@ -529,16 +747,11 @@ def research() -> None:
         research_md = (project_dir / "RESEARCH.md").read_text(encoding="utf-8")
         approve_research(state, project_dir / "STATE.json", research_md)
 
-        # State mutation ONLY after confirmed approval
-        sm.transition(Stage.RESEARCH)
-        state.current_stage = (
-            Stage.RESEARCH.value
-        )  # CRITICAL: sync ProjectState manually
-        state.add_history("research", "Research completed and approved")
-        save_state(state, project_dir / "STATE.json")
-        typer.echo(
-            typer.style("Research approved. Stage: research", fg=typer.colors.GREEN)
+        _append_state_event(
+            project_dir, state, "research", "Research completed and approved"
         )
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(typer.style("Research approved.", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -600,11 +813,11 @@ def design() -> None:
         design_md = (project_dir / "DESIGN.md").read_text(encoding="utf-8")
         approve_design(state, project_dir / "STATE.json", design_md)
 
-        sm.transition(Stage.DESIGN)
-        state.current_stage = Stage.DESIGN.value  # CRITICAL: sync ProjectState manually
-        state.add_history("design", "Design completed and approved")
+        _append_state_event(
+            project_dir, state, "design", "Design completed and approved"
+        )
         save_state(state, project_dir / "STATE.json")
-        typer.echo(typer.style("Design approved. Stage: design", fg=typer.colors.GREEN))
+        typer.echo(typer.style("Design approved.", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -718,21 +931,15 @@ def plan(
             state.approvals["research_approved"] = True
             state.approvals["design_approved"] = True
 
-            sm.transition(Stage.PLAN)
-            state.current_stage = (
-                Stage.PLAN.value
-            )  # CRITICAL: sync ProjectState manually
             state.metadata["skipped_stages"] = _json.dumps(sorted(skip_stages))
-            state.add_history(
+            _append_state_event(
+                project_dir,
+                state,
                 "plan",
                 "Fast mode: research and design skipped. Plan completed and approved.",
             )
             save_state(state, project_dir / "STATE.json")
-            typer.echo(
-                typer.style(
-                    "Plan approved. Stage: plan (fast mode)", fg=typer.colors.GREEN
-                )
-            )
+            typer.echo(typer.style("Plan approved (fast mode).", fg=typer.colors.GREEN))
 
         else:
             # --- NORMAL MODE PATH ---
@@ -779,13 +986,11 @@ def plan(
             plan_md = (project_dir / "PLAN.md").read_text(encoding="utf-8")
             approve_plan(state, project_dir / "STATE.json", plan_md)
 
-            sm.transition(Stage.PLAN)
-            state.current_stage = (
-                Stage.PLAN.value
-            )  # CRITICAL: sync ProjectState manually
-            state.add_history("plan", "Plan completed and approved")
+            _append_state_event(
+                project_dir, state, "plan", "Plan completed and approved"
+            )
             save_state(state, project_dir / "STATE.json")
-            typer.echo(typer.style("Plan approved. Stage: plan", fg=typer.colors.GREEN))
+            typer.echo(typer.style("Plan approved.", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -904,15 +1109,11 @@ def execute(
             )
         )
 
-        sm.transition(Stage.EXECUTE)
-        state.current_stage = (
-            Stage.EXECUTE.value
-        )  # CRITICAL: sync ProjectState manually
-        state.add_history("execute", "Execution completed and approved")
-        save_state(state, project_dir / "STATE.json")
-        typer.echo(
-            typer.style("Execution complete. Stage: execute", fg=typer.colors.GREEN)
+        _append_state_event(
+            project_dir, state, "execute", "Execution completed and approved"
         )
+        save_state(state, project_dir / "STATE.json")
+        typer.echo(typer.style("Execution complete.", fg=typer.colors.GREEN))
 
     except ApprovalError:
         typer.echo(
@@ -1021,14 +1222,11 @@ def review() -> None:
             from minilegion.core.schemas import Verdict
 
             if review_data.verdict == Verdict.PASS:
-                # Done — transition to review stage
-                sm.transition(Stage.REVIEW)
-                state.current_stage = Stage.REVIEW.value
-                state.add_history("review", "Review passed and approved")
-                save_state(state, project_dir / "STATE.json")
-                typer.echo(
-                    typer.style("Review passed. Stage: review", fg=typer.colors.GREEN)
+                _append_state_event(
+                    project_dir, state, "review", "Review passed and approved"
                 )
+                save_state(state, project_dir / "STATE.json")
+                typer.echo(typer.style("Review passed.", fg=typer.colors.GREEN))
                 return
 
             # verdict == revise
@@ -1057,7 +1255,12 @@ def review() -> None:
                 if want_redesign:
                     sm.transition(Stage.DESIGN)
                     state.current_stage = Stage.DESIGN.value
-                    state.add_history("review", "Backtracked to design for re-design")
+                    _append_state_event(
+                        project_dir,
+                        state,
+                        "review",
+                        "Backtracked to design for re-design",
+                    )
                     save_state(state, project_dir / "STATE.json")
                     typer.echo(
                         typer.style(
@@ -1229,7 +1432,9 @@ def archive() -> None:
         # Transition state — CRITICAL: set .value for JSON serializability
         sm.transition(Stage.ARCHIVE)
         state.current_stage = Stage.ARCHIVE.value  # sync gap fix
-        state.add_history(
+        _append_state_event(
+            project_dir,
+            state,
             "archive",
             f"Pipeline archived. {len(task_ids)} tasks. Verdict: {review_data.verdict.value}.",
         )
