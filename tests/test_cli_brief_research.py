@@ -1005,6 +1005,7 @@ class TestResearchBrainstormMode:
         monkeypatch.chdir(tmp_path)
 
         from minilegion.core.schemas import ResearchSchema
+
         mock_research = ResearchSchema(**VALID_RESEARCH)
         captured_args = []
 
@@ -1033,13 +1034,17 @@ class TestResearchBrainstormMode:
         monkeypatch.setattr(
             "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
         )
-        (project_ai / "RESEARCH.md").write_text("# Research" + chr(10), encoding="utf-8")
+        (project_ai / "RESEARCH.md").write_text(
+            "# Research" + chr(10), encoding="utf-8"
+        )
 
         runner.invoke(app, ["research"])
         assert len(captured_args) == 1
         assert captured_args[0]["mode"] == "fact"
 
-    def test_research_brainstorm_mode_passes_mode_parameter(self, tmp_path, monkeypatch):
+    def test_research_brainstorm_mode_passes_mode_parameter(
+        self, tmp_path, monkeypatch
+    ):
         """research --mode brainstorm passes mode to render_prompt (RSM-02)."""
         project_ai = tmp_path / "project-ai"
         project_ai.mkdir()
@@ -1047,6 +1052,7 @@ class TestResearchBrainstormMode:
         monkeypatch.chdir(tmp_path)
 
         from minilegion.core.schemas import ResearchSchema
+
         mock_research = ResearchSchema(**VALID_BRAINSTORM_RESEARCH)
         captured_args = []
 
@@ -1075,7 +1081,9 @@ class TestResearchBrainstormMode:
         monkeypatch.setattr(
             "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
         )
-        (project_ai / "RESEARCH.md").write_text("# Research" + chr(10), encoding="utf-8")
+        (project_ai / "RESEARCH.md").write_text(
+            "# Research" + chr(10), encoding="utf-8"
+        )
 
         runner.invoke(app, ["research", "--mode", "brainstorm"])
         assert len(captured_args) == 1
@@ -1084,12 +1092,14 @@ class TestResearchBrainstormMode:
     def test_research_config_default_mode_is_fact(self, tmp_path, monkeypatch):
         """ResearchConfig defaults to fact mode (RSM-04)."""
         from minilegion.core.config import ResearchConfig
+
         config = ResearchConfig()
         assert config.default_mode == "fact"
 
     def test_research_config_default_options_is_3(self, tmp_path, monkeypatch):
         """ResearchConfig defaults to 3 options (RSM-04)."""
         from minilegion.core.config import ResearchConfig
+
         config = ResearchConfig()
         assert config.default_options == 3
 
@@ -1118,3 +1128,170 @@ class TestResearchBrainstormMode:
         result = runner.invoke(app, ["research", "--options", "6"])
         assert result.exit_code == 1
         assert "Options must be between" in result.output
+
+    def test_brainstorm_fields_preserved_by_model_dump(self):
+        """ResearchSchema.model_dump_json() preserves all 7 brainstorm fields (RSM-02/03)."""
+        from minilegion.core.schemas import ResearchSchema
+
+        r = ResearchSchema(**VALID_BRAINSTORM_RESEARCH)
+        data = json.loads(r.model_dump_json())
+        for field in [
+            "problem_framing",
+            "facts",
+            "assumptions",
+            "candidate_directions",
+            "tradeoffs",
+            "risks",
+            "recommendation",
+        ]:
+            assert field in data, f"Field '{field}' dropped by model_dump_json()"
+        assert data["recommendation"] == "Direction 2 provides best balance"
+        assert len(data["candidate_directions"]) == 3
+        assert data["candidate_directions"][0]["name"] == "Direction 1"
+
+    def test_fact_mode_fields_unaffected_by_brainstorm_addition(self):
+        """Fact mode ResearchSchema serialization unchanged after brainstorm fields added (RSM-01)."""
+        from minilegion.core.schemas import ResearchSchema
+
+        r = ResearchSchema(**VALID_RESEARCH)
+        data = json.loads(r.model_dump_json())
+        for field in [
+            "project_overview",
+            "tech_stack",
+            "architecture_patterns",
+            "relevant_files",
+            "existing_conventions",
+            "potential_impacts",
+            "constraints",
+            "assumptions_verified",
+            "open_questions",
+            "recommended_focus_files",
+        ]:
+            assert field in data, f"Fact field '{field}' missing"
+        # Brainstorm fields exist but are null/empty — not present as real data
+        assert data["recommendation"] is None
+        assert data["problem_framing"] is None
+
+    def test_recommendation_required_in_brainstorm_mode_command(
+        self, tmp_path, monkeypatch
+    ):
+        """research --mode brainstorm exits 1 when recommendation is None (RSM-03)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(
+            **{**VALID_BRAINSTORM_RESEARCH, "recommendation": None}
+        )
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: ("sys", "template"),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.render_prompt",
+            lambda template, **kwargs: "rendered",
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda llm_call, prompt, artifact_name, config, project_dir: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research", "--mode", "brainstorm"])
+        assert result.exit_code == 1
+        assert "recommendation" in result.output
+
+    def test_recommendation_empty_string_rejected_in_brainstorm_mode(
+        self, tmp_path, monkeypatch
+    ):
+        """research --mode brainstorm exits 1 when recommendation is empty string (RSM-03)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(
+            **{**VALID_BRAINSTORM_RESEARCH, "recommendation": ""}
+        )
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: ("sys", "template"),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.render_prompt",
+            lambda template, **kwargs: "rendered",
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda llm_call, prompt, artifact_name, config, project_dir: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research", "--mode", "brainstorm"])
+        assert result.exit_code == 1
+        assert "recommendation" in result.output
+
+    def test_recommendation_not_required_in_fact_mode(self, tmp_path, monkeypatch):
+        """research (fact mode) exits 0 even when recommendation is absent (RSM-01)."""
+        project_ai = tmp_path / "project-ai"
+        project_ai.mkdir()
+        _write_brief_state(project_ai)
+        monkeypatch.chdir(tmp_path)
+
+        from minilegion.core.schemas import ResearchSchema
+
+        mock_research = ResearchSchema(**VALID_RESEARCH)
+
+        monkeypatch.setattr(
+            "minilegion.cli.commands.check_preflight", lambda s, pd, **kw: None
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.scan_codebase", lambda pd, cfg: "ctx"
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.load_prompt",
+            lambda role: ("sys", "template"),
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.render_prompt",
+            lambda template, **kwargs: "rendered",
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.validate_with_retry",
+            lambda llm_call, prompt, artifact_name, config, project_dir: mock_research,
+        )
+        monkeypatch.setattr(
+            "minilegion.cli.commands.save_dual", lambda data, jp, mp: None
+        )
+        monkeypatch.setattr(
+            "minilegion.core.approval.typer.confirm", lambda *a, **kw: True
+        )
+        (project_ai / "RESEARCH.md").write_text("# Research\n", encoding="utf-8")
+
+        result = runner.invoke(app, ["research"])
+        assert result.exit_code == 0
