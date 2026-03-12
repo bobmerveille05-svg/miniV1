@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1–12 (shipped 2026-03-10) ([archived roadmap](milestones/v1.0-ROADMAP.md), [archived requirements](milestones/v1.0-REQUIREMENTS.md))
 - ✅ **v1.1 pre-work** — Phase 1 (shipped 2026-03-11)
-- 🚧 **v1.1 Portable Kernel** — Phases 2–17 (in progress)
+- ✅ **v1.1 Portable Kernel** — Phases 2–17 (shipped 2026-03-12)
 
 ---
 
@@ -230,8 +230,10 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Implement `minilegion rollback "<reason>"` with artifact preservation and history event (RBK-01, RBK-02)
-- [ ] 17-02-PLAN.md — Implement `minilegion doctor` with 6 coherence checks and green/yellow/red output (DOC-01, DOC-02, DOC-03)
+- [x] 17-01-PLAN.md — Implement `minilegion rollback "<reason>"` with artifact preservation and history event (RBK-01, RBK-02)
+- [x] 17-02-PLAN.md — Implement `minilegion doctor` with 6 coherence checks and green/yellow/red output (DOC-01, DOC-02, DOC-03)
+
+**Status:** COMPLETE — UAT 7/7 passed. Closed 2026-03-12.
 
 ---
 
@@ -251,4 +253,4 @@ Plans:
 | 14. History Foundation + Migration | v1.1 gap closure | Complete    | 2026-03-11 | - |
 | 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | Complete    | 2026-03-12 | - |
 | 16. Research Brainstorm Mode | 2/2 | Complete    | 2026-03-12 | - |
-| 17. Rollback + Doctor Health Surface | v1.1 gap closure | 0/2 | Not started | - |
+| 17. Rollback + Doctor Health Surface | v1.1 gap closure | 2/2 | Complete | 2026-03-12 |

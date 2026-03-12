@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Portable Kernel
 status: completed
-stopped_at: Completed 16-research-brainstorm-mode/16-02-PLAN.md
-last_updated: "2026-03-12T05:10:01.367Z"
-last_activity: 2026-03-12 — Phase 16 Plan 2 complete (ResearchSchema brainstorm fields + recommendation enforcement)
+stopped_at: Completed 17-rollback-doctor-health-surface/17-02-PLAN.md
+last_updated: "2026-03-12T00:00:00Z"
+last_activity: 2026-03-12 — Phase 17 complete (rollback + doctor). v1.1 Portable Kernel milestone SHIPPED.
 progress:
   total_phases: 15
-  completed_phases: 14
-  total_plans: 27
-  completed_plans: 27
+  completed_phases: 15
+  total_plans: 29
+  completed_plans: 29
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** A user can open any old project, run `minilegion status` then `minilegion context claude`, and resume work in under 2 minutes — portable, auditable, resumable.
-**Current focus:** Phase 16 — Research brainstorm mode (gap closure) — COMPLETE
+**Current focus:** v1.1 Portable Kernel — COMPLETE ✅
 
 ## Current Position
 
-Phase: 16 of 17 (v1.1 gap closure) — research brainstorm mode COMPLETE
+Phase: 17 of 17 (v1.1 gap closure) — rollback + doctor COMPLETE
 Plan: 2 of 2 in current phase ✅
-Status: Phase 16 complete — all plans done
-Last activity: 2026-03-12 — Phase 16 Plan 2 complete (ResearchSchema brainstorm fields + recommendation enforcement)
+Status: **v1.1 milestone COMPLETE** — all phases and plans done
+Last activity: 2026-03-12 — Phase 17 UAT 7/7 passed. Rollback + Doctor shipped.
 
-Progress: [██████████] 100% (28 of 28 plans complete)
+Progress: [██████████] 100% (29 of 29 plans complete)
 
 ## Performance Metrics
 
@@ -90,10 +90,10 @@ None.
 
 ### Blockers/Concerns
 
-None. Phase 16 complete — all RSM requirements satisfied. 11 TestResearchBrainstormMode tests passing.
+None. Phase 17 complete — all RBK + DOC requirements satisfied. 15 TestRollback/TestDoctor tests passing. UAT 7/7 passed. v1.1 Portable Kernel milestone SHIPPED.
 
 ## Session Continuity
 
-Last session: 2026-03-12T05:00:00Z
-Stopped at: Completed 16-research-brainstorm-mode/16-02-PLAN.md
+Last session: 2026-03-12T00:00:00Z
+Stopped at: Completed 17-rollback-doctor-health-surface/17-02-PLAN.md
 Resume file: None
