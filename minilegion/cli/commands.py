@@ -735,6 +735,17 @@ def research(
             llm_call, user_message, "research", config, project_dir
         )
 
+        # Enforce non-empty recommendation in brainstorm mode (RSM-03)
+        if mode == "brainstorm" and config.research.require_recommendation:
+            if not research_data.recommendation:
+                typer.echo(
+                    typer.style(
+                        "Error: Brainstorm mode requires a non-empty recommendation field.",
+                        fg=typer.colors.RED,
+                    )
+                )
+                raise typer.Exit(code=1)
+
         # Save dual output (JSON + Markdown)
         save_dual(
             research_data, project_dir / "RESEARCH.json", project_dir / "RESEARCH.md"

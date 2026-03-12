@@ -1,6 +1,5 @@
 {
-  "description": "Research artifact: codebase analysis output supporting both fact and brainstorm modes.",
-  "type": "object",
+  "description": "Research artifact: codebase analysis output \u2014 supports fact mode (default) and brainstorm mode (structured directions).",
   "properties": {
     "project_overview": {
       "title": "Project Overview",
@@ -80,70 +79,77 @@
       "type": "array"
     },
     "problem_framing": {
-      "title": "Problem Framing",
-      "type": "string",
-      "description": "Brainstorm mode: structured analysis of the problem space"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Problem Framing"
     },
     "facts": {
-      "title": "Facts",
-      "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Brainstorm mode: verified facts about the codebase and problem"
+      "title": "Facts",
+      "type": "array"
     },
     "assumptions": {
-      "title": "Assumptions",
-      "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Brainstorm mode: assumptions about requirements, constraints, or user needs"
+      "title": "Assumptions",
+      "type": "array"
     },
     "candidate_directions": {
-      "title": "Candidate Directions",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Short name for the direction"
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
           },
-          "description": {
-            "type": "string",
-            "description": "Detailed description of this approach"
-          }
+          "type": "array"
         },
-        "required": ["name", "description"]
-      },
-      "description": "Brainstorm mode: array of candidate directions with name and description"
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Candidate Directions"
     },
     "tradeoffs": {
-      "title": "Tradeoffs",
-      "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Brainstorm mode: tradeoffs between candidate directions"
+      "title": "Tradeoffs",
+      "type": "array"
     },
     "risks": {
-      "title": "Risks",
-      "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Brainstorm mode: risks and potential issues with each direction"
+      "title": "Risks",
+      "type": "array"
     },
     "recommendation": {
-      "title": "Recommendation",
-      "type": "string",
-      "description": "Brainstorm mode: recommended direction with reasoning. Must be non-empty in brainstorm mode."
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recommendation"
     }
   },
   "required": [
     "project_overview"
   ],
   "title": "ResearchSchema",
-  "additionalProperties": false
+  "type": "object"
 }
