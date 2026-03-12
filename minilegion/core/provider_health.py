@@ -16,6 +16,7 @@ _SUPPORTED_PROVIDERS = {
     "ollama",
     "gemini",
     "anthropic",
+    "copilot",
 }
 _LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 _DEFAULT_OLLAMA_URL = "http://localhost:11434"
@@ -62,7 +63,25 @@ def run_provider_healthcheck(config: MiniLegionConfig) -> None:
         _check_openai_compatible(config)
         return
 
+    if provider == "copilot":
+        _check_copilot()
+        return
+
     _require_env_var(config.api_key_env, provider)
+
+
+def _check_copilot() -> None:
+    """Verify a valid Copilot token exists in the credential store."""
+    from minilegion.auth import get_token
+    from minilegion.core.exceptions import AuthError
+
+    try:
+        get_token("copilot")
+    except AuthError as exc:
+        raise ConfigError(
+            f"GitHub Copilot is not authenticated. "
+            f"Run: minilegion auth login copilot\n({exc})"
+        ) from exc
 
 
 def _check_openai_compatible(config: MiniLegionConfig) -> None:
