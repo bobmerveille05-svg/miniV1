@@ -1,5 +1,6 @@
 {
-  "description": "Research artifact: codebase analysis output.",
+  "description": "Research artifact: codebase analysis output supporting both fact and brainstorm modes.",
+  "type": "object",
   "properties": {
     "project_overview": {
       "title": "Project Overview",
@@ -77,11 +78,72 @@
       },
       "title": "Recommended Focus Files",
       "type": "array"
+    },
+    "problem_framing": {
+      "title": "Problem Framing",
+      "type": "string",
+      "description": "Brainstorm mode: structured analysis of the problem space"
+    },
+    "facts": {
+      "title": "Facts",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Brainstorm mode: verified facts about the codebase and problem"
+    },
+    "assumptions": {
+      "title": "Assumptions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Brainstorm mode: assumptions about requirements, constraints, or user needs"
+    },
+    "candidate_directions": {
+      "title": "Candidate Directions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Short name for the direction"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of this approach"
+          }
+        },
+        "required": ["name", "description"]
+      },
+      "description": "Brainstorm mode: array of candidate directions with name and description"
+    },
+    "tradeoffs": {
+      "title": "Tradeoffs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Brainstorm mode: tradeoffs between candidate directions"
+    },
+    "risks": {
+      "title": "Risks",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Brainstorm mode: risks and potential issues with each direction"
+    },
+    "recommendation": {
+      "title": "Recommendation",
+      "type": "string",
+      "description": "Brainstorm mode: recommended direction with reasoning. Must be non-empty in brainstorm mode."
     }
   },
   "required": [
     "project_overview"
   ],
   "title": "ResearchSchema",
-  "type": "object"
+  "additionalProperties": false
 }
