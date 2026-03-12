@@ -1142,7 +1142,7 @@ def execute(
                 # Apply only after confirmed approval
                 apply_patch(cf, project_root, dry_run=False)
             # Commit this task's changes
-            if config.git.enabled:
+            if config.git.enabled and not dry_run:
                 try:
                     commit_task(
                         repo_root=project_root,
