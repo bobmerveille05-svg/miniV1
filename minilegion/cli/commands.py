@@ -1619,8 +1619,14 @@ def pr(
                         "Actions: " + "; ".join(review_data.corrective_actions)
                     )
                 review_summary = "\n".join(parts)
-            except Exception:
-                pass
+            except Exception as exc:
+                typer.echo(
+                    typer.style(
+                        f"Warning: could not parse REVIEW.json: {exc}",
+                        fg=typer.colors.YELLOW,
+                    ),
+                    err=True,
+                )
 
         tasks: list[dict] = []
         plan_path = project_dir / "PLAN.json"
@@ -1630,8 +1636,14 @@ def pr(
                     plan_path.read_text(encoding="utf-8")
                 )
                 tasks = [{"id": t.id, "name": t.name} for t in plan_data.tasks]
-            except Exception:
-                pass
+            except Exception as exc:
+                typer.echo(
+                    typer.style(
+                        f"Warning: could not parse PLAN.json: {exc}",
+                        fg=typer.colors.YELLOW,
+                    ),
+                    err=True,
+                )
 
         # Detect current branch
         branch = "unknown"

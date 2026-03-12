@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-import pytest
 from typer.testing import CliRunner
 from minilegion.cli import app
 
@@ -73,7 +72,10 @@ def test_pr_command_uses_gh_when_available(tmp_path, monkeypatch):
         with patch("minilegion.core.git_integration.is_git_repo", return_value=True):
             with patch("minilegion.core.git_integration._git") as mock_git:
                 mock_git.return_value.stdout = "minilegion/myproject-20260101\n"
-                with patch("subprocess.run", return_value=mock_proc):
+                with patch(
+                    "minilegion.core.git_integration.subprocess.run",
+                    return_value=mock_proc,
+                ):
                     result = runner.invoke(app, ["pr"])
     assert result.exit_code == 0
     assert "github.com" in result.output or "PR" in result.output
