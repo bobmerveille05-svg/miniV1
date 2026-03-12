@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Portable Kernel
-status: completed
-stopped_at: Completed 13-context-evidence-verification-backfill/13-02-PLAN.md
-last_updated: "2026-03-12T00:47:48.337Z"
-last_activity: 2026-03-11 — Phase 13 Plan 2 complete (Phase 2 requirement evidence + config default docs)
+status: in-progress
+stopped_at: Completed 16-research-brainstorm-mode/16-01-PLAN.md
+last_updated: "2026-03-12T01:27:29Z"
+last_activity: 2026-03-12 — Phase 16 Plan 1 complete (Research brainstorm mode with config defaults)
 progress:
-  total_phases: 15
-  completed_phases: 13
-  total_plans: 25
-  completed_plans: 25
-  percent: 100
+  total_phases: 17
+  completed_phases: 14
+  total_plans: 28
+  completed_plans: 26
+  percent: 93
 ---
 
 
@@ -26,34 +26,33 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 
 ## Current Position
 
-Phase: 13 of 17 (v1.1 gap closure) ✅
-Plan: 2 of 2 in current phase ✅
-Status: Phase 13 complete — next is 14-01
-Last activity: 2026-03-11 — Phase 13 Plan 2 complete (Phase 2 requirement evidence + config default docs)
+Phase: 16 of 17 (v1.1 gap closure) — research brainstorm mode complete
+Plan: 1 of 2 in current phase ✅
+Status: Phase 16 Plan 1 complete — next is 16-02
+Last activity: 2026-03-12 — Phase 16 Plan 1 complete (Research brainstorm mode with config defaults)
 
-Progress: [██████████] 100% (planner aggregate progress)
+Progress: [██████████████] 93% (26 of 28 plans complete)
 
 ## Performance Metrics
 
 **Velocity (v1.1 so far):**
-- Total plans completed: 4 (Phase 1: 2, Phase 2: 2)
+- Total plans completed: 6 (Phase 1: 2, Phase 13: 2, Phase 16: 2)
 - Average duration: ~10 min
-- Total execution time: ~34 min
+- Total execution time: ~70 min
 
 **Recent Trend:**
 - Phase 1: 2 plans, ~11 min total
-- Phase 2 Plan 1: ~15 min
-- Phase 2 Plan 2: ~8 min
-- Trend: Stable, accelerating
+- Phase 13: 2 plans, ~6 min total
+- Phase 16 Plan 1: ~18 min
+- Trend: Maintaining velocity
 
-| Phase | Plan | Duration | Tasks | Files | Tests Added |
-|---|---|---|---|---|---|
-| 02-context-adapters | 01 | ~15 min | 2 | 5 | 36 |
-| 02-context-adapters | 02 | ~8 min | 2 | 4 | 12 |
-
-*Updated after each plan completion*
-| Phase 13-context-evidence-verification-backfill P01 | 4 min | 2 tasks | 2 files |
-| Phase 13-context-evidence-verification-backfill P02 | 2m | 3 tasks | 2 files |
+| Phase | Plan | Duration | Tasks | Files |
+|---|---|---|---|---|
+| 02-context-adapters | 01 | ~15 min | 2 | 5 |
+| 02-context-adapters | 02 | ~8 min | 2 | 4 |
+| 13-context-evidence-verification-backfill | 01 | ~4 min | 2 | 2 |
+| 13-context-evidence-verification-backfill | 02 | ~2 min | 3 | 2 |
+| 16-research-brainstorm-mode | 01 | ~18 min | 5 | 5 |
 
 ## Accumulated Context
 
@@ -77,6 +76,9 @@ Progress: [██████████] 100% (planner aggregate progress)
 - [Phase 13-01]: Missing or malformed PLAN.json is non-fatal and yields `_No plan context available._`
 - [Phase 13-02]: Phase 2 verification now maps CTX/CFG requirements to explicit pytest node IDs and implementation file references.
 - [Phase 13-02]: CTX-06 evidence is field-level anchored to ADR-0007 (`status`, `context`, `decision`, `consequences`, `rejected alternatives`, `success criterion`).
+- [Phase 16-01]: ResearchConfig follows ContextConfig/WorkflowConfig pattern with default_factory for non-breaking backward compatibility
+- [Phase 16-01]: Brainstorm mode uses dual prompts in single researcher.md file with mode-aware template substitution
+- [Phase 16-01]: Schema supports both fact and brainstorm modes via optional fields (no discriminator needed)
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ None. Plan 13-02 regression gate green (69 targeted tests passing).
 
 ## Session Continuity
 
-Last session: 2026-03-11T22:32:32.246Z
-Stopped at: Completed 13-context-evidence-verification-backfill/13-02-PLAN.md
+Last session: 2026-03-12T01:27:29Z
+Stopped at: Completed 16-research-brainstorm-mode/16-01-PLAN.md
 Resume file: None
