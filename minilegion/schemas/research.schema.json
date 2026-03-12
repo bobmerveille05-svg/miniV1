@@ -1,5 +1,5 @@
 {
-  "description": "Research artifact: codebase analysis output.",
+  "description": "Research artifact: codebase analysis output \u2014 supports fact mode (default) and brainstorm mode (structured directions).",
   "properties": {
     "project_overview": {
       "title": "Project Overview",
@@ -77,6 +77,74 @@
       },
       "title": "Recommended Focus Files",
       "type": "array"
+    },
+    "problem_framing": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Problem Framing"
+    },
+    "facts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "candidate_directions": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Candidate Directions"
+    },
+    "tradeoffs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tradeoffs",
+      "type": "array"
+    },
+    "risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "recommendation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recommendation"
     }
   },
   "required": [

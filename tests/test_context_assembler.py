@@ -29,8 +29,23 @@ def project_dir(tmp_path: Path) -> Path:
     pa = tmp_path / "project-ai"
     pa.mkdir()
     state = ProjectState()
-    state.add_history("init", "Project initialized")
     save_state(state, pa / "STATE.json")
+    history_dir = pa / "history"
+    history_dir.mkdir()
+    (history_dir / "001_init.json").write_text(
+        json.dumps(
+            {
+                "event_type": "init",
+                "stage": "init",
+                "timestamp": "2026-01-01T00:00:00",
+                "actor": "system",
+                "tool_used": "minilegion",
+                "notes": "Project initialized",
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return pa
 
 
@@ -113,8 +128,23 @@ class TestAssembleContextState:
         pa.mkdir()
         state = ProjectState()
         state.current_stage = "brief"
-        state.add_history("brief", "Brief created")
         save_state(state, pa / "STATE.json")
+        history_dir = pa / "history"
+        history_dir.mkdir()
+        (history_dir / "001_brief.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "brief",
+                    "stage": "brief",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Brief created",
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
 
         result = assemble_context("claude", pa, config)
         assert "brief" in result
@@ -345,6 +375,94 @@ class TestAssembleContextConfig:
         assert "[TRUNCATED]" in result
 
 
+class TestAssembleContextCompactPlan:
+    """Assembler emits deterministic compact lookahead from PLAN.json."""
+
+    @staticmethod
+    def _compact_plan_section(text: str) -> str:
+        marker = "## Compact Plan\n\n"
+        assert marker in text
+        section = text.split(marker, 1)[1]
+        return section.split("\n## ", 1)[0]
+
+    @staticmethod
+    def _write_plan(pa: Path, tasks: list[dict[str, object]]) -> None:
+        plan_payload = {
+            "objective": "Ship compact plan context",
+            "design_ref": "DESIGN.json",
+            "tasks": tasks,
+            "test_plan": "pytest",
+        }
+        (pa / "PLAN.json").write_text(
+            json.dumps(plan_payload, indent=2), encoding="utf-8"
+        )
+
+    def test_compact_plan_includes_two_pending_tasks_by_default(self, tmp_path):
+        pa = tmp_path / "project-ai"
+        pa.mkdir()
+
+        state = ProjectState()
+        state.completed_tasks = ["T-1"]
+        save_state(state, pa / "STATE.json")
+
+        self._write_plan(
+            pa,
+            [
+                {"id": "T-1", "name": "done", "description": "Done task"},
+                {"id": "T-2", "name": "next", "description": "Next task"},
+                {"id": "T-3", "name": "later", "description": "Later task"},
+            ],
+        )
+
+        cfg = MiniLegionConfig()
+        cfg.context.lookahead_tasks = 2
+
+        result = assemble_context("claude", pa, cfg)
+        section = self._compact_plan_section(result)
+        bullets = [line for line in section.splitlines() if line.startswith("- ")]
+        assert bullets == ["- T-2: next", "- T-3: later"]
+
+    def test_compact_plan_respects_lookahead_limit(self, tmp_path):
+        pa = tmp_path / "project-ai"
+        pa.mkdir()
+
+        state = ProjectState()
+        state.completed_tasks = ["T-1"]
+        save_state(state, pa / "STATE.json")
+
+        self._write_plan(
+            pa,
+            [
+                {"id": "T-1", "name": "done", "description": "Done task"},
+                {"id": "T-2", "name": "next", "description": "Next task"},
+                {"id": "T-3", "name": "later", "description": "Later task"},
+            ],
+        )
+
+        cfg = MiniLegionConfig()
+        cfg.context.lookahead_tasks = 1
+
+        result = assemble_context("claude", pa, cfg)
+        section = self._compact_plan_section(result)
+        bullets = [line for line in section.splitlines() if line.startswith("- ")]
+        assert bullets == ["- T-2: next"]
+
+    @pytest.mark.parametrize("malformed", [False, True])
+    def test_compact_plan_graceful_fallback_without_valid_plan(
+        self, tmp_path, malformed
+    ):
+        pa = tmp_path / "project-ai"
+        pa.mkdir()
+        save_state(ProjectState(), pa / "STATE.json")
+
+        if malformed:
+            (pa / "PLAN.json").write_text('{"tasks": "not-a-list"', encoding="utf-8")
+
+        result = assemble_context("claude", pa, MiniLegionConfig())
+        section = self._compact_plan_section(result)
+        assert "_No plan context available._" in section
+
+
 # ---------------------------------------------------------------------------
 # CLI command tests
 # ---------------------------------------------------------------------------
@@ -360,8 +478,23 @@ class TestContextCLICommand:
         project_dir = tmp_path / "project-ai"
         project_dir.mkdir(parents=True)
         state = ProjectState()
-        state.add_history("init", "Project initialized")
         save_state(state, project_dir / "STATE.json")
+        history_dir = project_dir / "history"
+        history_dir.mkdir()
+        (history_dir / "001_init.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "init",
+                    "stage": "init",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Project initialized",
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         return project_dir
 
     def test_context_command_writes_file(self, tmp_path, monkeypatch):

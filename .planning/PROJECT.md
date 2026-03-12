@@ -10,9 +10,9 @@ A complete, validated path from brief to committed code that stays auditable and
 
 ## Current State
 
-- **Shipped version:** v1.0 MVP (2026-03-10)
-- **Milestone status:** Complete and archived
-- **Coverage:** 12 phases completed, 23 plans completed, all v1 requirements checked
+- **Shipped version:** v1.0 MVP (2026-03-10), v1.1 Phase 1 pre-work (2026-03-11)
+- **Active milestone:** v1.1 Portable Kernel (Phases 2–8, in progress)
+- **Coverage:** 12 v1.0 phases + 1 v1.1 pre-work phase completed; 620 tests passing
 - **Production capabilities delivered:**
   - Full 8-stage pipeline with enforced transitions
   - 5 approval gates + immutable rejection behavior
@@ -21,12 +21,24 @@ A complete, validated path from brief to committed code that stays auditable and
   - Fast mode (`--fast`, `--skip-research-design`)
   - Multi-provider adapters (OpenAI, Anthropic, Gemini, Ollama, OpenAI-compatible)
   - Interactive provider/model configuration (`minilegion config init`, `minilegion config model`)
+  - Hardened config: small_model, tool_permissions, recommended_models, model_aliases, context_auto_compact, provider_healthcheck
 
-## Next Milestone Goals
+## Current Milestone: v1.1 Portable Kernel
 
-- Define v1.1 outcomes from real user adoption and feedback loops
-- Add milestone audit discipline before closure (to avoid unverified completion)
-- Prioritize highest-leverage DX and reliability improvements from first external usage
+**Goal:** Transform miniV1 from a solid LLM-orchestrated pipeline CLI into a portable, auditable, resumable kernel. After this milestone, a user can open any old project, run `minilegion status` then `minilegion context claude`, and resume work in under 2 minutes.
+
+**Phases:** 2–8 (7 phases)
+**Requirements:** 30 defined in `.planning/REQUIREMENTS.md`
+**ADR:** `.planning/milestones/v1.1-ADR-0007.md`
+
+**Slices:**
+- Phase 2: Context + Adapters (`minilegion context <tool>`)
+- Phase 3: History Extraction (`project-ai/history/`, `minilegion history`)
+- Phase 4: Evidence Bundles (`project-ai/evidence/`)
+- Phase 5: Validate + Advance as distinct commands
+- Phase 6: Research Brainstorm Mode (`--mode brainstorm`)
+- Phase 7: Rollback (`minilegion rollback "<reason>"`)
+- Phase 8: Doctor (`minilegion doctor`)
 
 ## Out of Scope (Carried Forward)
 
@@ -47,4 +59,4 @@ A complete, validated path from brief to committed code that stays auditable and
 </details>
 
 ---
-*Last updated: 2026-03-10 after v1.0 milestone completion*
+*Last updated: 2026-03-11 after v1.1 milestone roadmap creation*

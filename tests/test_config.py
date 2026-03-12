@@ -181,3 +181,25 @@ class TestContextConfig:
         assert config.timeout == 300
         assert config.max_retries == 2
         assert config.engines == {}
+
+
+class TestWorkflowConfig:
+    """Tests for workflow strict/validation defaults (CFG-07)."""
+
+    def test_workflow_defaults_when_omitted(self, tmp_project_dir):
+        config_path = tmp_project_dir / "project-ai" / "minilegion.config.json"
+        config_path.write_text(json.dumps({"model": "gpt-4o-mini"}), encoding="utf-8")
+
+        config = load_config(tmp_project_dir)
+        assert config.workflow.strict_mode is True
+        assert config.workflow.require_validation is True
+
+    def test_workflow_partial_override_keeps_unspecified_default(self, tmp_project_dir):
+        config_path = tmp_project_dir / "project-ai" / "minilegion.config.json"
+        config_path.write_text(
+            json.dumps({"workflow": {"strict_mode": False}}), encoding="utf-8"
+        )
+
+        config = load_config(tmp_project_dir)
+        assert config.workflow.strict_mode is False
+        assert config.workflow.require_validation is True

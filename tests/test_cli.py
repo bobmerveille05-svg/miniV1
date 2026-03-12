@@ -29,7 +29,7 @@ class TestCLIHelp:
         assert "Usage" in result.output
 
     def test_all_commands_registered(self):
-        """All 8 commands appear in help output."""
+        """All user-facing commands appear in help output."""
         result = runner.invoke(app, ["--help"])
         commands = [
             "init",
@@ -39,7 +39,12 @@ class TestCLIHelp:
             "plan",
             "execute",
             "review",
+            "archive",
+            "validate",
+            "advance",
+            "history",
             "status",
+            "context",
         ]
         for cmd in commands:
             assert cmd in result.output, f"Command '{cmd}' not found in help output"
@@ -100,19 +105,114 @@ class TestStatusCommand:
                 "review_approved": False,
             },
             "completed_tasks": [],
-            "history": [
-                {
-                    "timestamp": "2026-01-01T00:00:00",
-                    "action": "init",
-                    "details": "Project initialized",
-                }
-            ],
             "metadata": {},
         }
         (project_dir / "STATE.json").write_text(json.dumps(state_data, indent=2))
+        (project_dir / "history").mkdir()
+        (project_dir / "history" / "001_init.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "init",
+                    "stage": "init",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Project initialized",
+                },
+                indent=2,
+            )
+        )
         result = runner.invoke(app, ["status"])
         assert result.exit_code == 0
         assert "init" in result.output
+        assert "Last action" in result.output
+
+
+class TestHistoryCommand:
+    """Tests for history timeline command output."""
+
+    def test_history_empty_shows_fallback(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project_dir = tmp_path / "project-ai"
+        project_dir.mkdir()
+        (project_dir / "STATE.json").write_text(
+            json.dumps(
+                {
+                    "current_stage": "init",
+                    "approvals": {
+                        "brief_approved": False,
+                        "research_approved": False,
+                        "design_approved": False,
+                        "plan_approved": False,
+                        "execute_approved": False,
+                        "review_approved": False,
+                    },
+                    "completed_tasks": [],
+                    "metadata": {},
+                },
+                indent=2,
+            )
+        )
+
+        result = runner.invoke(app, ["history"])
+        assert result.exit_code == 0
+        assert "_No history yet._" in result.output
+
+    def test_history_prints_chronological_timeline(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        project_dir = tmp_path / "project-ai"
+        history_dir = project_dir / "history"
+        history_dir.mkdir(parents=True)
+        (project_dir / "STATE.json").write_text(
+            json.dumps(
+                {
+                    "current_stage": "plan",
+                    "approvals": {
+                        "brief_approved": True,
+                        "research_approved": True,
+                        "design_approved": True,
+                        "plan_approved": False,
+                        "execute_approved": False,
+                        "review_approved": False,
+                    },
+                    "completed_tasks": [],
+                    "metadata": {},
+                },
+                indent=2,
+            )
+        )
+        (history_dir / "001_init.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "init",
+                    "stage": "init",
+                    "timestamp": "2026-01-01T00:00:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Project initialized",
+                },
+                indent=2,
+            )
+        )
+        (history_dir / "002_brief.json").write_text(
+            json.dumps(
+                {
+                    "event_type": "brief",
+                    "stage": "brief",
+                    "timestamp": "2026-01-01T00:01:00",
+                    "actor": "system",
+                    "tool_used": "minilegion",
+                    "notes": "Brief approved",
+                },
+                indent=2,
+            )
+        )
+
+        result = runner.invoke(app, ["history"])
+        assert result.exit_code == 0
+        assert "init" in result.output
+        assert "brief" in result.output
+        assert result.output.index("init") < result.output.index("brief")
 
 
 class TestStateTransitionValidation:

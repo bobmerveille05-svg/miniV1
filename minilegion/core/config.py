@@ -227,6 +227,36 @@ class ContextConfig(BaseModel):
     warn_threshold: float = 0.7
 
 
+class WorkflowConfig(BaseModel):
+    """Config for explicit validate/advance workflow gating."""
+
+    strict_mode: bool = True
+    require_validation: bool = True
+
+
+class ResearchConfig(BaseModel):
+    """Config for research stage modes and options (RSM-01 through RSM-04).
+
+    All fields have defaults so omitting 'research' from minilegion.config.json
+    produces identical behavior (non-breaking).
+    """
+
+    default_mode: Literal["fact", "brainstorm"] = "fact"
+    default_options: int = 3
+    min_options: int = 1
+    max_options: int = 5
+    require_recommendation: bool = True
+
+    @model_validator(mode="after")
+    def _normalize_default_options(self) -> "ResearchConfig":
+        """Normalize default_options to be within min/max bounds."""
+        if self.default_options < self.min_options:
+            self.default_options = self.min_options
+        elif self.default_options > self.max_options:
+            self.default_options = self.max_options
+        return self
+
+
 class MiniLegionConfig(BaseModel):
     """Configuration for a MiniLegion project."""
 
@@ -256,6 +286,9 @@ class MiniLegionConfig(BaseModel):
     scan_max_file_size_kb: int = 100
     # Context assembly config (Phase 2, CTX-01, CFG-08) — optional, backward compatible
     context: ContextConfig = Field(default_factory=ContextConfig)
+    workflow: WorkflowConfig = Field(default_factory=WorkflowConfig)
+    # Research stage config (Phase 6, RSM-01 through RSM-04) — optional, backward compatible
+    research: ResearchConfig = Field(default_factory=ResearchConfig)
 
     @model_validator(mode="after")
     def _normalize_small_model(self) -> "MiniLegionConfig":

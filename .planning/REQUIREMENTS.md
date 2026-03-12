@@ -94,41 +94,42 @@ All requirements below are v1.1 scope (in-milestone). Previous v1.0 requirements
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CTX-01 | Phase 2 | ✅ Complete (02-01) |
-| CTX-02 | Phase 2 | ✅ Complete (02-01) |
-| CTX-03 | Phase 2 | Complete |
-| CTX-04 | Phase 2 | Complete |
-| CTX-05 | Phase 2 | Complete |
-| CTX-06 | Phase 2 | Complete |
-| HST-01 | Phase 3 | Pending |
-| HST-02 | Phase 3 | Pending |
-| HST-03 | Phase 3 | Pending |
-| HST-04 | Phase 3 | Pending |
-| HST-05 | Phase 3 | Pending |
-| EVD-01 | Phase 4 | Pending |
-| EVD-02 | Phase 4 | Pending |
-| EVD-03 | Phase 4 | Pending |
-| VAD-01 | Phase 5 | Pending |
-| VAD-02 | Phase 5 | Pending |
-| VAD-03 | Phase 5 | Pending |
-| VAD-04 | Phase 5 | Pending |
-| RSM-01 | Phase 6 | Pending |
-| RSM-02 | Phase 6 | Pending |
-| RSM-03 | Phase 6 | Pending |
-| RSM-04 | Phase 6 | Pending |
-| RBK-01 | Phase 7 | Pending |
-| RBK-02 | Phase 7 | Pending |
-| DOC-01 | Phase 8 | Pending |
-| DOC-02 | Phase 8 | Pending |
-| DOC-03 | Phase 8 | Pending |
-| CFG-07 | Phase 5 | Pending |
-| CFG-08 | Phase 2 | ✅ Complete (02-01) |
-| CFG-09 | Phase 2 | ✅ Complete (02-01) |
+| CTX-01 | Phase 13 | Complete |
+| CTX-02 | Phase 13 | Complete |
+| CTX-03 | Phase 13 | Complete |
+| CTX-04 | Phase 13 | Complete |
+| CTX-05 | Phase 13 | Complete |
+| CTX-06 | Phase 13 | Complete |
+| HST-01 | Phase 14 | Complete |
+| HST-02 | Phase 14 | Complete |
+| HST-03 | Phase 14 | Complete |
+| HST-04 | Phase 14 | Complete |
+| HST-05 | Phase 14 | Complete |
+| EVD-01 | Phase 15 | Complete |
+| EVD-02 | Phase 15 | Complete |
+| EVD-03 | Phase 15 | Complete |
+| VAD-01 | Phase 15 | Complete |
+| VAD-02 | Phase 15 | Complete |
+| VAD-03 | Phase 15 | Complete |
+| VAD-04 | Phase 15 | Complete |
+| RSM-01 | Phase 16 | Complete |
+| RSM-02 | Phase 16 | Complete |
+| RSM-03 | Phase 16 | Complete |
+| RSM-04 | Phase 16 | Complete |
+| RBK-01 | Phase 17 | Pending |
+| RBK-02 | Phase 17 | Pending |
+| DOC-01 | Phase 17 | Pending |
+| DOC-02 | Phase 17 | Pending |
+| DOC-03 | Phase 17 | Pending |
+| CFG-07 | Phase 15 | Complete |
+| CFG-08 | Phase 13 | Complete |
+| CFG-09 | Phase 13 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 30 total
 - Mapped to phases: 30
 - Unmapped: 0
+- Pending after audit replan: 30
 
 ---
 *Requirements defined: 2026-03-11*

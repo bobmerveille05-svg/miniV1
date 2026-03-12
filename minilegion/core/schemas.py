@@ -88,7 +88,7 @@ class DesignConformity(BaseModel):
 
 
 class ResearchSchema(BaseModel):
-    """Research artifact: codebase analysis output."""
+    """Research artifact: codebase analysis output — supports fact mode (default) and brainstorm mode (structured directions)."""
 
     project_overview: str
     tech_stack: list[str] = Field(default_factory=list)
@@ -101,6 +101,15 @@ class ResearchSchema(BaseModel):
     assumptions_verified: list[str] = Field(default_factory=list)
     open_questions: list[str] = Field(default_factory=list)
     recommended_focus_files: list[str] = Field(default_factory=list)
+
+    # Brainstorm-mode fields (optional — absent in fact mode, populated in brainstorm mode)
+    problem_framing: str | None = None
+    facts: list[str] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    candidate_directions: list[dict] | None = None
+    tradeoffs: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    recommendation: str | None = None
 
 
 class DesignSchema(BaseModel):

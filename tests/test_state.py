@@ -145,6 +145,17 @@ class TestProjectState:
         assert state.history[0].details == "Project initialized"
         assert state.history[0].timestamp  # Should have a timestamp
 
+    def test_save_state_excludes_embedded_history_field(self, tmp_path):
+        """save_state writes current-state fields only (no history key)."""
+        state = ProjectState()
+        state.add_history("init", "Project initialized")
+
+        state_path = tmp_path / "STATE.json"
+        save_state(state, state_path)
+
+        saved = state_path.read_text(encoding="utf-8")
+        assert '"history"' not in saved
+
     def test_save_load_state_roundtrip(self, tmp_path):
         """save_state then load_state returns equivalent ProjectState."""
         state = ProjectState(
@@ -168,5 +179,4 @@ class TestProjectState:
         assert loaded.current_stage == state.current_stage
         assert loaded.approvals == state.approvals
         assert loaded.completed_tasks == state.completed_tasks
-        assert len(loaded.history) == len(state.history)
-        assert loaded.history[0].action == "transition"
+        assert loaded.history == []

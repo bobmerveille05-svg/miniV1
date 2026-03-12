@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1–12 (shipped 2026-03-10) ([archived roadmap](milestones/v1.0-ROADMAP.md), [archived requirements](milestones/v1.0-REQUIREMENTS.md))
 - ✅ **v1.1 pre-work** — Phase 1 (shipped 2026-03-11)
-- 🚧 **v1.1 Portable Kernel** — Phases 2–8 (in progress)
+- ✅ **v1.1 Portable Kernel** — Phases 2–17 (shipped 2026-03-12)
 
 ---
 
@@ -165,6 +165,78 @@ Plans:
 
 ---
 
+### Phase 13: Context Evidence + Verification Backfill
+
+**Goal:** Re-establish auditable proof for context adapter outcomes and close the context completeness gap surfaced by milestone audit.
+**Depends on:** Phase 8
+**Requirements:** CTX-01, CTX-02, CTX-03, CTX-04, CTX-05, CTX-06, CFG-08, CFG-09
+**Gap Closure:** Closes orphaned Phase 2 requirement evidence and the status->context flow gap from v1.1 audit.
+**Plans:** 2/2 plans complete
+
+Plans:
+- [ ] 13-01-PLAN.md — Wire deterministic compact-plan lookahead into context assembly and test CTX-01/CFG-08 behavior
+- [ ] 13-02-PLAN.md — Backfill Phase 2 requirement-ID verification artifact and context default docs for audit traceability
+
+---
+
+### Phase 14: History Foundation + Migration
+
+**Goal:** Implement the history subsystem and migration path so state remains current-only while all events are append-only and queryable.
+**Depends on:** Phase 13
+**Requirements:** HST-01, HST-02, HST-03, HST-04, HST-05
+**Gap Closure:** Closes history extraction integration and E2E flow gaps from v1.1 audit.
+**Plans:** 2/2 plans complete
+
+Plans:
+- [ ] 14-01-PLAN.md — Build `core/history.py` append/read APIs, remove persisted STATE history, and add first-access legacy migration
+- [ ] 14-02-PLAN.md — Wire command/context surfaces to history events and add `minilegion history` timeline output
+
+---
+
+### Phase 15: Evidence Pipeline + Validate/Advance Gates
+
+**Goal:** Separate artifact generation from progression, enforce validation gates with machine-readable evidence, and restore workflow strictness controls.
+**Depends on:** Phase 14
+**Requirements:** EVD-01, EVD-02, EVD-03, VAD-01, VAD-02, VAD-03, VAD-04, CFG-07
+**Gap Closure:** Closes evidence/advance integration and validate->advance flow gaps from v1.1 audit.
+**Plans:** 3/3 plans complete
+
+Plans:
+- [ ] 15-01-PLAN.md — Introduce evidence subsystem and `validate <step>` command with machine-readable overwrite semantics
+- [ ] 15-02-PLAN.md — Enforce `advance` evidence gate, restore workflow strict config defaults, and remove stage auto-advance side effects
+
+---
+
+### Phase 16: Research Brainstorm Mode
+
+**Goal:** Add brainstorm exploration mode with bounded options, schema-validated recommendation output, and non-breaking config defaults.
+**Depends on:** Phase 15
+**Requirements:** RSM-01, RSM-02, RSM-03, RSM-04
+**Gap Closure:** Closes brainstorm integration and E2E flow gaps from v1.1 audit.
+**Plans:** 2/2 plans complete
+
+Plans:
+- [x] 16-01-PLAN.md — Add ResearchConfig to config, dual researcher prompts (fact+brainstorm), --mode/--options flags, schema validation, tests
+- [ ] 16-02-PLAN.md — Gap closure: sync Pydantic ResearchSchema with JSON schema (7 brainstorm fields), add recommendation enforcement, add real-Pydantic-path tests
+
+---
+
+### Phase 17: Rollback + Doctor Health Surface
+
+**Goal:** Restore operational safety with rollback semantics and expose project health via a user-facing doctor command.
+**Depends on:** Phase 16
+**Requirements:** RBK-01, RBK-02, DOC-01, DOC-02, DOC-03
+**Gap Closure:** Closes rollback/doctor integration and E2E flow gaps from v1.1 audit.
+**Plans:** 2 plans
+
+Plans:
+- [x] 17-01-PLAN.md — Implement `minilegion rollback "<reason>"` with artifact preservation and history event (RBK-01, RBK-02)
+- [x] 17-02-PLAN.md — Implement `minilegion doctor` with 6 coherence checks and green/yellow/red output (DOC-01, DOC-02, DOC-03)
+
+**Status:** COMPLETE — UAT 7/7 passed. Closed 2026-03-12.
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -174,6 +246,11 @@ Plans:
 | 3. History Extraction | v1.1 | 0/2 | Not started | - |
 | 4. Evidence Bundles | v1.1 | 0/1 | Not started | - |
 | 5. Validate + Advance | v1.1 | 0/2 | Not started | - |
-| 6. Research Brainstorm | v1.1 | 0/1 | Not started | - |
+| 6. Research Brainstorm | v1.1 gap closure | 1/1 | Planning | - |
 | 7. Rollback | v1.1 | 0/1 | Not started | - |
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
+| 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
+| 14. History Foundation + Migration | v1.1 gap closure | Complete    | 2026-03-11 | - |
+| 15. Evidence Pipeline + Validate/Advance Gates | v1.1 gap closure | Complete    | 2026-03-12 | - |
+| 16. Research Brainstorm Mode | 2/2 | Complete    | 2026-03-12 | - |
+| 17. Rollback + Doctor Health Surface | v1.1 gap closure | 2/2 | Complete | 2026-03-12 |

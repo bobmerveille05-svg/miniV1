@@ -78,13 +78,23 @@ class TestInitCommand:
         )
 
     def test_init_state_has_history_entry(self, tmp_path, monkeypatch):
-        """STATE.json history has init entry."""
+        """STATE.json does not persist embedded history."""
         monkeypatch.chdir(tmp_path)
         runner.invoke(app, ["init", "myproject"])
         state_path = tmp_path / "myproject" / "project-ai" / "STATE.json"
         data = json.loads(state_path.read_text())
-        assert len(data["history"]) >= 1
-        assert data["history"][0]["action"] == "init"
+        assert "history" not in data
+
+    def test_init_creates_history_event_file(self, tmp_path, monkeypatch):
+        """init writes first event under project-ai/history/."""
+        monkeypatch.chdir(tmp_path)
+        runner.invoke(app, ["init", "myproject"])
+        history_dir = tmp_path / "myproject" / "project-ai" / "history"
+        assert history_dir.is_dir()
+        event_files = sorted(history_dir.glob("*.json"))
+        assert event_files
+        payload = json.loads(event_files[0].read_text())
+        assert payload["event_type"] == "init"
 
 
 class TestInitContextScaffolding:
