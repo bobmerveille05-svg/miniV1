@@ -74,3 +74,38 @@ def ensure_feature_branch(repo_root: Path, project_name: str) -> str | None:
     branch_name = f"minilegion/{project_name}-{timestamp}"
     _git(["checkout", "-b", branch_name], cwd=repo_root)
     return branch_name
+
+
+def commit_task(
+    repo_root: Path,
+    task_id: str,
+    task_name: str,
+    changed_files: list[str],
+    artifact_files: list[str],
+) -> None:
+    """Stage and commit files for a completed task.
+
+    - `changed_files`: source files touched by the task (paths relative to repo_root).
+    - `artifact_files`: project-ai/* artifacts to include as audit trail.
+    - If not in a git repo: no-op.
+    - If nothing to stage: no-op (avoids 'nothing to commit' error).
+    """
+    if not is_git_repo(repo_root):
+        return
+
+    files_to_stage = [f for f in changed_files + artifact_files if f]
+    if not files_to_stage:
+        return
+
+    existing = [f for f in files_to_stage if (repo_root / f).exists()]
+    if not existing:
+        return
+
+    _git(["add", *existing], cwd=repo_root)
+
+    status = _git(["diff", "--cached", "--name-only"], cwd=repo_root)
+    if not status.stdout.strip():
+        return
+
+    message = f"feat(execute): {task_id} — {task_name}"
+    _git(["commit", "-m", message], cwd=repo_root)
