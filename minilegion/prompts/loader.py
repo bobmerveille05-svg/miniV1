@@ -126,6 +126,6 @@ def render_prompt(template: str, **variables: str) -> str:
                 f"Unresolved placeholder: {{{{{key}}}}} "
                 f"— available variables: {sorted(variables.keys())}"
             )
-        return variables[key]
+        return str(variables[key])
 
     return re.sub(r"\{\{(\w+)\}\}", _replacer, text)

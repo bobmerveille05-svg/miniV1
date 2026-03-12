@@ -726,7 +726,7 @@ def research(
         user_message = render_prompt(
             user_template,
             mode=mode,
-            num_options=options,
+            num_options=str(options),
             project_name=project_name,
             brief_content=brief_content,
             codebase_context=codebase_context,
