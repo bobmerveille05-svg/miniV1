@@ -1,9 +1,10 @@
-"""GitHub Copilot LLM adapter.
+"""GitHub Models LLM adapter (accessed via GitHub Personal Access Token).
 
-Uses the OpenAI-compatible GitHub Copilot API endpoint with a token
+Uses the OpenAI-compatible GitHub Models inference endpoint with a GitHub PAT
 retrieved from the credential store (set via `minilegion auth login copilot`).
 
-API endpoint: https://api.githubcopilot.com
+API endpoint: https://models.inference.ai.azure.com
+Docs: https://docs.github.com/en/github-models
 """
 
 from __future__ import annotations
@@ -16,13 +17,13 @@ from minilegion.auth import get_token
 from minilegion.core.config import MiniLegionConfig
 from minilegion.core.exceptions import AuthError, LLMError
 
-_COPILOT_BASE_URL = "https://api.githubcopilot.com"
+_COPILOT_BASE_URL = "https://models.inference.ai.azure.com"
 
 
 class CopilotAdapter(LLMAdapter):
-    """LLM adapter for GitHub Copilot via the OpenAI-compatible API.
+    """LLM adapter for GitHub Models via the OpenAI-compatible inference API.
 
-    Retrieves the access token from the credential store. The token is
+    Retrieves the GitHub PAT from the credential store. The token is
     fetched lazily on first call so construction never triggers I/O.
     """
 
@@ -38,7 +39,7 @@ class CopilotAdapter(LLMAdapter):
             token = get_token("copilot")
         except AuthError as exc:
             raise LLMError(
-                f"GitHub Copilot authentication required. "
+                f"GitHub Models authentication required. "
                 f"Run: minilegion auth login copilot\n({exc})"
             ) from exc
 
@@ -110,7 +111,7 @@ class CopilotAdapter(LLMAdapter):
             response = client.chat.completions.create(**kwargs)
         except openai.AuthenticationError as exc:
             raise LLMError(
-                f"GitHub Copilot authentication failed. "
+                f"GitHub Models authentication failed. "
                 f"Run: minilegion auth login copilot\n({exc})"
             ) from exc
         except openai.APITimeoutError as exc:
@@ -119,7 +120,7 @@ class CopilotAdapter(LLMAdapter):
                 f"Request timed out after {effective_timeout}s: {exc}"
             ) from exc
         except openai.APIError as exc:
-            raise LLMError(f"Copilot API error: {exc}") from exc
+            raise LLMError(f"GitHub Models API error: {exc}") from exc
 
         return self._map_response(response)
 

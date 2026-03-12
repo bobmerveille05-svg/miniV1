@@ -1,4 +1,4 @@
-"""Tests for CopilotAdapter — GitHub Copilot LLM via OpenAI-compatible API."""
+"""Tests for CopilotAdapter — GitHub Models LLM via OpenAI-compatible API."""
 
 from unittest.mock import MagicMock, patch
 
@@ -19,14 +19,14 @@ def config():
 
 
 def test_get_client_fetches_token_from_store(config):
-    with patch("minilegion.adapters.copilot_adapter.get_token", return_value="ghu_tok"):
+    with patch("minilegion.adapters.copilot_adapter.get_token", return_value="ghp_tok"):
         with patch("minilegion.adapters.copilot_adapter.OpenAI") as mock_openai:
             adapter = CopilotAdapter(config)
             adapter._get_client()
             mock_openai.assert_called_once()
             call_kwargs = mock_openai.call_args.kwargs
-            assert call_kwargs["api_key"] == "ghu_tok"
-            assert "githubcopilot.com" in call_kwargs["base_url"]
+            assert call_kwargs["api_key"] == "ghp_tok"
+            assert "models.inference.ai.azure.com" in call_kwargs["base_url"]
 
 
 def test_get_client_raises_llm_error_when_not_authenticated(config):

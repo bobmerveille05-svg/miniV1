@@ -71,7 +71,7 @@ def run_provider_healthcheck(config: MiniLegionConfig) -> None:
 
 
 def _check_copilot() -> None:
-    """Verify a valid Copilot token exists in the credential store."""
+    """Verify a valid GitHub PAT exists in the credential store."""
     from minilegion.auth import get_token
     from minilegion.core.exceptions import AuthError
 

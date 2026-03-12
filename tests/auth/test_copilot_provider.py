@@ -1,18 +1,15 @@
-"""Tests for CopilotAuthProvider — all GitHub HTTP calls are mocked."""
+"""Tests for CopilotAuthProvider — PAT-based GitHub Models authentication."""
 
 from __future__ import annotations
 
-import sys
-from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import patch
 
 import pytest
 
 from minilegion.auth.providers.copilot import CopilotAuthProvider
 from minilegion.auth.store import CredentialStore, TokenData
 from minilegion.core.exceptions import (
-    AuthExpiredError,
     AuthNotConfiguredError,
     AuthProviderError,
 )
@@ -29,127 +26,59 @@ def provider(store):
 
 
 # ---------------------------------------------------------------------------
-# Device code request
+# login — PAT prompt and storage
 # ---------------------------------------------------------------------------
 
 
-def test_request_device_code_returns_expected_fields(provider):
-    mock_response = MagicMock()
-    mock_response.read.return_value = (
-        b"device_code=abc&user_code=8F43-6FCF"
-        b"&verification_uri=https%3A%2F%2Fgithub.com%2Flogin%2Fdevice"
-        b"&expires_in=899&interval=5"
-    )
-    mock_response.__enter__ = lambda s: s
-    mock_response.__exit__ = MagicMock(return_value=False)
+def test_login_stores_pat(provider, store):
+    """login() should store the token entered by the user."""
+    with patch(
+        "minilegion.auth.providers.copilot._prompt_for_token",
+        return_value="ghp_testtoken123",
+    ):
+        provider.login()
 
-    with patch("urllib.request.urlopen", return_value=mock_response):
-        result = provider._request_device_code()
-
-    assert result["device_code"] == "abc"
-    assert result["user_code"] == "8F43-6FCF"
-    assert result["interval"] == 5
-    assert result["expires_in"] == 899
+    saved = store.load("copilot")
+    assert saved is not None
+    assert saved.access_token == "ghp_testtoken123"
 
 
-# ---------------------------------------------------------------------------
-# Polling
-# ---------------------------------------------------------------------------
+def test_login_raises_on_empty_token(provider):
+    """login() should raise AuthProviderError if user enters nothing."""
+    with patch(
+        "minilegion.auth.providers.copilot._prompt_for_token",
+        return_value="   ",
+    ):
+        with pytest.raises(AuthProviderError, match="No token entered"):
+            provider.login()
 
 
-def test_poll_returns_token_on_success(provider):
-    mock_response = MagicMock()
-    mock_response.read.return_value = (
-        b"access_token=ghu_abc123&token_type=bearer&scope=copilot"
-    )
-    mock_response.__enter__ = lambda s: s
-    mock_response.__exit__ = MagicMock(return_value=False)
-
-    with patch("urllib.request.urlopen", return_value=mock_response):
-        with patch("time.sleep"):
-            token_data = provider._poll_for_token(
-                device_code="abc", interval=5, expires_in=900
-            )
-
-    assert token_data.access_token == "ghu_abc123"
-    assert token_data.token_type == "bearer"
-    assert "copilot" in token_data.scopes
+def test_login_raises_on_cancelled(provider):
+    """login() should raise AuthProviderError on KeyboardInterrupt."""
+    with patch(
+        "minilegion.auth.providers.copilot._prompt_for_token",
+        side_effect=KeyboardInterrupt,
+    ):
+        with pytest.raises(AuthProviderError, match="cancelled"):
+            provider.login()
 
 
-def test_poll_retries_on_authorization_pending(provider):
-    """Should keep polling when authorization_pending is returned."""
-    pending_response = MagicMock()
-    pending_response.read.return_value = b"error=authorization_pending"
-    pending_response.__enter__ = lambda s: s
-    pending_response.__exit__ = MagicMock(return_value=False)
+def test_login_warns_on_unrecognised_token_format(provider, store, capsys):
+    """login() should warn (but not fail) if the token format is unrecognised."""
+    with patch(
+        "minilegion.auth.providers.copilot._prompt_for_token",
+        return_value="some_unexpected_token",
+    ):
+        provider.login()
 
-    success_response = MagicMock()
-    success_response.read.return_value = (
-        b"access_token=ghu_xyz&token_type=bearer&scope=copilot"
-    )
-    success_response.__enter__ = lambda s: s
-    success_response.__exit__ = MagicMock(return_value=False)
-
-    responses = [pending_response, pending_response, success_response]
-
-    with patch("urllib.request.urlopen", side_effect=responses):
-        with patch("time.sleep") as mock_sleep:
-            token_data = provider._poll_for_token(
-                device_code="abc", interval=5, expires_in=900
-            )
-
-    assert token_data.access_token == "ghu_xyz"
-    assert mock_sleep.call_count == 2
-
-
-def test_poll_increases_interval_on_slow_down(provider):
-    """slow_down response must increase polling interval by 5."""
-    slow_response = MagicMock()
-    slow_response.read.return_value = b"error=slow_down"
-    slow_response.__enter__ = lambda s: s
-    slow_response.__exit__ = MagicMock(return_value=False)
-
-    success_response = MagicMock()
-    success_response.read.return_value = (
-        b"access_token=ghu_xyz&token_type=bearer&scope=copilot"
-    )
-    success_response.__enter__ = lambda s: s
-    success_response.__exit__ = MagicMock(return_value=False)
-
-    with patch("urllib.request.urlopen", side_effect=[slow_response, success_response]):
-        with patch("time.sleep") as mock_sleep:
-            provider._poll_for_token(device_code="abc", interval=5, expires_in=900)
-
-    # First sleep should be 10 (5 + 5 increase), not 5
-    assert mock_sleep.call_args_list[0] == call(10)
-
-
-def test_poll_raises_on_expired_token(provider):
-    mock_response = MagicMock()
-    mock_response.read.return_value = b"error=expired_token"
-    mock_response.__enter__ = lambda s: s
-    mock_response.__exit__ = MagicMock(return_value=False)
-
-    with patch("urllib.request.urlopen", return_value=mock_response):
-        with patch("time.sleep"):
-            with pytest.raises(AuthProviderError, match="expired"):
-                provider._poll_for_token(device_code="abc", interval=5, expires_in=900)
-
-
-def test_poll_raises_on_access_denied(provider):
-    mock_response = MagicMock()
-    mock_response.read.return_value = b"error=access_denied"
-    mock_response.__enter__ = lambda s: s
-    mock_response.__exit__ = MagicMock(return_value=False)
-
-    with patch("urllib.request.urlopen", return_value=mock_response):
-        with patch("time.sleep"):
-            with pytest.raises(AuthProviderError, match="Copilot subscription"):
-                provider._poll_for_token(device_code="abc", interval=5, expires_in=900)
+    captured = capsys.readouterr()
+    assert "Warning" in captured.out
+    # Token should still be saved
+    assert store.load("copilot") is not None
 
 
 # ---------------------------------------------------------------------------
-# is_authenticated / get_token
+# is_authenticated
 # ---------------------------------------------------------------------------
 
 
@@ -157,52 +86,53 @@ def test_is_authenticated_false_when_no_credentials(provider):
     assert provider.is_authenticated() is False
 
 
-def test_is_authenticated_true_when_valid_token(provider, store):
+def test_is_authenticated_true_when_token_stored(provider, store):
     store.save(
         "copilot",
         TokenData(
-            access_token="ghu_x",
+            access_token="ghp_x",
             token_type="bearer",
-            expires_at=datetime(2099, 1, 1, tzinfo=timezone.utc),
+            expires_at=None,
             refresh_token=None,
-            scopes=["copilot"],
+            scopes=[],
         ),
     )
     assert provider.is_authenticated() is True
 
 
-def test_get_token_returns_token_when_valid(provider, store):
+# ---------------------------------------------------------------------------
+# get_token
+# ---------------------------------------------------------------------------
+
+
+def test_get_token_returns_stored_pat(provider, store):
     store.save(
         "copilot",
         TokenData(
-            access_token="ghu_valid",
+            access_token="ghp_valid",
             token_type="bearer",
-            expires_at=datetime(2099, 1, 1, tzinfo=timezone.utc),
+            expires_at=None,
             refresh_token=None,
-            scopes=["copilot"],
+            scopes=[],
         ),
     )
-    assert provider.get_token() == "ghu_valid"
+    assert provider.get_token() == "ghp_valid"
 
 
-def test_get_token_raises_not_configured_when_missing(provider):
+def test_get_token_raises_not_configured_when_missing_noninteractive(provider):
     with pytest.raises(AuthNotConfiguredError):
-        provider.get_token()
-
-
-def test_get_token_raises_expired_error_in_noninteractive(provider, store):
-    store.save(
-        "copilot",
-        TokenData(
-            access_token="ghu_old",
-            token_type="bearer",
-            expires_at=datetime(2000, 1, 1, tzinfo=timezone.utc),
-            refresh_token=None,
-            scopes=["copilot"],
-        ),
-    )
-    with pytest.raises(AuthExpiredError):
         provider.get_token(interactive=False)
+
+
+def test_get_token_runs_login_when_missing_interactive(provider, store):
+    """When interactive=True and no token exists, get_token should call login."""
+    with patch(
+        "minilegion.auth.providers.copilot._prompt_for_token",
+        return_value="ghp_from_login",
+    ):
+        token = provider.get_token(interactive=True)
+
+    assert token == "ghp_from_login"
 
 
 # ---------------------------------------------------------------------------
@@ -214,7 +144,7 @@ def test_logout_removes_credentials(provider, store):
     store.save(
         "copilot",
         TokenData(
-            access_token="ghu_x",
+            access_token="ghp_x",
             token_type="bearer",
             expires_at=None,
             refresh_token=None,
