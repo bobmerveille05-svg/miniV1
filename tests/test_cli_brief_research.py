@@ -698,7 +698,7 @@ class TestResearchHealthcheckGate:
             "minilegion.cli.commands.run_provider_healthcheck",
             lambda cfg: call_order.append("healthcheck"),
         )
-        original_scan = monkeypatch.setattr(
+        monkeypatch.setattr(
             "minilegion.cli.commands.scan_codebase",
             lambda pd, cfg: call_order.append("scan") or "ctx",
         )

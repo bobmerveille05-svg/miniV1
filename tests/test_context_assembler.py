@@ -13,7 +13,7 @@ import pytest
 from typer.testing import CliRunner
 
 from minilegion.cli import app
-from minilegion.core.config import ContextConfig, MiniLegionConfig
+from minilegion.core.config import MiniLegionConfig
 from minilegion.core.context_assembler import assemble_context
 from minilegion.core.state import ProjectState, save_state
 
