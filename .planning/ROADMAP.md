@@ -213,10 +213,10 @@ Plans:
 **Depends on:** Phase 15
 **Requirements:** RSM-01, RSM-02, RSM-03, RSM-04
 **Gap Closure:** Closes brainstorm integration and E2E flow gaps from v1.1 audit.
-**Plans:** TBD
+**Plans:** 1/1 plan
 
 Plans:
-- [ ] 16-01: Add `research --mode` and `--options` plus schema/prompt wiring for brainstorm mode
+- [x] 16-01-PLAN.md — Add ResearchConfig to config, dual researcher prompts (fact+brainstorm), --mode/--options flags, schema validation, tests
 
 ---
 
@@ -243,7 +243,7 @@ Plans:
 | 3. History Extraction | v1.1 | 0/2 | Not started | - |
 | 4. Evidence Bundles | v1.1 | 0/1 | Not started | - |
 | 5. Validate + Advance | v1.1 | 0/2 | Not started | - |
-| 6. Research Brainstorm | v1.1 | 0/1 | Not started | - |
+| 6. Research Brainstorm | v1.1 gap closure | 1/1 | Planning | - |
 | 7. Rollback | v1.1 | 0/1 | Not started | - |
 | 8. Doctor | v1.1 | 0/1 | Not started | - |
 | 13. Context Evidence + Verification Backfill | 2/2 | Complete    | 2026-03-11 | - |
