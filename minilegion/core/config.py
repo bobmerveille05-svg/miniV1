@@ -89,6 +89,14 @@ def _default_recommended_models() -> dict[str, list[ModelCatalogEntry]]:
                 description="Llama 3.3 70B via OpenRouter",
             ),
         ],
+        "copilot": [
+            ModelCatalogEntry(id="gpt-4o", description="GPT-4o via GitHub Copilot"),
+            ModelCatalogEntry(
+                id="claude-3.5-sonnet",
+                description="Claude 3.5 Sonnet via GitHub Copilot",
+            ),
+            ModelCatalogEntry(id="o3-mini", description="o3-mini via GitHub Copilot"),
+        ],
     }
 
 
@@ -178,6 +186,14 @@ def _default_all_models() -> dict[str, list[ModelCatalogEntry]]:
                 description="DeepSeek R1 via OpenRouter",
             ),
         ],
+        "copilot": [
+            ModelCatalogEntry(id="gpt-4o", description="GPT-4o via GitHub Copilot"),
+            ModelCatalogEntry(
+                id="claude-3.5-sonnet",
+                description="Claude 3.5 Sonnet via GitHub Copilot",
+            ),
+            ModelCatalogEntry(id="o3-mini", description="o3-mini via GitHub Copilot"),
+        ],
     }
 
 
@@ -211,6 +227,12 @@ def _default_model_aliases() -> dict[str, dict[str, str]]:
             "fast": "openai/gpt-4o-mini",
             "claude": "anthropic/claude-3.7-sonnet",
             "gemini": "google/gemini-2.0-flash",
+        },
+        "copilot": {
+            "default": "gpt-4o",
+            "fast": "gpt-4o",
+            "claude": "claude-3.5-sonnet",
+            "reasoning": "o3-mini",
         },
     }
 

@@ -28,6 +28,7 @@ PROVIDERS: dict[str, str] = {
     "gemini": "Gemini",
     "ollama": "Ollama",
     "openai-compatible": "OpenRouter / OpenAI-compatible",
+    "copilot": "GitHub Copilot",
 }
 
 # Maps provider slug → default base_url (None means not applicable)
@@ -37,6 +38,7 @@ DEFAULT_BASE_URL: dict[str, str | None] = {
     "gemini": None,
     "ollama": "http://localhost:11434",
     "openai-compatible": "https://openrouter.ai/api/v1",
+    "copilot": None,
 }
 
 DEFAULT_ENV_VAR: dict[str, str] = {
@@ -45,6 +47,7 @@ DEFAULT_ENV_VAR: dict[str, str] = {
     "gemini": "GEMINI_API_KEY",
     "ollama": "",  # No key needed for local Ollama
     "openai-compatible": "OPENROUTER_API_KEY",
+    "copilot": "",  # uses credential store, not env var
 }
 
 # ---------------------------------------------------------------------------
@@ -275,6 +278,21 @@ def config_init() -> None:
         typer.echo(
             typer.style(
                 "\nOllama is local — no API key required.", fg=typer.colors.CYAN
+            )
+        )
+    elif provider == "copilot":
+        # Copilot uses OAuth — no API key needed
+        api_key_env = ""
+        typer.echo(
+            typer.style(
+                "\nGitHub Copilot uses OAuth — no API key needed.",
+                fg=typer.colors.CYAN,
+            )
+        )
+        typer.echo(
+            typer.style(
+                "  Run: minilegion auth login copilot",
+                fg=typer.colors.CYAN,
             )
         )
     else:

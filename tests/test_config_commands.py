@@ -230,3 +230,19 @@ class TestConfigModel:
         result = runner.invoke(app, ["config", "init", "--help"])
         assert result.exit_code == 0
         assert "provider" in result.output.lower() or "init" in result.output.lower()
+
+
+class TestConfigInitCopilot:
+    def test_copilot_skips_api_key_prompt(self, tmp_path, monkeypatch):
+        """Selecting copilot as provider should skip the API key env var prompt."""
+        _make_project(tmp_path)
+        monkeypatch.chdir(tmp_path)
+
+        # provider=6 (copilot), model source=1 (recommended), model=1
+        result = runner.invoke(app, ["config", "init"], input="6\n1\n1\n")
+        assert result.exit_code == 0, result.output
+        assert "minilegion auth login copilot" in result.output
+
+        config = _read_config(tmp_path / "project-ai")
+        assert config.provider == "copilot"
+        assert config.api_key_env == ""
